@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购计划管理系统</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; }
+        .sidebar { width: 220px; min-height: 100vh; background: #001529; position: fixed; left: 0; top: 0; z-index: 100; }
+        .sidebar-logo { height: 64px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .sidebar-menu { padding: 8px 0; }
+        .sidebar-item { padding: 12px 24px; color: rgba(255,255,255,.65); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: all .2s; border-left: 3px solid transparent; }
+        .sidebar-item:hover { color: #fff; background: rgba(255,255,255,.08); }
+        .sidebar-item.active { color: #fff; background: #1890ff; border-left-color: #1890ff; }
+        .main-content { margin-left: 220px; padding: 24px; }
+        .header-bar { background: #fff; padding: 16px 24px; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.05); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .header-bar h2 { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+        .card { background: #fff; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.05); padding: 24px; margin-bottom: 24px; }
+        .search-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f0f0f0; }
+        .search-item { display: flex; flex-direction: column; gap: 4px; }
+        .search-item label { font-size: 12px; color: #666; }
+        .search-item input, .search-item select { padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; outline: none; min-width: 140px; }
+        .search-item input:focus, .search-item select:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,.2); }
+        .btn { padding: 6px 16px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; background: #fff; }
+        .btn:hover { border-color: #1890ff; color: #1890ff; }
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; border-color: #40a9ff; color: #fff; }
+        .btn-danger { color: #ff4d4f; border-color: #ff4d4f; }
+        .btn-danger:hover { background: #ff4d4f; color: #fff; }
+        .btn-success { color: #52c41a; border-color: #52c41a; }
+        .btn-success:hover { background: #52c41a; color: #fff; }
+        .btn-warning { color: #faad14; border-color: #faad14; }
+        .btn-warning:hover { background: #faad14; color: #fff; }
+        .btn-sm { padding: 3px 10px; font-size: 12px; }
+        .btn + .btn { margin-left: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #fafafa; padding: 12px 8px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+        td { padding: 10px 8px; border-bottom: 1px solid #f0f0f0; color: #333; }
+        tr:hover td { background: #e6f7ff; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 12px; }
+        .tag-blue { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .tag-green { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .tag-orange { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+        .tag-red { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+        .tag-gray { background: #f5f5f5; color: #999; border: 1px solid #d9d9d9; }
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 16px; font-size: 13px; }
+        .pagination .page-btn { padding: 4px 10px; border: 1px solid #d9d9d9; border-radius: 4px; cursor: pointer; background: #fff; font-size: 12px; }
+        .pagination .page-btn:hover { border-color: #1890ff; color: #1890ff; }
+        .pagination .page-btn.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #fff; border-radius: 4px; width: 720px; max-height: 85vh; overflow-y: auto; }
+        .modal-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; }
+        .modal-close { cursor: pointer; font-size: 20px; color: #999; line-height: 1; }
+        .modal-close:hover { color: #333; }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 12px 24px; border-top: 1px solid #f0f0f0; text-align: right; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 13px; color: #333; font-weight: 500; }
+        .form-group label .required { color: #ff4d4f; margin-left: 2px; }
+        .form-group input, .form-group select { padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,.2); }
+        .form-group .hint { font-size: 11px; color: #999; }
+        .view-content { display: none; }
+        .view-content.active { display: block; }
+        .stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border-radius: 4px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+        .stat-card .label { font-size: 13px; color: #666; }
+        .stat-card .value { font-size: 28px; font-weight: 600; color: #1a1a1a; margin-top: 4px; }
+        .stat-card .sub { font-size: 12px; color: #999; margin-top: 4px; }
+        .action-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .progress-bar { width: 80px; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+        .progress-bar .fill { height: 100%; border-radius: 3px; transition: width .3s; }
+        .badge-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar-logo span, .sidebar-item span { display: none; }
+            .main-content { margin-left: 60px; }
+            .stat-cards { grid-template-columns: repeat(2, 1fr); }
+            .form-grid { grid-template-columns: 1fr; }
+            .modal { width: 95%; }
+            .search-bar { flex-direction: column; }
+            .search-item input, .search-item select { min-width: 100%; }
+        }
+        .toast { position: fixed; top: 24px; right: 24px; padding: 12px 24px; border-radius: 4px; color: #fff; font-size: 14px; z-index: 2000; transform: translateX(120%); transition: transform .3s; }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: #52c41a; }
+        .toast.error { background: #ff4d4f; }
+        .toast.info { background: #1890ff; }
+        /* Searchable Select */
+        .ss-wrap { position: relative; }
+        .ss-input { width: 100%; box-sizing: border-box; cursor: pointer; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 8px center; }
+        .ss-input.open { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,.2); border-bottom-left-radius: 0; border-bottom-right-radius: 0; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231890ff' stroke-width='2'%3E%3Cpolyline points='18 15 12 9 6 15'/%3E%3C/svg%3E"); }
+        .ss-dropdown { display: none; position: absolute; left: 0; right: 0; top: 100%; background: #fff; border: 1px solid #1890ff; border-top: none; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; z-index: 1050; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+        .ss-dropdown.show { display: block; }
+        .ss-dropdown .ss-item { padding: 7px 12px; font-size: 13px; cursor: pointer; }
+        .ss-dropdown .ss-item:hover { background: #e6f7ff; }
+        .ss-dropdown .ss-item.active { background: #1890ff; color: #fff; }
+        .ss-dropdown .ss-item .ss-highlight { background: #ffd54f; padding: 0 1px; }
+        .ss-dropdown .ss-item.active .ss-highlight { background: #fff3a0; }
+        .ss-dropdown .ss-empty { padding: 12px; text-align: center; color: #999; font-size: 13px; }
+        .ss-tag { display: inline-block; background: #e6f7ff; color: #1890ff; font-size: 11px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+        /* Log detail */
+        .log-detail-row { display: none; }
+        .log-detail-row.show { display: table-row; }
+        .log-detail-cell { padding: 12px 16px !important; background: #fafafa; }
+        .detail-section { margin-bottom: 12px; }
+        .detail-section:last-child { margin-bottom: 0; }
+        .detail-section-title { font-size: 12px; font-weight: 600; color: #333; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .detail-section-title .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px; }
+        .detail-item { font-size: 12px; padding: 3px 8px; background: #fff; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f0f0f0; }
+        .detail-item .dlabel { color: #666; }
+        .detail-item .dvalue { font-weight: 500; }
+        .detail-item .dpass { color: #52c41a; }
+        .detail-item .dfail { color: #ff4d4f; }
+        .detail-item.dfail-row { border-color: #ffccc7; background: #fff2f0; }
+        .detail-item.dpass-row { border-color: #b7eb8f; background: #f6ffed; }
+        .detail-result { font-size: 14px; font-weight: 600; text-align: center; padding: 8px; border-radius: 4px; margin-top: 8px; }
+        .detail-result.pass { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .detail-result.fail { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+        .btn-link { color: #1890ff; background: none; border: none; cursor: pointer; font-size: 13px; padding: 2px 6px; }
+        .btn-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">📋 <span style="margin-left:8px;">采购计划管理</span></div>
+    <div class="sidebar-menu">
+        <div class="sidebar-item active" data-view="plan" onclick="switchView('plan')">
+            <span>📦</span><span>采购计划管理</span>
+        </div>
+        <div class="sidebar-item" data-view="order" onclick="switchView('order')">
+            <span>📄</span><span>采购订单管理</span>
+        </div>
+        <div class="sidebar-item" data-view="log" onclick="switchView('log')">
+            <span>📝</span><span>订单判断日志</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+    <!-- Header -->
+    <div class="header-bar">
+        <h2 id="pageTitle">采购计划管理</h2>
+        <div style="font-size:13px;color:#666;">
+            <span id="currentTime"></span>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- View 1: 采购计划管理 -->
+    <!-- ============================================ -->
+    <div id="view-plan" class="view-content active">
+
+        <!-- Stat Cards -->
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="label">采购计划总数</div>
+                <div class="value" id="totalPlans">0</div>
+                <div class="sub">全部计划</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">执行中</div>
+                <div class="value" id="activePlans" style="color:#1890ff;">0</div>
+                <div class="sub">进行中计划</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">已完成</div>
+                <div class="value" id="completedPlans" style="color:#52c41a;">0</div>
+                <div class="sub">已完成计划</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">已完成总金额</div>
+                <div class="value" id="totalCompletedAmount" style="color:#fa8c16;">¥0</div>
+                <div class="sub">累计采购金额</div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="card">
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>采购计划编码</label>
+                    <input type="text" id="planSearchCode" placeholder="请输入计划编码" oninput="filterPlans()">
+                </div>
+                <div class="search-item">
+                    <label>品牌</label>
+                    <select id="planSearchBrand" class="sel-brand" onchange="filterPlans()">
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>品类</label>
+                    <select id="planSearchCategory" class="sel-category" onchange="filterPlans()">
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>采购层级</label>
+                    <select id="planSearchLevel" onchange="filterPlans()">
+                        <option value="">全部</option>
+                        <option value="二级采购">二级采购</option>
+                        <option value="三级采购">三级采购</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>执行状态</label>
+                    <select id="planSearchStatus" onchange="filterPlans()">
+                        <option value="">全部</option>
+                        <option value="待执行">待执行</option>
+                        <option value="执行中">执行中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已关闭">已关闭</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>开始日期</label>
+                    <input type="date" id="planSearchDateStart" onchange="filterPlans()">
+                </div>
+                <div class="search-item">
+                    <label>结束日期</label>
+                    <input type="date" id="planSearchDateEnd" onchange="filterPlans()">
+                </div>
+                <div class="search-item" style="justify-content:flex-end;">
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn" onclick="resetPlanSearch()">重置</button>
+                        <button class="btn btn-primary" onclick="filterPlans()">搜索</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-primary" onclick="openCreatePlanModal()">＋ 创建采购计划</button>
+            </div>
+
+            <!-- Table -->
+            <div style="overflow-x:auto;">
+                <table id="planTable">
+                    <thead>
+                        <tr>
+                            <th>计划编码</th>
+                            <th>采购层级</th>
+                            <th>品牌</th>
+                            <th>品类</th>
+                            <th>采购总金额</th>
+                            <th>已完成</th>
+                            <th>完成率</th>
+                            <th>采购企业</th>
+                            <th>预计日期</th>
+                            <th>执行状态</th>
+                            <th>计划状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="planTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="planPagination"></div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- View 2: 采购订单管理 -->
+    <!-- ============================================ -->
+    <div id="view-order" class="view-content">
+        <div class="card">
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>匹配计划编码</label>
+                    <input type="text" id="orderSearchPlanCode" placeholder="搜索匹配到的计划编码" oninput="filterOrders()">
+                    <span style="font-size:11px;color:#999;">由系统自动匹配</span>
+                </div>
+                <div class="search-item">
+                    <label>计划子编码</label>
+                    <input type="text" id="orderSearchSubCode" placeholder="搜索子编码" oninput="filterOrders()">
+                </div>
+                <div class="search-item">
+                    <label>品牌</label>
+                    <select id="orderSearchBrand" class="sel-brand" onchange="filterOrders()">
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>品类</label>
+                    <select id="orderSearchCategory" class="sel-category" onchange="filterOrders()">
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>SKU 编码</label>
+                    <input type="text" id="orderSearchSku" placeholder="请输入SKU编码" oninput="filterOrders()">
+                </div>
+                <div class="search-item">
+                    <label>订单号</label>
+                    <input type="text" id="orderSearchNo" placeholder="请输入订单号" oninput="filterOrders()">
+                </div>
+                <div class="search-item">
+                    <label>所属企业</label>
+                    <select id="orderSearchEnterprise" onchange="filterOrders()">
+                        <option value="">全部</option>
+                        <option value="采购企业 1">采购企业 1（供应商→企业1）</option>
+                        <option value="采购企业 2">采购企业 2（企业1→企业2）</option>
+                        <option value="采购企业 3">采购企业 3（企业2→企业3，仅三级采购）</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>下单时间</label>
+                    <input type="date" id="orderSearchDate" onchange="filterOrders()">
+                </div>
+                <div class="search-item" style="justify-content:flex-end;">
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn" onclick="resetOrderSearch()">重置</button>
+                        <button class="btn btn-primary" onclick="filterOrders()">搜索</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table id="orderTable">
+                    <thead>
+                        <tr>
+                            <th>匹配计划</th>
+                            <th>计划子编码</th>
+                            <th>所属企业</th>
+                            <th>品牌</th>
+                            <th>品类</th>
+                            <th>商品名称</th>
+                            <th>SKU编码</th>
+                            <th>订单号</th>
+                            <th>单价</th>
+                            <th>数量</th>
+                            <th>总价</th>
+                            <th>供应商</th>
+                            <th>采购商</th>
+                            <th>下单时间</th>
+                            <th>付款方式</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orderTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="orderPagination"></div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- View 3: 订单判断日志 -->
+    <!-- ============================================ -->
+    <div id="view-log" class="view-content">
+        <div class="card">
+            <div class="search-bar">
+                <div class="search-item">
+                    <label>匹配计划编码</label>
+                    <input type="text" id="logSearchPlanCode" placeholder="搜索匹配到的计划" oninput="filterLogs()">
+                </div>
+                <div class="search-item">
+                    <label>计划子编码</label>
+                    <input type="text" id="logSearchSubCode" placeholder="搜索子编码" oninput="filterLogs()">
+                </div>
+                <div class="search-item">
+                    <label>订单号</label>
+                    <input type="text" id="logSearchOrderNo" placeholder="请输入订单号" oninput="filterLogs()">
+                </div>
+                <div class="search-item">
+                    <label>品牌</label>
+                    <input type="text" id="logSearchBrand" placeholder="请输入品牌" oninput="filterLogs()">
+                </div>
+                <div class="search-item">
+                    <label>所属企业</label>
+                    <select id="logSearchEnterprise" onchange="filterLogs()">
+                        <option value="">全部</option>
+                        <option value="采购企业 1">采购企业 1</option>
+                        <option value="采购企业 2">采购企业 2</option>
+                        <option value="采购企业 3">采购企业 3</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>判断结果</label>
+                    <select id="logSearchResult" onchange="filterLogs()">
+                        <option value="">全部</option>
+                        <option value="通过">通过</option>
+                        <option value="拒绝">拒绝</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>拒绝原因</label>
+                    <select id="logSearchReason" onchange="filterLogs()">
+                        <option value="">全部</option>
+                        <option value="品牌不匹配">品牌不匹配</option>
+                        <option value="品类不匹配">品类不匹配</option>
+                        <option value="单价超出范围">单价超出范围</option>
+                        <option value="数量超出范围">数量超出范围</option>
+                        <option value="总价不符合">总价不符合</option>
+                        <option value="供应商开票率不足" disabled>🔄 二期：开票率不足</option>
+                        <option value="合作期限未达标" disabled>🔄 二期：合作期限未达标</option>
+                        <option value="贸易金额不足" disabled>🔄 二期：贸易金额不足</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label>判断时间</label>
+                    <input type="date" id="logSearchDate" onchange="filterLogs()">
+                </div>
+                <div class="search-item" style="justify-content:flex-end;">
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn" onclick="resetLogSearch()">重置</button>
+                        <button class="btn btn-primary" onclick="filterLogs()">搜索</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table id="logTable">
+                    <thead>
+                        <tr>
+                            <th>匹配计划编码</th>
+                            <th>计划子编码</th>
+                            <th>匹配说明</th>
+                            <th>品牌</th>
+                            <th>所属企业</th>
+                            <th>订单金额</th>
+                            <th>订单号</th>
+                            <th>判断结果</th>
+                            <th>拒绝原因</th>
+                            <th>采购单号</th>
+                            <th>判断时间</th>
+                            <th>详情</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="logPagination"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================ -->
+<!-- Modal: 创建/编辑采购计划 -->
+<!-- ============================================ -->
+<div class="modal-overlay" id="planModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">创建采购计划</h3>
+            <span class="modal-close" onclick="closeModal('planModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>采购计划编码 <span class="required">*</span></label>
+                    <input type="text" id="f_code" readonly placeholder="自动生成">
+                    <span class="hint">系统自动生成，保存后不可修改</span>
+                </div>
+                <div class="form-group">
+                    <label>品牌 <span class="required">*</span></label>
+                    <select id="f_brand" class="sel-brand">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>品类 <span class="required">*</span></label>
+                    <select id="f_category" class="sel-category">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>采购层级 <span class="required">*</span></label>
+                    <select id="f_level" onchange="onLevelChange()">
+                        <option value="三级采购">三级采购（企业1→企业2→企业3）</option>
+                        <option value="二级采购">二级采购（企业1→企业2）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>采购总金额（元）<span class="required">*</span></label>
+                    <input type="number" id="f_totalAmount" placeholder="请输入采购总金额" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>完成率（%）</label>
+                    <input type="text" id="f_completionRate" readonly value="0.00%">
+                </div>
+                <div class="form-group">
+                    <label>采购企业 1 <span class="required">*</span></label>
+                    <input type="hidden" id="f_company1">
+                    <div class="ss-wrap" id="ss1"></div>
+                    <span class="hint">向供应商采购货物的企业</span>
+                </div>
+                <div class="form-group">
+                    <label>采购企业 2 <span class="required">*</span></label>
+                    <input type="hidden" id="f_company2">
+                    <div class="ss-wrap" id="ss2"></div>
+                    <span class="hint">向采购企业 1 采购货物的企业</span>
+                </div>
+                <div class="form-group">
+                    <label>采购企业 3 <span class="required">*</span></label>
+                    <input type="hidden" id="f_company3">
+                    <div class="ss-wrap" id="ss3"></div>
+                    <span class="hint">向采购企业 2 采购货物的企业</span>
+                </div>
+                <div class="form-group">
+                    <label>差价 1 类型</label>
+                    <select id="f_diff1Type" onchange="onDiffTypeChange(1)">
+                        <option value="比例">比例（%）</option>
+                        <option value="固定">固定（元）</option>
+                    </select>
+                </div>
+                <div class="form-group diff1-field">
+                    <label>差价 1 比例（%）</label>
+                    <input type="number" id="f_diff1Pct" placeholder="如 5" value="0" step="0.01">
+                    <span class="hint">采购企业 2 与采购企业 1 之间的差价比例</span>
+                </div>
+                <div class="form-group diff1-field-fixed" style="display:none;">
+                    <label>差价 1 金额（元）</label>
+                    <input type="number" id="f_diff1Amt" placeholder="如 8.00" value="0" step="0.01">
+                    <span class="hint">采购企业 2 与采购企业 1 之间的固定差价</span>
+                </div>
+                <div class="form-group diff2-group" style="display:none;">
+                    <label>差价 2 类型</label>
+                    <select id="f_diff2Type" onchange="onDiffTypeChange(2)">
+                        <option value="比例">比例（%）</option>
+                        <option value="固定">固定（元）</option>
+                    </select>
+                </div>
+                <div class="form-group diff2-field" style="display:none;">
+                    <label>差价 2 比例（%）</label>
+                    <input type="number" id="f_diff2Pct" placeholder="如 5" value="0" step="0.01">
+                    <span class="hint">采购企业 3 与采购企业 2 之间的差价比例</span>
+                </div>
+                <div class="form-group diff2-field-fixed" style="display:none;">
+                    <label>差价 2 金额（元）</label>
+                    <input type="number" id="f_diff2Amt" placeholder="如 8.00" value="0" step="0.01">
+                    <span class="hint">采购企业 3 与采购企业 2 之间的固定差价</span>
+                </div>
+                <div class="form-group">
+                    <label>账期 1（天）</label>
+                    <input type="number" id="f_term1" placeholder="企业2与企业1的账期" value="0" min="0">
+                    <span class="hint">采购企业 2 与采购企业 1 之间的付款信用期限</span>
+                </div>
+                <div class="form-group">
+                    <label>账期 2（天）</label>
+                    <input type="number" id="f_term2" placeholder="企业3与企业2的账期" value="0" min="0">
+                    <span class="hint">采购企业 3 与采购企业 2 之间的付款信用期限</span>
+                </div>
+                <div class="form-group">
+                    <label>预计开始日期 <span class="required">*</span></label>
+                    <input type="date" id="f_startDate">
+                </div>
+                <div class="form-group">
+                    <label>预计结束日期 <span class="required">*</span></label>
+                    <input type="date" id="f_endDate">
+                </div>
+                <div class="form-group">
+                    <label>执行状态</label>
+                    <select id="f_execStatus">
+                        <option value="待执行">待执行</option>
+                        <option value="执行中">执行中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已关闭">已关闭</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>计划状态</label>
+                    <select id="f_planStatus">
+                        <option value="启动">启动</option>
+                        <option value="关闭">关闭</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label>订单要求 <span style="font-size:12px;color:#999;font-weight:400;">（0 表示不限制）</span></label>
+                    <div class="form-grid" style="gap:12px;">
+                        <div class="form-group">
+                            <label>最低单价（元）</label>
+                            <input type="number" id="f_minPrice" placeholder="0=不限" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>最高单价（元）</label>
+                            <input type="number" id="f_maxPrice" placeholder="0=不限" min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>最低数量</label>
+                            <input type="number" id="f_minQty" placeholder="0=不限" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>最高数量</label>
+                            <input type="number" id="f_maxQty" placeholder="0=不限" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>最低总价（元）</label>
+                            <input type="number" id="f_minTotal" placeholder="0=不限" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group full">
+                    <label>供应商资质要求 <span style="font-size:11px;color:#fa8c16;font-weight:400;">🔄 二期</span></label>
+                    <div class="form-grid" style="gap:12px;">
+                        <div class="form-group">
+                            <label>最低开票率（%）</label>
+                            <input type="number" id="f_invoiceRate" placeholder="二期功能" min="0" max="100" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>最低合作期限（月）</label>
+                            <input type="number" id="f_coopTerm" placeholder="二期功能" min="0" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>最低贸易金额（元）</label>
+                            <input type="number" id="f_tradeAmount" placeholder="二期功能" min="0" disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal('planModal')">取消</button>
+            <button class="btn btn-primary" onclick="savePlan()" style="margin-left:8px;">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ==============================
+    // Mock Data
+    // ==============================
+    const brands = ['华为', '苹果', '小米', 'OPPO', 'vivo', '荣耀', '三星', '联想', '戴尔', '华硕', '索尼', '大疆'];
+    const categories = ['手机', '笔记本电脑', '平板电脑', '耳机/音箱', '智能穿戴', '数码配件', '电脑外设', '摄影摄像', '智能家居', '游戏设备'];
+    const skuNames = ['智能芯片 A1', '精密轴承 B2', '电路板 C3', '传感器 D4', '显示屏 E5'];
+    const payMethods = ['银行转账', '商业承兑汇票', '银行承兑汇票', '信用证'];
+    const enterprises = [
+        // 头部3C品牌/制造商
+        '华为技术有限公司', '小米通讯技术有限公司', 'OPPO广东移动通信有限公司',
+        '维沃移动通信有限公司', '荣耀终端有限公司', '三星（中国）投资有限公司',
+        '联想集团', '戴尔（中国）有限公司', '华硕电脑股份有限公司',
+        '索尼（中国）有限公司', '大疆创新科技有限公司',
+        // 供应链/代工企业
+        '富士康科技集团', '立讯精密工业股份有限公司', '比亚迪股份有限公司',
+        '京东方科技集团股份有限公司', '宁德时代新能源科技股份有限公司',
+        '歌尔股份有限公司', '欣旺达电子股份有限公司', '蓝思科技股份有限公司',
+        'TCL科技集团股份有限公司', '中芯国际集成电路制造有限公司',
+        // 分销/贸易企业
+        '深圳华强供应链有限公司', '广州恒通贸易有限公司', '东莞鑫源电子有限公司',
+        '苏州科达供应链有限公司', '武汉中汇贸易有限公司', '成都兴达电子科技有限公司',
+        '杭州鼎盛供应链管理有限公司', '南京瑞丰贸易有限公司', '厦门联合电子有限公司',
+        '青岛海润贸易有限公司', '深圳赛格电子市场管理有限公司',
+        '北京中关村电子贸易有限公司', '上海百脑汇电子信息有限公司'
+    ];
+
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pick(arr) { return arr[rand(0, arr.length - 1)]; }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function optList(arr, emptyLabel) {
+        let html = emptyLabel ? `<option value="">${emptyLabel}</option>` : '';
+        arr.forEach(v => { html += `<option value="${v}">${v}</option>`; });
+        return html;
+    }
+
+    function dateStr(d) {
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+
+    function genPlanCode(index) {
+        return 'PL' + dateStr(new Date()).replace(/-/g, '') + pad(index);
+    }
+
+    function genOrderCode(index) {
+        return 'ORD' + dateStr(new Date()).replace(/-/g, '') + pad(index);
+    }
+
+    // Generate plans
+    let plans = [];
+    const planCount = 18;
+    const statuses = ['待执行', '执行中', '已完成', '执行中', '待执行', '已关闭', '执行中', '已完成', '待执行', '执行中', '已完成', '待执行', '已关闭', '执行中', '已完成', '待执行', '执行中', '已完成'];
+
+    for (let i = 0; i < planCount; i++) {
+        const totalAmt = rand(50, 500) * 10000;
+        const completedAmt = statuses[i] === '已完成' ? totalAmt : statuses[i] === '执行中' ? rand(10, 80) * totalAmt / 100 : 0;
+        const rate = totalAmt > 0 ? (completedAmt / totalAmt * 100) : 0;
+        const startD = new Date(2026, 5, rand(1, 28));
+        const endD = new Date(startD);
+        endD.setDate(endD.getDate() + rand(15, 60));
+        const isL3 = i % 2 === 0; // 一半二级一半三级
+
+        plans.push({
+            code: genPlanCode(i + 1),
+            level: isL3 ? '三级采购' : '二级采购',
+            brand: pick(brands),
+            category: pick(categories),
+            totalAmount: totalAmt,
+            completedAmount: Math.round(completedAmt * 100) / 100,
+            completionRate: Math.round(rate * 100) / 100,
+            company1: pick(enterprises),
+            company2: pick(enterprises),
+            company3: isL3 ? pick(enterprises) : '',
+            diff1Type: '比例',
+            diff1Pct: rand(2, 10),
+            diff1Amt: 0,
+            diff2Type: isL3 ? '比例' : '比例',
+            diff2Pct: isL3 ? rand(2, 10) : 0,
+            diff2Amt: 0,
+            term1: rand(15, 90),
+            term2: isL3 ? rand(15, 90) : 0,
+            startDate: dateStr(startD),
+            endDate: dateStr(endD),
+            execDate: statuses[i] !== '待执行' ? dateStr(new Date(startD.getTime() + rand(1, 5) * 86400000)) : '-',
+            finishDate: statuses[i] === '已完成' || statuses[i] === '已关闭' ? dateStr(endD) : '-',
+            execStatus: statuses[i],
+            planStatus: statuses[i] === '已关闭' ? '关闭' : '启动',
+            minPrice: rand(100, 200),
+            maxPrice: rand(301, 500),
+            minQty: rand(30, 80),
+            maxQty: rand(200, 500),
+            minTotal: rand(1, 5) * 10000,
+            invoiceRate: rand(70, 100),
+            coopTerm: rand(6, 36),
+            tradeAmount: rand(5, 50) * 10000
+        });
+    }
+
+    // Generate orders (独立订单，不依赖计划编码)
+    let orders = [];
+    const orderEnterpriseLabels = ['采购企业 1', '采购企业 2', '采购企业 3'];
+    const orderSupplierList = ['供应商A', '供应商B', '供应商C', '供应商D'];
+    const orderPurchaserList = [enterprises[12], enterprises[25], enterprises[27]];
+    for (let i = 0; i < 30; i++) {
+        const plan = pick(plans);
+        const seg = i % 3;
+        const unitPrice = rand(100, 500);
+        const qty = rand(50, 500);
+        // 模拟：大部分订单会被匹配到计划，少数无匹配
+        const matched = i % 7 !== 6;
+        orders.push({
+            matchedPlanCode: matched ? plan.code : '',
+            subCode: matched ? plan.code + '-' + pad(i + 1).slice(-3) : '',
+            enterprise: orderEnterpriseLabels[seg],
+            brand: plan.brand,
+            category: plan.category,
+            skuName: pick(skuNames),
+            skuCode: 'SKU' + pad(i + 1) + rand(100, 999),
+            orderNo: genOrderCode(i + 1),
+            unitPrice: unitPrice,
+            quantity: qty,
+            totalPrice: unitPrice * qty,
+            supplier: pick(orderSupplierList),
+            purchaser: orderPurchaserList[seg],
+            orderTime: dateStr(new Date(2026, 5, rand(1, 28))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
+            payMethod: pick(payMethods)
+        });
+    }
+
+    // Generate logs
+    const rejectReasons = ['供应商开票率不足', '合作期限未达标', '贸易金额不足', '品牌不匹配', '品类不匹配', '单价超出范围', '数量超出范围', '总价不符合'];
+    const matchNotes = ['匹配成功', '品牌无匹配计划', '品类无匹配计划', '金额额度不足', '无符合条件的执行中计划'];
+    let logs = [];
+    for (let i = 0; i < 24; i++) {
+        const order = orders[i % orders.length];
+        const plan = plans.find(p => p.code === order.matchedPlanCode);
+        const passed = i % 4 !== 3;
+        const reason = passed ? '' : pick(rejectReasons);
+        const poNo = passed ? 'PO' + pad(i + 1) + rand(1000, 9999) : '';
+        // Build judge details
+        const invoiceOk = passed || reason !== '供应商开票率不足';
+        const coopOk = passed || reason !== '合作期限未达标';
+        const tradeOk = passed || reason !== '贸易金额不足';
+        const brandOk = passed || reason !== '品牌不匹配';
+        const catOk = passed || reason !== '品类不匹配';
+        const priceOk = passed || reason !== '单价超出范围';
+        const qtyOk = passed || reason !== '数量超出范围';
+        const totalOk = passed || reason !== '总价不符合';
+
+        // 模拟无可匹配计划（每7条中1条）
+        const noMatch = i % 7 === 6;
+        const matchedPlanCode = noMatch ? '' : (order.matchedPlanCode || plan.code);
+        const matchNote = noMatch ? pick(['无符合条件的执行中计划', '品牌无匹配计划', '金额额度不足']) : '匹配成功';
+
+        logs.push({
+            matchedPlanCode: matchedPlanCode,
+            subCode: noMatch ? '' : (matchedPlanCode + '-' + pad(i + 1).slice(-3)),
+            matchNote: matchNote,
+            brand: order.brand,
+            category: order.category,
+            enterprise: order.enterprise,
+            orderAmount: order.totalPrice,
+            orderNo: order.orderNo,
+            result: noMatch ? '无可匹配' : (passed ? '通过' : '拒绝'),
+            reason: noMatch ? '' : reason,
+            purchaseOrderNo: (!noMatch && passed) ? poNo : '-',
+            judgeTime: dateStr(new Date(2026, 5, rand(1, 28))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
+            hasNoMatch: noMatch,
+            details: {
+                supplier: [
+                    { rule: '开票率 ≥ ' + (plan ? plan.invoiceRate : 80) + '%', value: (plan ? plan.invoiceRate : 80) + '%', pass: invoiceOk },
+                    { rule: '合作期限 ≥ ' + (plan ? plan.coopTerm : 12) + '月', value: (plan ? plan.coopTerm + 6 : 18) + '月', pass: coopOk },
+                    { rule: '贸易金额 ≥ ¥' + ((plan ? plan.tradeAmount : 10) * 10000).toLocaleString(), value: '¥' + (rand(8, 60) * 10000).toLocaleString(), pass: tradeOk }
+                ],
+                orderContent: [
+                    { rule: '品牌匹配 ' + order.brand, value: order.brand, pass: brandOk },
+                    { rule: '品类匹配 ' + order.category, value: order.category, pass: catOk },
+                    { rule: '单价范围', value: '¥' + order.unitPrice, pass: priceOk },
+                    { rule: '数量范围', value: order.quantity + '件', pass: qtyOk },
+                    { rule: '总价校验', value: '¥' + order.totalPrice.toLocaleString(), pass: totalOk }
+                ],
+                amountMonitor: [
+                    { rule: '已采购累计 < 目标', value: '¥' + rand(10, 80) * 10000 + ' / ¥' + '1,000,000', pass: !noMatch }
+                ]
+            }
+        });
+    }
+
+    // ==============================
+    // State
+    // ==============================
+    let currentView = 'plan';
+    let editingPlanIndex = -1;
+    let planPage = 1, planPageSize = 5;
+    let orderPage = 1, orderPageSize = 5;
+    let logPage = 1, logPageSize = 5;
+
+    // ==============================
+    // Searchable Select Component
+    // ==============================
+    function createSearchableSelect(containerId, hiddenId, placeholder) {
+        const container = document.getElementById(containerId);
+        const hidden = document.getElementById(hiddenId);
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ss-input';
+        input.placeholder = placeholder || '搜索并选择...';
+        input.autocomplete = 'off';
+        const dropdown = document.createElement('ul');
+        dropdown.className = 'ss-dropdown';
+        container.appendChild(input);
+        container.appendChild(dropdown);
+
+        let isOpen = false;
+        let activeIndex = -1;
+        let filtered = [];
+
+        function filterItems(query) {
+            const q = query.trim().toLowerCase();
+            if (!q) return enterprises.slice();
+            return enterprises.filter(e => e.toLowerCase().includes(q));
+        }
+
+        function renderDropdown(items) {
+            filtered = items;
+            dropdown.innerHTML = '';
+            if (items.length === 0) {
+                dropdown.innerHTML = '<li class="ss-empty">无匹配结果</li>';
+                return;
+            }
+            const q = input.value.trim().toLowerCase();
+            items.forEach((item, idx) => {
+                const li = document.createElement('li');
+                li.className = 'ss-item' + (idx === activeIndex ? ' active' : '');
+                const label = item;
+                if (q && item.toLowerCase().includes(q)) {
+                    const pos = item.toLowerCase().indexOf(q);
+                    const before = item.slice(0, pos);
+                    const match = item.slice(pos, pos + q.length);
+                    const after = item.slice(pos + q.length);
+                    li.innerHTML = `${before}<span class="ss-highlight">${match}</span>${after}`;
+                } else {
+                    li.textContent = label;
+                }
+                li.dataset.value = item;
+                li.onclick = function() { selectItem(item); };
+                dropdown.appendChild(li);
+            });
+        }
+
+        function selectItem(val) {
+            hidden.value = val;
+            input.value = val;
+            input.className = 'ss-input';
+            dropdown.classList.remove('show');
+            isOpen = false;
+            activeIndex = -1;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function openDropdown() {
+            const items = filterItems(input.value);
+            activeIndex = -1;
+            renderDropdown(items);
+            dropdown.classList.add('show');
+            input.className = 'ss-input open';
+            isOpen = true;
+        }
+
+        function closeDropdown() {
+            dropdown.classList.remove('show');
+            input.className = 'ss-input';
+            isOpen = false;
+            activeIndex = -1;
+            if (!hidden.value) input.value = '';
+        }
+
+        input.addEventListener('focus', function() {
+            if (!isOpen) openDropdown();
+        });
+
+        input.addEventListener('input', function() {
+            if (!isOpen) openDropdown();
+            else {
+                const items = filterItems(input.value);
+                activeIndex = -1;
+                renderDropdown(items);
+            }
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (!isOpen) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, filtered.length - 1);
+                renderDropdown(filterItems(input.value));
+                const items = dropdown.querySelectorAll('.ss-item');
+                if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, -1);
+                renderDropdown(filterItems(input.value));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeIndex >= 0 && filtered[activeIndex]) {
+                    selectItem(filtered[activeIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                closeDropdown();
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => { if (!container.contains(document.activeElement)) closeDropdown(); }, 150);
+        });
+
+        dropdown.addEventListener('mousedown', function(e) { e.preventDefault(); });
+
+        // Public methods
+        return {
+            setValue(val) {
+                if (val) { hidden.value = val; input.value = val; }
+                else { hidden.value = ''; input.value = ''; }
+            },
+            getValue() { return hidden.value; },
+            reset() { hidden.value = ''; input.value = ''; closeDropdown(); }
+        };
+    }
+
+    // ==============================
+    // Init
+    // ==============================
+    let ss1, ss2, ss3;
+
+    function init() {
+        ss1 = createSearchableSelect('ss1', 'f_company1', '搜索采购企业1...');
+        ss2 = createSearchableSelect('ss2', 'f_company2', '搜索采购企业2...');
+        ss3 = createSearchableSelect('ss3', 'f_company3', '搜索采购企业3...');
+        initSelects();
+        renderPlans();
+        renderOrders();
+        renderLogs();
+        updateStats();
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
+    function initSelects() {
+        // Populate all brand selects
+        document.querySelectorAll('.sel-brand').forEach(el => {
+            el.innerHTML = el.id === 'f_brand' ? '<option value="">请选择品牌</option>' : '<option value="">全部</option>';
+            brands.forEach(b => { el.innerHTML += `<option value="${b}">${b}</option>`; });
+        });
+        // Populate all category selects
+        document.querySelectorAll('.sel-category').forEach(el => {
+            el.innerHTML = el.id === 'f_category' ? '<option value="">请选择品类</option>' : '<option value="">全部</option>';
+            categories.forEach(c => { el.innerHTML += `<option value="${c}">${c}</option>`; });
+        });
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('currentTime').textContent =
+            now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
+            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    }
+
+    // ==============================
+    // Level toggle
+    // ==============================
+    function onDiffTypeChange(idx) {
+        const type = document.getElementById('f_diff' + idx + 'Type').value;
+        const isPct = type === '比例';
+        document.querySelector('.diff' + idx + '-field').style.display = isPct ? 'flex' : 'none';
+        document.querySelector('.diff' + idx + '-field-fixed').style.display = isPct ? 'none' : 'flex';
+        if (isPct) { document.getElementById('f_diff' + idx + 'Amt').value = 0; }
+        else { document.getElementById('f_diff' + idx + 'Pct').value = 0; }
+    }
+
+    function onLevelChange() {
+        const level = document.getElementById('f_level').value;
+        const isL3 = level === '三级采购';
+        // 企业3的搜索下拉框
+        const ss3wrap = document.getElementById('ss3');
+        const ss3row = ss3wrap.closest('.form-group');
+        if (ss3row) ss3row.style.display = isL3 ? 'flex' : 'none';
+        if (!isL3 && ss3) ss3.reset();
+        // 差价2/账期2 分组
+        const diff2Group = document.querySelector('.diff2-group');
+        const diff2Field = document.querySelector('.diff2-field');
+        const diff2Fixed = document.querySelector('.diff2-field-fixed');
+        [diff2Group, diff2Field, diff2Fixed].forEach(el => {
+            if (el) el.style.display = isL3 ? 'flex' : 'none';
+        });
+        if (!isL3) {
+            document.getElementById('f_diff2Type').value = '比例';
+            document.getElementById('f_diff2Pct').value = 0;
+            document.getElementById('f_diff2Amt').value = 0;
+        }
+        // 账期2
+        const term2 = document.getElementById('f_term2');
+        const term2Row = term2.closest('.form-group');
+        if (term2Row) term2Row.style.display = isL3 ? 'flex' : 'none';
+        if (!isL3) term2.value = 0;
+    }
+
+    // ==============================
+    // View Switching
+    // ==============================
+    function switchView(view) {
+        currentView = view;
+        document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + view).classList.add('active');
+        document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+        document.querySelector('.sidebar-item[data-view="' + view + '"]').classList.add('active');
+
+        const titles = { plan: '采购计划管理', order: '采购订单管理', log: '订单判断日志' };
+        document.getElementById('pageTitle').textContent = titles[view];
+    }
+
+    // ==============================
+    // Status Tags
+    // ==============================
+    function statusTag(status) {
+        const map = {
+            '待执行': 'tag-orange',
+            '执行中': 'tag-blue',
+            '已完成': 'tag-green',
+            '已关闭': 'tag-gray',
+            '关闭': 'tag-gray',
+            '启动': 'tag-green',
+            '通过': 'tag-green',
+            '拒绝': 'tag-red'
+        };
+        const cls = map[status] || 'tag-gray';
+        return `<span class="tag ${cls}">${status}</span>`;
+    }
+
+    function progressBar(rate) {
+        const color = rate >= 100 ? '#52c41a' : rate >= 50 ? '#1890ff' : '#faad14';
+        return `<div class="progress-bar"><div class="fill" style="width:${Math.min(rate,100)}%;background:${color};"></div></div> ${rate}%`;
+    }
+
+    // ==============================
+    // Toast
+    // ==============================
+    function showToast(msg, type) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + type + ' show';
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ==============================
+    // Modal
+    // ==============================
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function openCreatePlanModal() {
+        editingPlanIndex = -1;
+        document.getElementById('modalTitle').textContent = '创建采购计划';
+        document.getElementById('f_code').value = genPlanCode(plans.length + 1);
+        ['f_totalAmount', 'f_term1', 'f_term2', 'f_startDate', 'f_endDate',
+         'f_minPrice','f_maxPrice','f_minQty','f_maxQty','f_minTotal',
+         'f_invoiceRate','f_coopTerm','f_tradeAmount'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el.type === 'number' || el.tagName === 'INPUT') el.value = '';
+            else if (el.tagName === 'SELECT') el.value = '';
+        });
+        ['f_company1','f_company2','f_company3'].forEach(id => document.getElementById(id).value = '');
+        if (ss1) ss1.reset();
+        if (ss2) ss2.reset();
+        if (ss3) ss3.reset();
+        document.getElementById('f_level').value = '三级采购';
+        document.getElementById('f_brand').value = '';
+        document.getElementById('f_category').value = '';
+        document.getElementById('f_diff1Type').value = '比例';
+        document.getElementById('f_diff1Pct').value = 5;
+        document.getElementById('f_diff1Amt').value = 0;
+        document.getElementById('f_diff2Type').value = '比例';
+        document.getElementById('f_diff2Pct').value = 5;
+        document.getElementById('f_diff2Amt').value = 0;
+        document.getElementById('f_term1').value = 0;
+        document.getElementById('f_term2').value = 0;
+        document.getElementById('f_execStatus').value = '待执行';
+        document.getElementById('f_planStatus').value = '启动';
+        document.getElementById('f_completionRate').value = '0.00%';
+        onLevelChange();
+        onDiffTypeChange(1);
+        onDiffTypeChange(2);
+        openModal('planModal');
+    }
+
+    function openEditPlanModal(index) {
+        editingPlanIndex = index;
+        const p = filteredPlansData[index];
+        document.getElementById('modalTitle').textContent = '编辑采购计划';
+        document.getElementById('f_code').value = p.code;
+        document.getElementById('f_level').value = p.level;
+        document.getElementById('f_brand').value = p.brand;
+        document.getElementById('f_category').value = p.category;
+        document.getElementById('f_totalAmount').value = p.totalAmount;
+        document.getElementById('f_completionRate').value = p.completionRate + '%';
+        document.getElementById('f_company1').value = p.company1;
+        document.getElementById('f_company2').value = p.company2;
+        document.getElementById('f_company3').value = p.company3;
+        if (ss1) ss1.setValue(p.company1);
+        if (ss2) ss2.setValue(p.company2);
+        if (ss3) ss3.setValue(p.company3);
+        document.getElementById('f_diff1Type').value = p.diff1Type;
+        document.getElementById('f_diff1Pct').value = p.diff1Pct;
+        document.getElementById('f_diff1Amt').value = p.diff1Amt || 0;
+        document.getElementById('f_diff2Type').value = p.diff2Type;
+        document.getElementById('f_diff2Pct').value = p.diff2Pct;
+        document.getElementById('f_diff2Amt').value = p.diff2Amt || 0;
+        document.getElementById('f_term1').value = p.term1;
+        document.getElementById('f_term2').value = p.term2;
+        onLevelChange();
+        onDiffTypeChange(1);
+        onDiffTypeChange(2);
+        document.getElementById('f_startDate').value = p.startDate;
+        document.getElementById('f_endDate').value = p.endDate;
+        document.getElementById('f_execStatus').value = p.execStatus;
+        document.getElementById('f_planStatus').value = p.planStatus;
+        document.getElementById('f_minPrice').value = p.minPrice;
+        document.getElementById('f_maxPrice').value = p.maxPrice;
+        document.getElementById('f_minQty').value = p.minQty;
+        document.getElementById('f_maxQty').value = p.maxQty;
+        document.getElementById('f_minTotal').value = p.minTotal;
+        document.getElementById('f_invoiceRate').value = p.invoiceRate;
+        document.getElementById('f_coopTerm').value = p.coopTerm;
+        document.getElementById('f_tradeAmount').value = p.tradeAmount;
+        openModal('planModal');
+    }
+
+    function savePlan() {
+        const brand = document.getElementById('f_brand').value;
+        const category = document.getElementById('f_category').value;
+        const level = document.getElementById('f_level').value;
+        const totalAmount = parseFloat(document.getElementById('f_totalAmount').value);
+        const company1 = document.getElementById('f_company1').value.trim();
+        const company2 = document.getElementById('f_company2').value.trim();
+        const company3 = document.getElementById('f_company3').value.trim();
+        const startDate = document.getElementById('f_startDate').value;
+        const endDate = document.getElementById('f_endDate').value;
+        const isL3 = level === '三级采购';
+
+        if (!brand) return showToast('请输入品牌', 'error');
+        if (!category) return showToast('请选择品类', 'error');
+        if (!totalAmount || totalAmount <= 0) return showToast('请输入有效的采购总金额', 'error');
+        if (!company1) return showToast('请输入采购企业 1', 'error');
+        if (!company2) return showToast('请输入采购企业 2', 'error');
+        if (isL3 && !company3) return showToast('三级采购请填写采购企业 3', 'error');
+        if (!startDate) return showToast('请选择预计开始日期', 'error');
+        if (!endDate) return showToast('请选择预计结束日期', 'error');
+        if (new Date(endDate) <= new Date(startDate)) return showToast('结束日期必须大于开始日期', 'error');
+
+        const minP = parseFloat(document.getElementById('f_minPrice').value) || 0;
+        const maxP = parseFloat(document.getElementById('f_maxPrice').value) || 0;
+        const minQ = parseInt(document.getElementById('f_minQty').value) || 0;
+        const maxQ = parseInt(document.getElementById('f_maxQty').value) || 0;
+        if (minP > 0 && maxP > 0 && maxP < minP) return showToast('最高单价不能低于最低单价', 'error');
+        if (minQ > 0 && maxQ > 0 && maxQ < minQ) return showToast('最高数量不能低于最低数量', 'error');
+
+        const planData = {
+            code: document.getElementById('f_code').value || genPlanCode(plans.length + 1),
+            level: level,
+            brand,
+            category,
+            totalAmount,
+            completedAmount: 0,
+            completionRate: 0,
+            company1,
+            company2,
+            company3: isL3 ? company3 : '',
+            diff1Type: document.getElementById('f_diff1Type').value,
+            diff1Pct: document.getElementById('f_diff1Type').value === '比例' ? (parseFloat(document.getElementById('f_diff1Pct').value) || 0) : 0,
+            diff1Amt: document.getElementById('f_diff1Type').value === '固定' ? (parseFloat(document.getElementById('f_diff1Amt').value) || 0) : 0,
+            diff2Type: isL3 ? document.getElementById('f_diff2Type').value : '比例',
+            diff2Pct: isL3 && document.getElementById('f_diff2Type').value === '比例' ? (parseFloat(document.getElementById('f_diff2Pct').value) || 0) : 0,
+            diff2Amt: isL3 && document.getElementById('f_diff2Type').value === '固定' ? (parseFloat(document.getElementById('f_diff2Amt').value) || 0) : 0,
+            term1: parseInt(document.getElementById('f_term1').value) || 0,
+            term2: isL3 ? (parseInt(document.getElementById('f_term2').value) || 0) : 0,
+            startDate,
+            endDate,
+            execDate: '-',
+            finishDate: '-',
+            execStatus: document.getElementById('f_execStatus').value,
+            planStatus: document.getElementById('f_planStatus').value,
+            minPrice: parseFloat(document.getElementById('f_minPrice').value) || 0,
+            maxPrice: parseFloat(document.getElementById('f_maxPrice').value) || 0,
+            minQty: parseInt(document.getElementById('f_minQty').value) || 0,
+            maxQty: parseInt(document.getElementById('f_maxQty').value) || 0,
+            minTotal: parseFloat(document.getElementById('f_minTotal').value) || 0,
+            invoiceRate: parseFloat(document.getElementById('f_invoiceRate').value) || 0,
+            coopTerm: parseInt(document.getElementById('f_coopTerm').value) || 0,
+            tradeAmount: parseFloat(document.getElementById('f_tradeAmount').value) || 0
+        };
+
+        if (editingPlanIndex >= 0) {
+            const orig = filteredPlansData[editingPlanIndex];
+            const realIdx = plans.findIndex(p => p.code === orig.code);
+            if (realIdx >= 0) plans[realIdx] = { ...plans[realIdx], ...planData };
+            showToast('采购计划已更新', 'success');
+        } else {
+            plans.push(planData);
+            showToast('采购计划已创建', 'success');
+        }
+
+        closeModal('planModal');
+        filterPlans();
+        updateStats();
+    }
+
+    // ==============================
+    // Plan Actions
+    // ==============================
+    function executePlan(code) {
+        const p = plans.find(x => x.code === code);
+        if (!p) return;
+        if (p.execStatus !== '待执行') return showToast('仅待执行的计划可以执行', 'error');
+        p.execStatus = '执行中';
+        p.planStatus = '启动';
+        p.execDate = dateStr(new Date());
+        showToast('计划已执行，同步推送至无仓平台', 'success');
+        filterPlans();
+        updateStats();
+    }
+
+    function closePlan(code) {
+        const p = plans.find(x => x.code === code);
+        if (!p) return;
+        if (p.execStatus !== '执行中') return showToast('仅执行中的计划可以关闭', 'error');
+        p.execStatus = '已完成';
+        p.planStatus = '关闭';
+        p.finishDate = dateStr(new Date());
+        showToast('计划已关闭', 'success');
+        filterPlans();
+        updateStats();
+    }
+
+    function deletePlan(code) {
+        if (!confirm('确认删除采购计划 ' + code + ' 吗？')) return;
+        plans = plans.filter(p => p.code !== code);
+        showToast('计划已删除', 'info');
+        filterPlans();
+        updateStats();
+    }
+
+    // ==============================
+    // Filter & Render: Plans
+    // ==============================
+    let filteredPlansData = [];
+
+    function filterPlans() {
+        planPage = 1;
+        renderPlans();
+    }
+
+    function getFilteredPlans() {
+        const code = document.getElementById('planSearchCode').value.trim().toLowerCase();
+        const brand = document.getElementById('planSearchBrand').value.trim().toLowerCase();
+        const cat = document.getElementById('planSearchCategory').value.trim().toLowerCase();
+        const level = document.getElementById('planSearchLevel').value;
+        const status = document.getElementById('planSearchStatus').value;
+        const ds = document.getElementById('planSearchDateStart').value;
+        const de = document.getElementById('planSearchDateEnd').value;
+
+        return plans.filter(p => {
+            if (code && !p.code.toLowerCase().includes(code)) return false;
+            if (brand && !p.brand.toLowerCase().includes(brand)) return false;
+            if (cat && !p.category.toLowerCase().includes(cat)) return false;
+            if (level && p.level !== level) return false;
+            if (status && p.execStatus !== status) return false;
+            if (ds && p.startDate < ds) return false;
+            if (de && p.startDate > de) return false;
+            return true;
+        });
+    }
+
+    function renderPlans() {
+        filteredPlansData = getFilteredPlans();
+        const total = filteredPlansData.length;
+        const totalPages = Math.ceil(total / planPageSize);
+        if (planPage > totalPages) planPage = totalPages || 1;
+        const start = (planPage - 1) * planPageSize;
+        const pageData = filteredPlansData.slice(start, start + planPageSize);
+
+        const tbody = document.getElementById('planTableBody');
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+        } else {
+            tbody.innerHTML = pageData.map(p => `
+                <tr>
+                    <td><a href="#" style="color:#1890ff;" onclick="openEditPlanModal(${filteredPlansData.indexOf(p)});return false;">${p.code}</a></td>
+                    <td><span class="tag ${p.level === '三级采购' ? 'tag-blue' : 'tag-orange'}">${p.level}</span></td>
+                    <td>${p.brand}</td>
+                    <td>${p.category}</td>
+                    <td>¥${p.totalAmount.toLocaleString()}</td>
+                    <td>¥${p.completedAmount.toLocaleString()}</td>
+                    <td>${progressBar(p.completionRate)}</td>
+                    <td style="font-size:12px;">
+                        <div>1: ${p.company1}</div>
+                        <div>2: ${p.company2}</div>
+                        ${p.company3 ? `<div>3: ${p.company3}</div>` : ''}
+                    </td>
+                    <td style="font-size:12px;">
+                        <div>起: ${p.startDate}</div>
+                        <div>止: ${p.endDate}</div>
+                    </td>
+                    <td>${statusTag(p.execStatus)}</td>
+                    <td>${statusTag(p.planStatus)}</td>
+                    <td>
+                        ${p.execStatus === '待执行' ? `<button class="btn btn-success btn-sm" onclick="executePlan('${p.code}')">执行</button>` : ''}
+                        ${p.execStatus === '执行中' ? `<button class="btn btn-warning btn-sm" onclick="closePlan('${p.code}')">关闭</button>` : ''}
+                        <button class="btn btn-danger btn-sm" onclick="deletePlan('${p.code}')">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Pagination
+        const pg = document.getElementById('planPagination');
+        if (totalPages <= 1) {
+            pg.innerHTML = '<span style="color:#999;font-size:13px;">共 ' + total + ' 条</span>';
+        } else {
+            let html = '<span style="color:#999;font-size:13px;margin-right:8px;">共 ' + total + ' 条</span>';
+            html += `<button class="page-btn" onclick="planPage=${Math.max(1,planPage-1)};renderPlans();" ${planPage<=1?'disabled':''}>上一页</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="page-btn ${i===planPage?'active':''}" onclick="planPage=${i};renderPlans();">${i}</button>`;
+            }
+            html += `<button class="page-btn" onclick="planPage=${Math.min(totalPages,planPage+1)};renderPlans();" ${planPage>=totalPages?'disabled':''}>下一页</button>`;
+            pg.innerHTML = html;
+        }
+    }
+
+    function resetPlanSearch() {
+        document.getElementById('planSearchCode').value = '';
+        document.getElementById('planSearchBrand').value = '';
+        document.getElementById('planSearchCategory').value = '';
+        document.getElementById('planSearchLevel').value = '';
+        document.getElementById('planSearchStatus').value = '';
+        document.getElementById('planSearchDateStart').value = '';
+        document.getElementById('planSearchDateEnd').value = '';
+        filterPlans();
+    }
+
+    // ==============================
+    // Filter & Render: Orders
+    // ==============================
+    function filterOrders() {
+        orderPage = 1;
+        renderOrders();
+    }
+
+    function getFilteredOrders() {
+        const planCode = document.getElementById('orderSearchPlanCode').value.trim().toLowerCase();
+        const subCode = document.getElementById('orderSearchSubCode').value.trim().toLowerCase();
+        const brand = document.getElementById('orderSearchBrand').value.trim().toLowerCase();
+        const cat = document.getElementById('orderSearchCategory').value.trim().toLowerCase();
+        const sku = document.getElementById('orderSearchSku').value.trim().toLowerCase();
+        const orderNo = document.getElementById('orderSearchNo').value.trim().toLowerCase();
+        const enterprise = document.getElementById('orderSearchEnterprise').value;
+        const date = document.getElementById('orderSearchDate').value;
+
+        return orders.filter(o => {
+            if (planCode && !o.matchedPlanCode.toLowerCase().includes(planCode)) return false;
+            if (subCode && !(o.subCode || '').toLowerCase().includes(subCode)) return false;
+            if (brand && !o.brand.toLowerCase().includes(brand)) return false;
+            if (cat && !o.category.toLowerCase().includes(cat)) return false;
+            if (sku && !o.skuCode.toLowerCase().includes(sku)) return false;
+            if (orderNo && !o.orderNo.toLowerCase().includes(orderNo)) return false;
+            if (enterprise && o.enterprise !== enterprise) return false;
+            if (date && !o.orderTime.startsWith(date)) return false;
+            return true;
+        });
+    }
+
+    function renderOrders() {
+        const filtered = getFilteredOrders();
+        const total = filtered.length;
+        const totalPages = Math.ceil(total / orderPageSize);
+        if (orderPage > totalPages) orderPage = totalPages || 1;
+        const start = (orderPage - 1) * orderPageSize;
+        const pageData = filtered.slice(start, start + orderPageSize);
+
+        const tbody = document.getElementById('orderTableBody');
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+        } else {
+            tbody.innerHTML = pageData.map(o => `
+                <tr>
+                    <td>${o.matchedPlanCode ? `<a href="#" style="color:#1890ff;">${o.matchedPlanCode}</a>` : '<span style="color:#999;">未匹配</span>'}</td>
+                    <td>${o.subCode ? `<span class="tag tag-blue">${o.subCode}</span>` : '<span style="color:#999;">—</span>'}</td>
+                    <td><span class="tag tag-blue">${o.enterprise}</span></td>
+                    <td>${o.brand}</td>
+                    <td>${o.category}</td>
+                    <td>${o.skuName}</td>
+                    <td>${o.skuCode}</td>
+                    <td>${o.orderNo}</td>
+                    <td>¥${o.unitPrice.toLocaleString()}</td>
+                    <td>${o.quantity}</td>
+                    <td>¥${o.totalPrice.toLocaleString()}</td>
+                    <td>${o.supplier}</td>
+                    <td>${o.purchaser}</td>
+                    <td style="white-space:nowrap;">${o.orderTime}</td>
+                    <td>${o.payMethod}</td>
+                </tr>
+            `).join('');
+        }
+
+        const pg = document.getElementById('orderPagination');
+        if (totalPages <= 1) {
+            pg.innerHTML = '<span style="color:#999;font-size:13px;">共 ' + total + ' 条</span>';
+        } else {
+            let html = '<span style="color:#999;font-size:13px;margin-right:8px;">共 ' + total + ' 条</span>';
+            html += `<button class="page-btn" onclick="orderPage=${Math.max(1,orderPage-1)};renderOrders();" ${orderPage<=1?'disabled':''}>上一页</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="page-btn ${i===orderPage?'active':''}" onclick="orderPage=${i};renderOrders();">${i}</button>`;
+            }
+            html += `<button class="page-btn" onclick="orderPage=${Math.min(totalPages,orderPage+1)};renderOrders();" ${orderPage>=totalPages?'disabled':''}>下一页</button>`;
+            pg.innerHTML = html;
+        }
+    }
+
+    function resetOrderSearch() {
+        ['orderSearchPlanCode','orderSearchSubCode','orderSearchSku','orderSearchNo'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('orderSearchBrand').value = '';
+        document.getElementById('orderSearchCategory').value = '';
+        document.getElementById('orderSearchEnterprise').value = '';
+        document.getElementById('orderSearchDate').value = '';
+        filterOrders();
+    }
+
+    // ==============================
+    // Filter & Render: Logs
+    // ==============================
+    function filterLogs() {
+        logPage = 1;
+        renderLogs();
+    }
+
+    function getFilteredLogs() {
+        const planCode = document.getElementById('logSearchPlanCode').value.trim().toLowerCase();
+        const subCode = document.getElementById('logSearchSubCode').value.trim().toLowerCase();
+        const orderNo = document.getElementById('logSearchOrderNo').value.trim().toLowerCase();
+        const brand = document.getElementById('logSearchBrand').value.trim().toLowerCase();
+        const enterprise = document.getElementById('logSearchEnterprise').value;
+        const result = document.getElementById('logSearchResult').value;
+        const reason = document.getElementById('logSearchReason').value;
+        const date = document.getElementById('logSearchDate').value;
+
+        return logs.filter(l => {
+            if (planCode && !(l.matchedPlanCode || '').toLowerCase().includes(planCode)) return false;
+            if (subCode && !(l.subCode || '').toLowerCase().includes(subCode)) return false;
+            if (orderNo && !l.orderNo.toLowerCase().includes(orderNo)) return false;
+            if (brand && !l.brand.toLowerCase().includes(brand)) return false;
+            if (enterprise && l.enterprise !== enterprise) return false;
+            if (result && l.result !== result) return false;
+            if (reason && l.reason !== reason) return false;
+            if (date && !l.judgeTime.startsWith(date)) return false;
+            return true;
+        });
+    }
+
+    function toggleLogDetail(index) {
+        const row = document.getElementById('log-detail-' + index);
+        if (row) row.classList.toggle('show');
+    }
+
+    function renderLogs() {
+        const filtered = getFilteredLogs();
+        const total = filtered.length;
+        const totalPages = Math.ceil(total / logPageSize);
+        if (logPage > totalPages) logPage = totalPages || 1;
+        const start = (logPage - 1) * logPageSize;
+        const pageData = filtered.slice(start, start + logPageSize);
+
+        const tbody = document.getElementById('logTableBody');
+        if (pageData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+        } else {
+            let html = '';
+            pageData.forEach((l, idx) => {
+                const globalIdx = start + idx;
+                const d = l.details;
+                const allPass = d && d.supplier && d.supplier.every(r => r.pass) && d.orderContent && d.orderContent.every(r => r.pass) && d.amountMonitor && d.amountMonitor.every(r => r.pass);
+                html += `<tr>
+                    <td>${l.matchedPlanCode || '<span style="color:#999;">—</span>'}</td>
+                    <td>${l.subCode ? `<span class="tag tag-blue">${l.subCode}</span>` : '<span style="color:#999;">—</span>'}</td>
+                    <td><span class="tag ${l.matchNote === '匹配成功' ? 'tag-green' : 'tag-gray'}">${l.matchNote}</span></td>
+                    <td>${l.brand}</td>
+                    <td><span class="tag tag-blue">${l.enterprise}</span></td>
+                    <td>¥${l.orderAmount.toLocaleString()}</td>
+                    <td>${l.orderNo}</td>
+                    <td>${statusTag(l.result)}</td>
+                    <td style="color:${l.result === '拒绝' ? '#ff4d4f' : '#999'};">${l.reason || '-'}</td>
+                    <td>${l.purchaseOrderNo || '-'}</td>
+                    <td style="white-space:nowrap;">${l.judgeTime}</td>
+                    <td>${l.hasNoMatch ? '-' : `<button class="btn-link" onclick="toggleLogDetail(${globalIdx})">查看详情</button>`}</td>
+                </tr>`;
+                // Detail row (仅匹配成功有详情)
+                if (l.hasNoMatch) { html += '</tr>'; return; }
+                html += `<tr class="log-detail-row" id="log-detail-${globalIdx}">
+                    <td colspan="12" class="log-detail-cell">
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                            <div class="detail-section">
+                                <div class="detail-section-title"><span class="dot" style="background:#1890ff;"></span>供应商资质 <span style="font-size:10px;color:#fa8c16;">🔄二期</span></div>
+                                <div class="detail-grid">
+                                    ${d.supplier.map(r => `
+                                        <div class="detail-item ${r.pass ? 'dpass-row' : 'dfail-row'}">
+                                            <span class="dlabel">${r.rule}</span>
+                                            <span class="dvalue ${r.pass ? 'dpass' : 'dfail'}">${r.value} ${r.pass ? '✅' : '❌'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><span class="dot" style="background:#52c41a;"></span>订单内容</div>
+                                <div class="detail-grid">
+                                    ${d.orderContent.map(r => `
+                                        <div class="detail-item ${r.pass ? 'dpass-row' : 'dfail-row'}">
+                                            <span class="dlabel">${r.rule}</span>
+                                            <span class="dvalue ${r.pass ? 'dpass' : 'dfail'}">${r.value} ${r.pass ? '✅' : '❌'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-section-title"><span class="dot" style="background:#fa8c16;"></span>金额监控</div>
+                                <div class="detail-grid">
+                                    ${d.amountMonitor.map(r => `
+                                        <div class="detail-item ${r.pass ? 'dpass-row' : 'dfail-row'}">
+                                            <span class="dlabel">${r.rule}</span>
+                                            <span class="dvalue ${r.pass ? 'dpass' : 'dfail'}">${r.value} ${r.pass ? '✅' : '❌'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-result ${allPass ? 'pass' : 'fail'}">
+                            最终结果：${allPass ? '✅ 通过' : '❌ 拒绝'}
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        const pg = document.getElementById('logPagination');
+        if (totalPages <= 1) {
+            pg.innerHTML = '<span style="color:#999;font-size:13px;">共 ' + total + ' 条</span>';
+        } else {
+            let html = '<span style="color:#999;font-size:13px;margin-right:8px;">共 ' + total + ' 条</span>';
+            html += `<button class="page-btn" onclick="logPage=${Math.max(1,logPage-1)};renderLogs();" ${logPage<=1?'disabled':''}>上一页</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="page-btn ${i===logPage?'active':''}" onclick="logPage=${i};renderLogs();">${i}</button>`;
+            }
+            html += `<button class="page-btn" onclick="logPage=${Math.min(totalPages,logPage+1)};renderLogs();" ${logPage>=totalPages?'disabled':''}>下一页</button>`;
+            pg.innerHTML = html;
+        }
+    }
+
+    function resetLogSearch() {
+        document.getElementById('logSearchPlanCode').value = '';
+        document.getElementById('logSearchSubCode').value = '';
+        document.getElementById('logSearchOrderNo').value = '';
+        document.getElementById('logSearchBrand').value = '';
+        document.getElementById('logSearchEnterprise').value = '';
+        document.getElementById('logSearchResult').value = '';
+        document.getElementById('logSearchReason').value = '';
+        document.getElementById('logSearchDate').value = '';
+        filterLogs();
+    }
+
+    // ==============================
+    // Stats
+    // ==============================
+    function updateStats() {
+        document.getElementById('totalPlans').textContent = plans.length;
+        const active = plans.filter(p => p.execStatus === '执行中').length;
+        const completed = plans.filter(p => p.execStatus === '已完成').length;
+        document.getElementById('activePlans').textContent = active;
+        document.getElementById('completedPlans').textContent = completed;
+        const totalAmt = plans.reduce((s, p) => s + p.completedAmount, 0);
+        document.getElementById('totalCompletedAmount').textContent = '¥' + Math.round(totalAmt).toLocaleString();
+    }
+
+    // ==============================
+    // Close modal on overlay click
+    // ==============================
+    document.getElementById('planModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal('planModal');
+    });
+
+    // ==============================
+    // Start
+    // ==============================
+    init();
+</script>
+
+</body>
+</html>
