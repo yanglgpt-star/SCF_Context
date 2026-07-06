@@ -256,6 +256,7 @@
                             <th>完成率</th>
                             <th>采购企业</th>
                             <th>预计日期</th>
+                            <th>执行日期</th>
                             <th>执行状态</th>
                             <th>计划状态</th>
                             <th>操作</th>
@@ -323,6 +324,10 @@
                 </div>
             </div>
 
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                <button class="btn btn-success" onclick="exportOrders()" style="font-size:12px;">📥 导出订单</button>
+            </div>
+
             <div style="overflow-x:auto;">
                 <table id="orderTable">
                     <thead>
@@ -388,6 +393,7 @@
                         <option value="">全部</option>
                         <option value="通过">通过</option>
                         <option value="拒绝">拒绝</option>
+                        <option value="已取消">已取消（IF04）</option>
                     </select>
                 </div>
                 <div class="search-item">
@@ -736,7 +742,7 @@
         const matched = i % 7 !== 6;
         orders.push({
             matchedPlanCode: matched ? plan.code : '',
-            subCode: matched ? plan.code + '-' + pad(i + 1).slice(-3) : '',
+            subCode: matched ? plan.code + '-' + String(i + 1 + 1000000).slice(1) : '',
             enterprise: orderEnterpriseLabels[seg],
             brand: plan.brand,
             category: plan.category,
@@ -780,7 +786,7 @@
 
         logs.push({
             matchedPlanCode: matchedPlanCode,
-            subCode: noMatch ? '' : (matchedPlanCode + '-' + pad(i + 1).slice(-3)),
+            subCode: noMatch ? '' : (matchedPlanCode + '-' + String(i + 1 + 1000000).slice(1)),
             matchNote: matchNote,
             brand: order.brand,
             category: order.category,
@@ -792,6 +798,12 @@
             purchaseOrderNo: (!noMatch && passed) ? poNo : '-',
             judgeTime: dateStr(new Date(2026, 5, rand(1, 28))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
             hasNoMatch: noMatch,
+            // 跨计划重试拒绝时，汇总所有拒因
+            rejectDetails: (!passed && !noMatch) ? [
+                { plan: matchedPlanCode || 'PL001', reason: reason || '规则不通过' },
+                { plan: 'PL00' + rand(2, 9), reason: pick(rejectReasons.filter(r => r !== reason)) },
+                { plan: 'PL0' + rand(10, 20), reason: pick(rejectReasons.filter(r => r !== reason)) }
+            ].slice(0, rand(2, 3)) : null,
             details: {
                 supplier: [
                     { rule: '开票率 ≥ ' + (plan ? plan.invoiceRate : 80) + '%', value: (plan ? plan.invoiceRate : 80) + '%', pass: invoiceOk },
@@ -808,6 +820,33 @@
                 amountMonitor: [
                     { rule: '已采购累计 < 目标', value: '¥' + rand(10, 80) * 10000 + ' / ¥' + '1,000,000', pass: !noMatch }
                 ]
+            }
+        });
+    }
+
+    // Add cancel logs (IF04)
+    const cancelReasons = ['供应商缺货', '价格变动', '重复提交', '客户取消'];
+    for (let i = 0; i < 4; i++) {
+        const order = orders[i % orders.length];
+        logs.push({
+            matchedPlanCode: order.matchedPlanCode || plans[i % plans.length].code,
+            subCode: (order.matchedPlanCode || plans[i % plans.length].code) + '-' + pad(i + 20),
+            matchNote: '匹配成功',
+            brand: order.brand,
+            category: order.category,
+            enterprise: order.enterprise,
+            orderAmount: order.totalPrice,
+            orderNo: order.orderNo,
+            result: '已取消',
+            reason: pick(cancelReasons),
+            purchaseOrderNo: '-',
+            judgeTime: dateStr(new Date(2026, 6, rand(1, 10))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
+            hasNoMatch: false,
+            rejectDetails: null,
+            details: {
+                supplier: [{ rule: '订单已取消', value: pick(cancelReasons), pass: false }],
+                orderContent: [{ rule: '订单已取消', value: '—', pass: false }],
+                amountMonitor: [{ rule: '金额已回退', value: '¥' + order.totalPrice.toLocaleString() + ' 已扣减', pass: true }]
             }
         });
     }
@@ -963,6 +1002,7 @@
         ss2 = createSearchableSelect('ss2', 'f_company2', '搜索采购企业2...');
         ss3 = createSearchableSelect('ss3', 'f_company3', '搜索采购企业3...');
         initSelects();
+        autoExecutePlans();
         renderPlans();
         renderOrders();
         renderLogs();
@@ -1056,7 +1096,9 @@
             '关闭': 'tag-gray',
             '启动': 'tag-green',
             '通过': 'tag-green',
-            '拒绝': 'tag-red'
+            '拒绝': 'tag-red',
+            '无可匹配': 'tag-gray',
+            '已取消': 'tag-orange'
         };
         const cls = map[status] || 'tag-gray';
         return `<span class="tag ${cls}">${status}</span>`;
@@ -1249,9 +1291,24 @@
         p.execStatus = '执行中';
         p.planStatus = '启动';
         p.execDate = dateStr(new Date());
-        showToast('计划已执行，同步推送至无仓平台', 'success');
+        showToast('计划已执行', 'success');
         filterPlans();
         updateStats();
+    }
+
+    // Auto-execute: 预计开始日期 ≤ 当前日期的待执行计划自动变更为执行中
+    function autoExecutePlans() {
+        const today = dateStr(new Date());
+        let changed = false;
+        plans.forEach(p => {
+            if (p.execStatus === '待执行' && p.startDate <= today) {
+                p.execStatus = '执行中';
+                p.planStatus = '启动';
+                p.execDate = today;
+                changed = true;
+            }
+        });
+        if (changed) { filterPlans(); updateStats(); }
     }
 
     function closePlan(code) {
@@ -1315,7 +1372,7 @@
 
         const tbody = document.getElementById('planTableBody');
         if (pageData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
         } else {
             tbody.innerHTML = pageData.map(p => `
                 <tr>
@@ -1334,6 +1391,10 @@
                     <td style="font-size:12px;">
                         <div>起: ${p.startDate}</div>
                         <div>止: ${p.endDate}</div>
+                    </td>
+                    <td style="font-size:12px;">
+                        <div>执: ${p.execDate}</div>
+                        <div>完: ${p.finishDate}</div>
                     </td>
                     <td>${statusTag(p.execStatus)}</td>
                     <td>${statusTag(p.planStatus)}</td>
@@ -1450,6 +1511,27 @@
         }
     }
 
+    function exportOrders() {
+        const data = getFilteredOrders();
+        if (data.length === 0) return showToast('当前没有可导出的订单', 'error');
+        const headers = ['匹配计划编码', '计划子编码', '所属企业', '品牌', '品类', '商品名称', 'SKU编码', '订单号', '单价', '数量', '总价', '供应商', '采购商', '下单时间', '付款方式'];
+        const rows = data.map(o => [
+            o.matchedPlanCode, o.subCode, o.enterprise, o.brand, o.category,
+            o.skuName, o.skuCode, o.orderNo, o.unitPrice, o.quantity, o.totalPrice,
+            o.supplier, o.purchaser, o.orderTime, o.payMethod
+        ]);
+        let csv = '﻿' + headers.join(',') + '\n';
+        rows.forEach(r => { csv += r.join(',') + '\n'; });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const now = new Date();
+        a.download = '采购订单_' + now.getFullYear() + pad(now.getMonth()+1) + pad(now.getDate()) + '_' + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + '.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('导出成功，共 ' + data.length + ' 条记录', 'success');
+    }
+
     function resetOrderSearch() {
         ['orderSearchPlanCode','orderSearchSubCode','orderSearchSku','orderSearchNo'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('orderSearchBrand').value = '';
@@ -1528,8 +1610,23 @@
                 </tr>`;
                 // Detail row (仅匹配成功有详情)
                 if (l.hasNoMatch) { html += '</tr>'; return; }
+                // 跨计划拒绝拒因汇总
+                const rd = l.rejectDetails;
                 html += `<tr class="log-detail-row" id="log-detail-${globalIdx}">
                     <td colspan="12" class="log-detail-cell">
+                        ${rd ? `
+                        <div class="detail-section" style="margin-bottom:16px;">
+                            <div class="detail-section-title"><span class="dot" style="background:#ff4d4f;"></span>全部拒因汇总 <span style="font-size:10px;color:#999;font-weight:400;">跨计划重试全部拒绝</span></div>
+                            <div class="detail-grid" style="grid-template-columns:1fr;">
+                                ${rd.map(r => `
+                                    <div class="detail-item dfail-row">
+                                        <span class="dlabel">${r.plan}</span>
+                                        <span class="dvalue dfail">${r.reason} ❌</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
                         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
                             <div class="detail-section">
                                 <div class="detail-section-title"><span class="dot" style="background:#1890ff;"></span>供应商资质 <span style="font-size:10px;color:#fa8c16;">🔄二期</span></div>
