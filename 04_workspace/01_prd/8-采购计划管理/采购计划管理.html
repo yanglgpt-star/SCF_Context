@@ -127,6 +127,19 @@
         .detail-result.fail { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
         .btn-link { color: #1890ff; background: none; border: none; cursor: pointer; font-size: 13px; padding: 2px 6px; }
         .btn-link:hover { text-decoration: underline; }
+        /* Detail modal */
+        .dt-row { display: flex; border-bottom: 1px solid #f0f0f0; padding: 8px 0; font-size: 13px; }
+        .dt-row:last-child { border-bottom: none; }
+        .dt-label { width: 120px; color: #666; flex-shrink: 0; }
+        .dt-value { flex: 1; color: #333; font-weight: 500; }
+        .dt-section { margin-bottom: 20px; }
+        .dt-section-title { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #1890ff; display: flex; align-items: center; gap: 8px; }
+        .dt-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #fafafa; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+        .dt-compare-item { text-align: center; }
+        .dt-compare-item .label { font-size: 11px; color: #999; }
+        .dt-compare-item .value { font-size: 16px; font-weight: 600; color: #333; margin-top: 2px; }
+        .dt-compare-item .value.diff { color: #ff4d4f; }
+        .dt-compare-item .value.match { color: #52c41a; }
     </style>
 </head>
 <body>
@@ -307,9 +320,9 @@
                     <label>所属企业</label>
                     <select id="orderSearchEnterprise" onchange="filterOrders()">
                         <option value="">全部</option>
-                        <option value="采购企业 1">采购企业 1（供应商→企业1）</option>
-                        <option value="采购企业 2">采购企业 2（企业1→企业2）</option>
-                        <option value="采购企业 3">采购企业 3（企业2→企业3，仅三级采购）</option>
+                        <option value="采购企业 1">采购企业 1</option>
+                        <option value="采购企业 2">采购企业 2</option>
+                        <option value="采购企业 3">采购企业 3</option>
                     </select>
                 </div>
                 <div class="search-item">
@@ -345,8 +358,9 @@
                             <th>总价</th>
                             <th>供应商</th>
                             <th>采购商</th>
+                            <th>订单渠道</th>
                             <th>下单时间</th>
-                            <th>付款方式</th>
+                            <th>订单完成时间</th>
                         </tr>
                     </thead>
                     <tbody id="orderTableBody"></tbody>
@@ -371,10 +385,6 @@
                     <input type="text" id="logSearchSubCode" placeholder="搜索子编码" oninput="filterLogs()">
                 </div>
                 <div class="search-item">
-                    <label>订单号</label>
-                    <input type="text" id="logSearchOrderNo" placeholder="请输入订单号" oninput="filterLogs()">
-                </div>
-                <div class="search-item">
                     <label>品牌</label>
                     <input type="text" id="logSearchBrand" placeholder="请输入品牌" oninput="filterLogs()">
                 </div>
@@ -392,8 +402,7 @@
                     <select id="logSearchResult" onchange="filterLogs()">
                         <option value="">全部</option>
                         <option value="通过">通过</option>
-                        <option value="拒绝">拒绝</option>
-                        <option value="已取消">已取消（IF04）</option>
+                        <option value="不通过">不通过</option>
                     </select>
                 </div>
                 <div class="search-item">
@@ -431,11 +440,11 @@
                             <th>匹配说明</th>
                             <th>品牌</th>
                             <th>所属企业</th>
+                            <th>订单单价</th>
+                            <th>订单数量</th>
                             <th>订单金额</th>
-                            <th>订单号</th>
                             <th>判断结果</th>
                             <th>拒绝原因</th>
-                            <th>采购单号</th>
                             <th>判断时间</th>
                             <th>详情</th>
                         </tr>
@@ -627,6 +636,22 @@
     </div>
 </div>
 
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal" style="width:850px;">
+        <div class="modal-header">
+            <h3>判断详情 — <span id="detailPlanCode"></span></h3>
+            <span class="modal-close" onclick="closeModal('detailModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="detailContent"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal('detailModal')">关闭</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -637,7 +662,7 @@
     const brands = ['华为', '苹果', '小米', 'OPPO', 'vivo', '荣耀', '三星', '联想', '戴尔', '华硕', '索尼', '大疆'];
     const categories = ['手机', '笔记本电脑', '平板电脑', '耳机/音箱', '智能穿戴', '数码配件', '电脑外设', '摄影摄像', '智能家居', '游戏设备'];
     const skuNames = ['智能芯片 A1', '精密轴承 B2', '电路板 C3', '传感器 D4', '显示屏 E5'];
-    const payMethods = ['银行转账', '商业承兑汇票', '银行承兑汇票', '信用证'];
+    const orderChannels = ['无仓平台', '市场助手'];
     const enterprises = [
         // 头部3C品牌/制造商
         '华为技术有限公司', '小米通讯技术有限公司', 'OPPO广东移动通信有限公司',
@@ -727,6 +752,41 @@
             tradeAmount: rand(5, 50) * 10000
         });
     }
+    // 添加一条未来日期的待执行计划（不会被 autoExecutePlans 转换）
+    plans.push({
+        code: genPlanCode(planCount + 1),
+        level: '三级采购',
+        brand: pick(brands),
+        category: pick(categories),
+        totalAmount: rand(50, 200) * 10000,
+        completedAmount: 0,
+        completionRate: 0,
+        company1: pick(enterprises),
+        company2: pick(enterprises),
+        company3: pick(enterprises),
+        diff1Type: '比例',
+        diff1Pct: 5,
+        diff1Amt: 0,
+        diff2Type: '比例',
+        diff2Pct: 3,
+        diff2Amt: 0,
+        term1: 60,
+        term2: 45,
+        startDate: dateStr(new Date(2026, 7, 1)),  // 2026-08-01 未来日期
+        endDate: dateStr(new Date(2026, 7, 31)),
+        execDate: '-',
+        finishDate: '-',
+        execStatus: '待执行',
+        planStatus: '启动',
+        minPrice: 100,
+        maxPrice: 500,
+        minQty: 50,
+        maxQty: 300,
+        minTotal: 10000,
+        invoiceRate: 80,
+        coopTerm: 12,
+        tradeAmount: 100000
+    });
 
     // Generate orders (独立订单，不依赖计划编码)
     let orders = [];
@@ -755,7 +815,8 @@
             supplier: pick(orderSupplierList),
             purchaser: orderPurchaserList[seg],
             orderTime: dateStr(new Date(2026, 5, rand(1, 28))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
-            payMethod: pick(payMethods)
+            channel: pick(orderChannels),
+            completeTime: rand(0, 1) ? (dateStr(new Date(2026, 6, rand(1, 10))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59))) : '-'
         });
     }
 
@@ -791,11 +852,12 @@
             brand: order.brand,
             category: order.category,
             enterprise: order.enterprise,
+            orderPrice: order.unitPrice,
+            orderQty: order.quantity,
             orderAmount: order.totalPrice,
             orderNo: order.orderNo,
-            result: noMatch ? '无可匹配' : (passed ? '通过' : '拒绝'),
+            result: noMatch ? '无可匹配' : (passed ? '通过' : '不通过'),
             reason: noMatch ? '' : reason,
-            purchaseOrderNo: (!noMatch && passed) ? poNo : '-',
             judgeTime: dateStr(new Date(2026, 5, rand(1, 28))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
             hasNoMatch: noMatch,
             // 跨计划重试拒绝时，汇总所有拒因
@@ -835,9 +897,11 @@
             brand: order.brand,
             category: order.category,
             enterprise: order.enterprise,
+            orderPrice: order.unitPrice,
+            orderQty: order.quantity,
             orderAmount: order.totalPrice,
             orderNo: order.orderNo,
-            result: '已取消',
+            result: '不通过',
             reason: pick(cancelReasons),
             purchaseOrderNo: '-',
             judgeTime: dateStr(new Date(2026, 6, rand(1, 10))) + ' ' + pad(rand(8, 18)) + ':' + pad(rand(0, 59)),
@@ -1096,9 +1160,8 @@
             '关闭': 'tag-gray',
             '启动': 'tag-green',
             '通过': 'tag-green',
-            '拒绝': 'tag-red',
-            '无可匹配': 'tag-gray',
-            '已取消': 'tag-orange'
+            '不通过': 'tag-red',
+            '无可匹配': 'tag-gray'
         };
         const cls = map[status] || 'tag-gray';
         return `<span class="tag ${cls}">${status}</span>`;
@@ -1332,6 +1395,97 @@
     }
 
     // ==============================
+    // Plan Detail
+    // ==============================
+    function openPlanDetail(code) {
+        const plan = plans.find(p => p.code === code);
+        if (!plan) return;
+        document.getElementById('detailPlanCode').textContent = code;
+
+        // 模拟该计划下各子编码批次的判断/完成数据
+        const rows = [];
+        const rowCount = plan.execStatus === '待执行' ? 0 : (rand(1, 4));
+        for (let i = 1; i <= rowCount; i++) {
+            const subCode = code + '-' + String(i + 1000000).slice(1);
+            const jBrand = plan.brand;
+            const jCat = plan.category;
+            const jPrice = rand(200, 500);
+            const jQty = rand(80, 300);
+            const jTotal = jPrice * jQty;
+            // 状态随机: 正常核对 / 撤单 / 异常
+            const statusPick = rand(1, 10);
+            let status, aBrand, aCat, aPrice, aQty, aTotal;
+            if (statusPick <= 6) { // 正常核对
+                status = '正常核对';
+                aBrand = jBrand; aCat = jCat; aPrice = jPrice; aQty = jQty; aTotal = jTotal;
+            } else if (statusPick <= 8) { // 撤单
+                status = '撤单';
+                aBrand = aCat = aPrice = aQty = aTotal = '-';
+            } else { // 异常
+                status = '异常';
+                aBrand = jBrand; aCat = jCat;
+                aPrice = Math.round(jPrice * rand(85, 115) / 100);
+                aQty = Math.round(jQty * rand(85, 115) / 100);
+                aTotal = aPrice * aQty;
+            }
+            rows.push({ subCode, jBrand, jCat, jPrice, jQty, jTotal, status, aBrand, aCat, aPrice, aQty, aTotal });
+        }
+
+        let html = `<div style="overflow-x:auto;">
+            <table style="font-size:12px;">
+                <thead>
+                    <tr>
+                        <th>计划编码</th>
+                        <th>计划子编码</th>
+                        <th>核对状态</th>
+                        <th>核对品牌</th>
+                        <th>核对品类</th>
+                        <th>核对单价</th>
+                        <th>核对数量</th>
+                        <th>核对金额</th>
+                        <th>完成品牌</th>
+                        <th>完成品类</th>
+                        <th>完成单价</th>
+                        <th>完成数量</th>
+                        <th>完成金额</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        if (rows.length === 0) {
+            html += '<tr><td colspan="13" style="text-align:center;padding:30px;color:#999;">暂无订单数据</td></tr>';
+        } else {
+            rows.forEach(r => {
+                const stTag = r.status === '正常核对' ? 'tag-green' : r.status === '撤单' ? 'tag-gray' : 'tag-red';
+                // 完成数据单元格: 非'-'时判断是否与核对数据一致
+                function tdCmp(j, a) {
+                    if (a === '-') return '<td style="color:#999;">-</td>';
+                    const isDiff = String(a) !== String(j);
+                    return `<td style="${isDiff ? 'color:#ff4d4f;' : ''}">${a}</td>`;
+                }
+                html += `<tr>
+                    <td>${code}</td>
+                    <td>${r.subCode}</td>
+                    <td><span class="tag ${stTag}">${r.status}</span></td>
+                    <td>${r.jBrand}</td>
+                    <td>${r.jCat}</td>
+                    <td>¥${r.jPrice.toLocaleString()}</td>
+                    <td>${r.jQty.toLocaleString()}</td>
+                    <td>¥${r.jTotal.toLocaleString()}</td>
+                    ${tdCmp(r.jBrand, r.aBrand)}
+                    ${tdCmp(r.jCat, r.aCat)}
+                    ${tdCmp(r.jPrice, r.aPrice)}
+                    ${tdCmp(r.jQty, r.aQty)}
+                    ${tdCmp(r.jTotal, r.aTotal)}
+                </tr>`;
+            });
+        }
+        html += '</tbody></table></div>';
+
+        document.getElementById('detailContent').innerHTML = html;
+        openModal('detailModal');
+    }
+
+    // ==============================
     // Filter & Render: Plans
     // ==============================
     let filteredPlansData = [];
@@ -1401,7 +1555,8 @@
                     <td>
                         ${p.execStatus === '待执行' ? `<button class="btn btn-success btn-sm" onclick="executePlan('${p.code}')">执行</button>` : ''}
                         ${p.execStatus === '执行中' ? `<button class="btn btn-warning btn-sm" onclick="closePlan('${p.code}')">关闭</button>` : ''}
-                        <button class="btn btn-danger btn-sm" onclick="deletePlan('${p.code}')">删除</button>
+                        ${p.execStatus === '待执行' ? `<button class="btn btn-danger btn-sm" onclick="deletePlan('${p.code}')">删除</button>` : ''}
+                        <button class="btn btn-sm" style="color:#1890ff;border-color:#1890ff;" onclick="openPlanDetail('${p.code}')">判断详情</button>
                     </td>
                 </tr>
             `).join('');
@@ -1474,7 +1629,7 @@
 
         const tbody = document.getElementById('orderTableBody');
         if (pageData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="16" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
         } else {
             tbody.innerHTML = pageData.map(o => `
                 <tr>
@@ -1491,8 +1646,9 @@
                     <td>¥${o.totalPrice.toLocaleString()}</td>
                     <td>${o.supplier}</td>
                     <td>${o.purchaser}</td>
+                    <td><span class="tag tag-blue">${o.channel}</span></td>
                     <td style="white-space:nowrap;">${o.orderTime}</td>
-                    <td>${o.payMethod}</td>
+                    <td style="white-space:nowrap;">${o.completeTime}</td>
                 </tr>
             `).join('');
         }
@@ -1514,11 +1670,11 @@
     function exportOrders() {
         const data = getFilteredOrders();
         if (data.length === 0) return showToast('当前没有可导出的订单', 'error');
-        const headers = ['匹配计划编码', '计划子编码', '所属企业', '品牌', '品类', '商品名称', 'SKU编码', '订单号', '单价', '数量', '总价', '供应商', '采购商', '下单时间', '付款方式'];
+        const headers = ['匹配计划编码', '计划子编码', '所属企业', '品牌', '品类', '商品名称', 'SKU编码', '订单号', '单价', '数量', '总价', '供应商', '采购商', '订单渠道', '下单时间', '订单完成时间'];
         const rows = data.map(o => [
             o.matchedPlanCode, o.subCode, o.enterprise, o.brand, o.category,
             o.skuName, o.skuCode, o.orderNo, o.unitPrice, o.quantity, o.totalPrice,
-            o.supplier, o.purchaser, o.orderTime, o.payMethod
+            o.supplier, o.purchaser, o.channel, o.orderTime, o.completeTime
         ]);
         let csv = '﻿' + headers.join(',') + '\n';
         rows.forEach(r => { csv += r.join(',') + '\n'; });
@@ -1552,7 +1708,6 @@
     function getFilteredLogs() {
         const planCode = document.getElementById('logSearchPlanCode').value.trim().toLowerCase();
         const subCode = document.getElementById('logSearchSubCode').value.trim().toLowerCase();
-        const orderNo = document.getElementById('logSearchOrderNo').value.trim().toLowerCase();
         const brand = document.getElementById('logSearchBrand').value.trim().toLowerCase();
         const enterprise = document.getElementById('logSearchEnterprise').value;
         const result = document.getElementById('logSearchResult').value;
@@ -1562,7 +1717,6 @@
         return logs.filter(l => {
             if (planCode && !(l.matchedPlanCode || '').toLowerCase().includes(planCode)) return false;
             if (subCode && !(l.subCode || '').toLowerCase().includes(subCode)) return false;
-            if (orderNo && !l.orderNo.toLowerCase().includes(orderNo)) return false;
             if (brand && !l.brand.toLowerCase().includes(brand)) return false;
             if (enterprise && l.enterprise !== enterprise) return false;
             if (result && l.result !== result) return false;
@@ -1587,7 +1741,7 @@
 
         const tbody = document.getElementById('logTableBody');
         if (pageData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
         } else {
             let html = '';
             pageData.forEach((l, idx) => {
@@ -1600,11 +1754,11 @@
                     <td><span class="tag ${l.matchNote === '匹配成功' ? 'tag-green' : 'tag-gray'}">${l.matchNote}</span></td>
                     <td>${l.brand}</td>
                     <td><span class="tag tag-blue">${l.enterprise}</span></td>
+                    <td>¥${(l.orderPrice || 0).toLocaleString()}</td>
+                    <td>${(l.orderQty || 0).toLocaleString()}</td>
                     <td>¥${l.orderAmount.toLocaleString()}</td>
-                    <td>${l.orderNo}</td>
                     <td>${statusTag(l.result)}</td>
-                    <td style="color:${l.result === '拒绝' ? '#ff4d4f' : '#999'};">${l.reason || '-'}</td>
-                    <td>${l.purchaseOrderNo || '-'}</td>
+                    <td style="color:${l.result === '不通过' ? '#ff4d4f' : '#999'};">${l.reason || '-'}</td>
                     <td style="white-space:nowrap;">${l.judgeTime}</td>
                     <td>${l.hasNoMatch ? '-' : `<button class="btn-link" onclick="toggleLogDetail(${globalIdx})">查看详情</button>`}</td>
                 </tr>`;
@@ -1613,7 +1767,7 @@
                 // 跨计划拒绝拒因汇总
                 const rd = l.rejectDetails;
                 html += `<tr class="log-detail-row" id="log-detail-${globalIdx}">
-                    <td colspan="12" class="log-detail-cell">
+                    <td colspan="11" class="log-detail-cell">
                         ${rd ? `
                         <div class="detail-section" style="margin-bottom:16px;">
                             <div class="detail-section-title"><span class="dot" style="background:#ff4d4f;"></span>全部拒因汇总 <span style="font-size:10px;color:#999;font-weight:400;">跨计划重试全部拒绝</span></div>
@@ -1663,7 +1817,7 @@
                             </div>
                         </div>
                         <div class="detail-result ${allPass ? 'pass' : 'fail'}">
-                            最终结果：${allPass ? '✅ 通过' : '❌ 拒绝'}
+                            最终结果：${allPass ? '✅ 通过' : '❌ 不通过'}
                         </div>
                     </td>
                 </tr>`;
@@ -1688,7 +1842,6 @@
     function resetLogSearch() {
         document.getElementById('logSearchPlanCode').value = '';
         document.getElementById('logSearchSubCode').value = '';
-        document.getElementById('logSearchOrderNo').value = '';
         document.getElementById('logSearchBrand').value = '';
         document.getElementById('logSearchEnterprise').value = '';
         document.getElementById('logSearchResult').value = '';
