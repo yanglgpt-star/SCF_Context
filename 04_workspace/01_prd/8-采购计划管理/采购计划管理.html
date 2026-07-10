@@ -389,15 +389,6 @@
                     <input type="text" id="logSearchBrand" placeholder="请输入品牌" oninput="filterLogs()">
                 </div>
                 <div class="search-item">
-                    <label>所属企业</label>
-                    <select id="logSearchEnterprise" onchange="filterLogs()">
-                        <option value="">全部</option>
-                        <option value="采购企业 1">采购企业 1</option>
-                        <option value="采购企业 2">采购企业 2</option>
-                        <option value="采购企业 3">采购企业 3</option>
-                    </select>
-                </div>
-                <div class="search-item">
                     <label>判断结果</label>
                     <select id="logSearchResult" onchange="filterLogs()">
                         <option value="">全部</option>
@@ -437,9 +428,7 @@
                         <tr>
                             <th>匹配计划编码</th>
                             <th>计划子编码</th>
-                            <th>匹配说明</th>
                             <th>品牌</th>
-                            <th>所属企业</th>
                             <th>订单单价</th>
                             <th>订单数量</th>
                             <th>订单金额</th>
@@ -1709,7 +1698,6 @@
         const planCode = document.getElementById('logSearchPlanCode').value.trim().toLowerCase();
         const subCode = document.getElementById('logSearchSubCode').value.trim().toLowerCase();
         const brand = document.getElementById('logSearchBrand').value.trim().toLowerCase();
-        const enterprise = document.getElementById('logSearchEnterprise').value;
         const result = document.getElementById('logSearchResult').value;
         const reason = document.getElementById('logSearchReason').value;
         const date = document.getElementById('logSearchDate').value;
@@ -1718,7 +1706,6 @@
             if (planCode && !(l.matchedPlanCode || '').toLowerCase().includes(planCode)) return false;
             if (subCode && !(l.subCode || '').toLowerCase().includes(subCode)) return false;
             if (brand && !l.brand.toLowerCase().includes(brand)) return false;
-            if (enterprise && l.enterprise !== enterprise) return false;
             if (result && l.result !== result) return false;
             if (reason && l.reason !== reason) return false;
             if (date && !l.judgeTime.startsWith(date)) return false;
@@ -1741,19 +1728,18 @@
 
         const tbody = document.getElementById('logTableBody');
         if (pageData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#999;">暂无数据</td></tr>';
         } else {
             let html = '';
             pageData.forEach((l, idx) => {
                 const globalIdx = start + idx;
                 const d = l.details;
                 const allPass = d && d.supplier && d.supplier.every(r => r.pass) && d.orderContent && d.orderContent.every(r => r.pass) && d.amountMonitor && d.amountMonitor.every(r => r.pass);
+                const subCodeDisplay = (l.result === '不通过' || l.hasNoMatch) ? '<span style="color:#999;">-</span>' : (l.subCode ? `<span class="tag tag-blue">${l.subCode}</span>` : '<span style="color:#999;">-</span>');
                 html += `<tr>
                     <td>${l.matchedPlanCode || '<span style="color:#999;">—</span>'}</td>
-                    <td>${l.subCode ? `<span class="tag tag-blue">${l.subCode}</span>` : '<span style="color:#999;">—</span>'}</td>
-                    <td><span class="tag ${l.matchNote === '匹配成功' ? 'tag-green' : 'tag-gray'}">${l.matchNote}</span></td>
+                    <td>${subCodeDisplay}</td>
                     <td>${l.brand}</td>
-                    <td><span class="tag tag-blue">${l.enterprise}</span></td>
                     <td>¥${(l.orderPrice || 0).toLocaleString()}</td>
                     <td>${(l.orderQty || 0).toLocaleString()}</td>
                     <td>¥${l.orderAmount.toLocaleString()}</td>
@@ -1762,25 +1748,10 @@
                     <td style="white-space:nowrap;">${l.judgeTime}</td>
                     <td>${l.hasNoMatch ? '-' : `<button class="btn-link" onclick="toggleLogDetail(${globalIdx})">查看详情</button>`}</td>
                 </tr>`;
-                // Detail row (仅匹配成功有详情)
+                // Detail row
                 if (l.hasNoMatch) { html += '</tr>'; return; }
-                // 跨计划拒绝拒因汇总
-                const rd = l.rejectDetails;
                 html += `<tr class="log-detail-row" id="log-detail-${globalIdx}">
-                    <td colspan="11" class="log-detail-cell">
-                        ${rd ? `
-                        <div class="detail-section" style="margin-bottom:16px;">
-                            <div class="detail-section-title"><span class="dot" style="background:#ff4d4f;"></span>全部拒因汇总 <span style="font-size:10px;color:#999;font-weight:400;">跨计划重试全部拒绝</span></div>
-                            <div class="detail-grid" style="grid-template-columns:1fr;">
-                                ${rd.map(r => `
-                                    <div class="detail-item dfail-row">
-                                        <span class="dlabel">${r.plan}</span>
-                                        <span class="dvalue dfail">${r.reason} ❌</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
+                    <td colspan="9" class="log-detail-cell">
                         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
                             <div class="detail-section">
                                 <div class="detail-section-title"><span class="dot" style="background:#1890ff;"></span>供应商资质 <span style="font-size:10px;color:#fa8c16;">🔄二期</span></div>
@@ -1843,7 +1814,6 @@
         document.getElementById('logSearchPlanCode').value = '';
         document.getElementById('logSearchSubCode').value = '';
         document.getElementById('logSearchBrand').value = '';
-        document.getElementById('logSearchEnterprise').value = '';
         document.getElementById('logSearchResult').value = '';
         document.getElementById('logSearchReason').value = '';
         document.getElementById('logSearchDate').value = '';
