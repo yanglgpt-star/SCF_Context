@@ -1746,51 +1746,7 @@
                     <td>${statusTag(l.result)}</td>
                     <td style="color:${l.result === '不通过' ? '#ff4d4f' : '#999'};">${l.reason || '-'}</td>
                     <td style="white-space:nowrap;">${l.judgeTime}</td>
-                    <td>${l.hasNoMatch ? '-' : `<button class="btn-link" onclick="toggleLogDetail(${globalIdx})">查看详情</button>`}</td>
-                </tr>`;
-                // Detail row
-                if (l.hasNoMatch) { html += '</tr>'; return; }
-                html += `<tr class="log-detail-row" id="log-detail-${globalIdx}">
-                    <td colspan="9" class="log-detail-cell">
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-                            <div class="detail-section">
-                                <div class="detail-section-title"><span class="dot" style="background:#1890ff;"></span>供应商资质 <span style="font-size:10px;color:#fa8c16;">🔄二期</span></div>
-                                <div class="detail-grid">
-                                    ${d.supplier.map(r => `
-                                        <div class="detail-item ${r.pass ? 'dpass-row' : 'dfail-row'}">
-                                            <span class="dlabel">${r.rule}</span>
-                                            <span class="dvalue ${r.pass ? 'dpass' : 'dfail'}">${r.value} ${r.pass ? '✅' : '❌'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="detail-section">
-                                <div class="detail-section-title"><span class="dot" style="background:#52c41a;"></span>订单内容</div>
-                                <div class="detail-grid">
-                                    ${d.orderContent.map(r => `
-                                        <div class="detail-item ${r.pass ? 'dpass-row' : 'dfail-row'}">
-                                            <span class="dlabel">${r.rule}</span>
-                                            <span class="dvalue ${r.pass ? 'dpass' : 'dfail'}">${r.value} ${r.pass ? '✅' : '❌'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            <div class="detail-section">
-                                <div class="detail-section-title"><span class="dot" style="background:#fa8c16;"></span>金额监控</div>
-                                <div class="detail-grid">
-                                    ${d.amountMonitor.map(r => `
-                                        <div class="detail-item ${r.pass ? 'dpass-row' : 'dfail-row'}">
-                                            <span class="dlabel">${r.rule}</span>
-                                            <span class="dvalue ${r.pass ? 'dpass' : 'dfail'}">${r.value} ${r.pass ? '✅' : '❌'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="detail-result ${allPass ? 'pass' : 'fail'}">
-                            最终结果：${allPass ? '✅ 通过' : '❌ 不通过'}
-                        </div>
-                    </td>
+                    <td><span style="color:#999;">-</span></td>
                 </tr>`;
             });
             tbody.innerHTML = html;
