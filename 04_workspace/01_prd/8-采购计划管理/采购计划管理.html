@@ -317,15 +317,6 @@
                     <input type="text" id="orderSearchNo" placeholder="请输入订单号" oninput="filterOrders()">
                 </div>
                 <div class="search-item">
-                    <label>所属企业</label>
-                    <select id="orderSearchEnterprise" onchange="filterOrders()">
-                        <option value="">全部</option>
-                        <option value="采购企业 1">采购企业 1</option>
-                        <option value="采购企业 2">采购企业 2</option>
-                        <option value="采购企业 3">采购企业 3</option>
-                    </select>
-                </div>
-                <div class="search-item">
                     <label>下单时间</label>
                     <input type="date" id="orderSearchDate" onchange="filterOrders()">
                 </div>
@@ -347,7 +338,6 @@
                         <tr>
                             <th>匹配计划</th>
                             <th>计划子编码</th>
-                            <th>所属企业</th>
                             <th>品牌</th>
                             <th>品类</th>
                             <th>商品名称</th>
@@ -1592,7 +1582,6 @@
         const cat = document.getElementById('orderSearchCategory').value.trim().toLowerCase();
         const sku = document.getElementById('orderSearchSku').value.trim().toLowerCase();
         const orderNo = document.getElementById('orderSearchNo').value.trim().toLowerCase();
-        const enterprise = document.getElementById('orderSearchEnterprise').value;
         const date = document.getElementById('orderSearchDate').value;
 
         return orders.filter(o => {
@@ -1602,7 +1591,6 @@
             if (cat && !o.category.toLowerCase().includes(cat)) return false;
             if (sku && !o.skuCode.toLowerCase().includes(sku)) return false;
             if (orderNo && !o.orderNo.toLowerCase().includes(orderNo)) return false;
-            if (enterprise && o.enterprise !== enterprise) return false;
             if (date && !o.orderTime.startsWith(date)) return false;
             return true;
         });
@@ -1624,7 +1612,6 @@
                 <tr>
                     <td>${o.matchedPlanCode ? `<a href="#" style="color:#1890ff;">${o.matchedPlanCode}</a>` : '<span style="color:#999;">未匹配</span>'}</td>
                     <td>${o.subCode ? `<span class="tag tag-blue">${o.subCode}</span>` : '<span style="color:#999;">—</span>'}</td>
-                    <td><span class="tag tag-blue">${o.enterprise}</span></td>
                     <td>${o.brand}</td>
                     <td>${o.category}</td>
                     <td>${o.skuName}</td>
@@ -1659,9 +1646,9 @@
     function exportOrders() {
         const data = getFilteredOrders();
         if (data.length === 0) return showToast('当前没有可导出的订单', 'error');
-        const headers = ['匹配计划编码', '计划子编码', '所属企业', '品牌', '品类', '商品名称', 'SKU编码', '订单号', '单价', '数量', '总价', '供应商', '采购商', '订单渠道', '下单时间', '订单完成时间'];
+        const headers = ['匹配计划编码', '计划子编码', '品牌', '品类', '商品名称', 'SKU编码', '订单号', '单价', '数量', '总价', '供应商', '采购商', '订单渠道', '下单时间', '订单完成时间'];
         const rows = data.map(o => [
-            o.matchedPlanCode, o.subCode, o.enterprise, o.brand, o.category,
+            o.matchedPlanCode, o.subCode, o.brand, o.category,
             o.skuName, o.skuCode, o.orderNo, o.unitPrice, o.quantity, o.totalPrice,
             o.supplier, o.purchaser, o.channel, o.orderTime, o.completeTime
         ]);
@@ -1681,7 +1668,6 @@
         ['orderSearchPlanCode','orderSearchSubCode','orderSearchSku','orderSearchNo'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('orderSearchBrand').value = '';
         document.getElementById('orderSearchCategory').value = '';
-        document.getElementById('orderSearchEnterprise').value = '';
         document.getElementById('orderSearchDate').value = '';
         filterOrders();
     }
