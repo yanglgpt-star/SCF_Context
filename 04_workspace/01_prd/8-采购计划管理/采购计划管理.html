@@ -1422,16 +1422,13 @@
                         <th>核对单价</th>
                         <th>核对数量</th>
                         <th>核对金额</th>
-                        <th>完成品牌</th>
-                        <th>完成品类</th>
-                        <th>完成单价</th>
                         <th>完成数量</th>
                         <th>完成金额</th>
                     </tr>
                 </thead>
                 <tbody>`;
         if (rows.length === 0) {
-            html += '<tr><td colspan="13" style="text-align:center;padding:30px;color:#999;">暂无订单数据</td></tr>';
+            html += '<tr><td colspan="10" style="text-align:center;padding:30px;color:#999;">暂无订单数据</td></tr>';
         } else {
             rows.forEach(r => {
                 const stTag = r.status === '正常核对' ? 'tag-green' : r.status === '撤单' ? 'tag-gray' : 'tag-red';
@@ -1450,9 +1447,6 @@
                     <td>¥${r.jPrice.toLocaleString()}</td>
                     <td>${r.jQty.toLocaleString()}</td>
                     <td>¥${r.jTotal.toLocaleString()}</td>
-                    ${tdCmp(r.jBrand, r.aBrand)}
-                    ${tdCmp(r.jCat, r.aCat)}
-                    ${tdCmp(r.jPrice, r.aPrice)}
                     ${tdCmp(r.jQty, r.aQty)}
                     ${tdCmp(r.jTotal, r.aTotal)}
                 </tr>`;
