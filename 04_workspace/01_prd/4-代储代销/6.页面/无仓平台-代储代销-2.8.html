@@ -417,6 +417,52 @@
         .table-scroll { overflow-x: auto; margin: 0 24px 24px; width: calc(100% - 48px); }
         .table-scroll .data-table { width: auto; min-width: 100%; }
         
+        /* 库存总览卡片 */
+        .inventory-overview {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 0 24px;
+            padding-top: 20px;
+        }
+        .inv-card {
+            background: linear-gradient(135deg, #fafafa 0%, #fff 100%);
+            border: 1px solid #e8e8e8;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .inv-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        .inv-card .inv-label {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        .inv-card .inv-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #262626;
+        }
+        .inv-card .inv-value.blue { color: #1890ff; }
+        .inv-card .inv-value.green { color: #52c41a; }
+        .inv-card .inv-value.orange { color: #faad14; }
+        .inv-card .inv-value.red { color: #cf1322; }
+        .inv-card .inv-sub {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 6px;
+        }
+        .inv-card .inv-sub .highlight { font-weight: 600; }
+        .inv-card .inv-sub .highlight.green { color: #52c41a; }
+        .inv-card .inv-sub .highlight.blue { color: #1890ff; }
+        .inv-card .inv-sub .highlight.orange { color: #faad14; }
+        .inv-card .inv-sub .highlight.red { color: #cf1322; }
+
         /* 标签 */
         .tag {
             display: inline-block;
@@ -907,6 +953,34 @@
         <!-- 申请记录 -->
         <div id="page-apply-record" class="page-content hidden">
                 <div class="card" style="border-radius: 0 0 8px 8px;">
+                    <!-- 库存总览 -->
+                    <div class="inventory-overview">
+                        <div class="inv-card">
+                            <div class="inv-label">申请总量</div>
+                            <div class="inv-value" id="inv-total-qty">-</div>
+                            <div class="inv-sub">审核通过批次累计</div>
+                        </div>
+                        <div class="inv-card">
+                            <div class="inv-label">已入库量</div>
+                            <div class="inv-value blue" id="inv-in-qty">-</div>
+                            <div class="inv-sub">入库率 <span class="highlight blue" id="inv-in-rate">-</span></div>
+                        </div>
+                        <div class="inv-card">
+                            <div class="inv-label">在库余量</div>
+                            <div class="inv-value green" id="inv-stock-qty">-</div>
+                            <div class="inv-sub">占总入库 <span class="highlight green" id="inv-stock-rate">-</span></div>
+                        </div>
+                        <div class="inv-card">
+                            <div class="inv-label">已售总量</div>
+                            <div class="inv-value orange" id="inv-sold-qty">-</div>
+                            <div class="inv-sub">占总入库 <span class="highlight orange" id="inv-sold-rate">-</span></div>
+                        </div>
+                        <div class="inv-card">
+                            <div class="inv-label">剩余金额</div>
+                            <div class="inv-value red" id="inv-deposit">-</div>
+                            <div class="inv-sub">拨付保证金-提货保证金</div>
+                        </div>
+                    </div>
                     <!-- 搜索区 -->
                 <div class="search-area">
                     <div class="search-item">
@@ -938,22 +1012,24 @@
                     <thead>
                         <tr>
                             <th>申请编号</th>
-                            <th>入库仓库</th>
                             <th>货物数量</th>
                             <th>申请总金额</th>
                             <th>申请状态</th>
                             <th>申请时间</th>
+                            <th>入库仓库</th>
+                            <th>仓库地址</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>SQ20250909001</td>
-                            <td>醒市仓储-上海仓</td>
                             <td>100</td>
                             <td>¥899,900.00</td>
                             <td><span class="tag tag-processing">审核中</span></td>
                             <td>2026-09-09 10:00</td>
+                            <td>醒市仓储-上海仓</td>
+                            <td>上海市松江区xxx路xx号</td>
                             <td>
                                 <div class="action-links">
                                     <span class="action-link" onclick="showDetailModal('SQ20250909001')">查看</span>
@@ -962,11 +1038,12 @@
                         </tr>
                         <tr>
                             <td>SQ20250908002</td>
-                            <td>醒市仓储-深圳仓</td>
                             <td>50</td>
                             <td>¥958,000.00</td>
                             <td><span class="tag tag-warning">待提交</span></td>
                             <td>2026-09-08 15:00</td>
+                            <td>醒市仓储-深圳仓</td>
+                            <td>深圳市龙岗区xxx路xx号</td>
                             <td>
                                 <div class="action-links">
                                     <span class="action-link" onclick="showDetailModal('SQ20250908002')">查看</span>
@@ -976,11 +1053,12 @@
                         </tr>
                         <tr>
                             <td>SQ20250907003</td>
-                            <td>醒市仓储-上海仓</td>
                             <td>200</td>
                             <td>¥345,000.00</td>
                             <td><span class="tag tag-success">已通过</span></td>
                             <td>2026-09-07 09:00</td>
+                            <td>醒市仓储-上海仓</td>
+                            <td>上海市松江区xxx路xx号</td>
                             <td>
                                 <div class="action-links">
                                     <span class="action-link" onclick="showDetailModal('SQ20250907003')">查看</span>
@@ -989,11 +1067,12 @@
                         </tr>
                         <tr>
                             <td>SQ20250906004</td>
-                            <td>醒市仓储-北京仓</td>
                             <td>80</td>
                             <td>¥256,000.00</td>
                             <td><span class="tag tag-error">已驳回</span></td>
                             <td>2026-09-06 14:00</td>
+                            <td>醒市仓储-北京仓</td>
+                            <td>北京市大兴区xxx路xx号</td>
                             <td>
                                 <div class="action-links">
                                     <span class="action-link" onclick="showDetailModal('SQ20250906004')">查看</span>
@@ -1003,11 +1082,12 @@
                         </tr>
                         <tr>
                             <td>SQ20250905005</td>
-                            <td>醒市仓储-深圳仓</td>
                             <td>60</td>
                             <td>¥456,000.00</td>
                             <td><span class="tag tag-error">已拒绝</span></td>
                             <td>2026-09-05 16:00</td>
+                            <td>醒市仓储-深圳仓</td>
+                            <td>深圳市龙岗区xxx路xx号</td>
                             <td>
                                 <div class="action-links">
                                     <span class="action-link" onclick="showDetailModal('SQ20250905005')">查看</span>
@@ -1734,8 +1814,90 @@
             document.getElementById('page-main').classList.remove('hidden');
         }
 
+        // ====== 库存总览 ======
+
+        // 库存模拟数据（实际应从接口获取）
+        var inventoryData = {
+            'SQ20250907003': { stockInQty: 180, stockQty: 120, evaluateAmount: 345000, depositAmount: 241500 },
+        };
+
+        // 需要排除的状态（不纳入库存统计）
+        var EXCLUDED_STATUSES = ['已驳回', '已拒绝'];
+
+        function refreshInventoryOverview() {
+            var totalQty = 0;
+            var totalInQty = 0;
+            var totalStockQty = 0;
+            var totalDeposit = 0;
+            var hasInventory = false;
+
+            // 仅统计审核通过的申请
+            for (var key in applyDetailData) {
+                if (applyDetailData.hasOwnProperty(key)) {
+                    var data = applyDetailData[key];
+                    if (EXCLUDED_STATUSES.indexOf(data.status) !== -1) continue;
+                    if (data.status === '已通过') {
+                        totalQty += parseInt(data.qty) || 0;
+                        var inv = inventoryData[key];
+                        if (inv) {
+                            totalInQty += inv.stockInQty || 0;
+                            totalStockQty += inv.stockQty || 0;
+                            totalDeposit += inv.depositAmount || 0;
+                            hasInventory = true;
+                        }
+                    }
+                }
+            }
+
+            var totalSoldQty = totalInQty - totalStockQty;
+            if (totalSoldQty < 0) totalSoldQty = 0;
+
+            // 格式化数字
+            function fmtNum(n) {
+                if (n >= 10000) return (n / 10000).toFixed(1) + '万';
+                return n.toLocaleString();
+            }
+
+            // 格式化金额
+            function fmtMoney(n) {
+                if (n >= 10000) {
+                    var wan = n / 10000;
+                    if (wan >= 10000) return (wan / 10000).toFixed(2) + '亿';
+                    if (Number.isInteger(wan)) return '¥' + wan.toLocaleString() + '万';
+                    return '¥' + wan.toFixed(1) + '万';
+                }
+                return '¥' + n.toLocaleString();
+            }
+
+            document.getElementById('inv-total-qty').textContent = fmtNum(totalQty) || '0';
+            document.getElementById('inv-in-qty').textContent = fmtNum(totalInQty) || '0';
+            document.getElementById('inv-stock-qty').textContent = fmtNum(totalStockQty) || '0';
+            document.getElementById('inv-sold-qty').textContent = fmtNum(totalSoldQty) || '0';
+            document.getElementById('inv-deposit').textContent = fmtMoney(totalDeposit) || '¥0';
+
+            // 入库率
+            if (totalQty > 0) {
+                var inRate = (totalInQty / totalQty * 100).toFixed(1);
+                document.getElementById('inv-in-rate').textContent = inRate + '%';
+            } else {
+                document.getElementById('inv-in-rate').textContent = '-';
+            }
+
+            // 在库占比
+            if (totalInQty > 0) {
+                var stockRate = (totalStockQty / totalInQty * 100).toFixed(1);
+                var soldRate = (totalSoldQty / totalInQty * 100).toFixed(1);
+                document.getElementById('inv-stock-rate').textContent = stockRate + '%';
+                document.getElementById('inv-sold-rate').textContent = soldRate + '%';
+            } else {
+                document.getElementById('inv-stock-rate').textContent = '-';
+                document.getElementById('inv-sold-rate').textContent = '-';
+            }
+        }
+
         // 申请记录页面
         function goToApplyRecords() {
+            refreshInventoryOverview();
             showToast('正在进入申请记录...', 'info');
             document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
             document.getElementById('page-apply-record').classList.remove('hidden');

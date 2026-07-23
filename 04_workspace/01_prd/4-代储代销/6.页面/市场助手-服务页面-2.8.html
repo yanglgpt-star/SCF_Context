@@ -77,6 +77,21 @@
             font-weight: 600;
             color: #333;
         }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-link {
+            font-size: 14px;
+            color: #3b82f6;
+            cursor: pointer;
+            white-space: nowrap;
+            background: none;
+            border: none;
+            padding: 4px 0;
+        }
+        .header-link:active { opacity: 0.7; }
         .capsule-btn {
             width: 88px;
             height: 32px;
@@ -645,6 +660,276 @@
         .form-select:active, .form-text-input:focus {
             border-color: #3b82f6;
         }
+
+        /* 详情弹窗 */
+        .detail-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        .detail-overlay.active { display: flex; }
+        .detail-sheet {
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            width: 100%;
+            max-width: 414px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: sheetUp 0.25s ease;
+            padding: 20px 20px 30px;
+        }
+        @keyframes sheetUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .detail-close {
+            text-align: center;
+            padding: 12px 0 0;
+            font-size: 14px;
+            color: #999;
+            cursor: pointer;
+        }
+        .detail-close::before {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 0 auto 12px;
+        }
+        .detail-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .detail-sub {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        .detail-status-tag {
+            display: inline-block;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .detail-section {
+            margin-bottom: 16px;
+        }
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            border-left: 3px solid #3b82f6;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #999; }
+        .detail-value { color: #333; font-weight: 500; }
+        .detail-value.amount { color: #ff6b35; }
+        .detail-goods {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .detail-goods-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .detail-goods-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .detail-goods-row:last-child { margin-bottom: 0; }
+        /* 状态流程 */
+        .detail-flow {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+        }
+        .flow-dot {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .flow-dot.done { background: #52c41a; color: #fff; }
+        .flow-dot.active { background: #3b82f6; color: #fff; }
+        .flow-dot.pending { background: #e8e8e8; color: #999; }
+        .flow-dot.fail { background: #ff4d4f; color: #fff; }
+        .flow-line {
+            flex: 1;
+            height: 2px;
+            background: #e8e8e8;
+            margin: 0 6px;
+        }
+        .flow-line.done { background: #52c41a; }
+        .flow-line.active { background: #3b82f6; }
+        .flow-line.fail { background: #ff4d4f; }
+        .flow-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* 申请记录列表 */
+        .records-body {
+            background: #f8f9fa;
+            min-height: calc(100vh - 44px);
+            padding: 12px 16px 100px;
+        }
+        .record-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .record-no {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .record-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .record-status.pending { background: #f5f5f5; color: #999; }
+        .record-status.review { background: #e6f7ff; color: #1890ff; }
+        .record-status.approved { background: #f6ffed; color: #52c41a; }
+        .record-status.rejected { background: #fff2f0; color: #ff4d4f; }
+        .record-status.refused { background: #fff2f0; color: #cf1322; }
+        .record-body {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.8;
+        }
+        .record-body .label { color: #999; }
+        .record-body .value { color: #333; font-weight: 500; }
+        .record-body .value.amount { color: #ff6b35; }
+        .record-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f5f5f5;
+        }
+        .record-footer span {
+            font-size: 13px;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .record-footer .btn-view {
+            color: #3b82f6;
+            background: #f0f5ff;
+        }
+        .record-footer .btn-edit {
+            color: #fff;
+            background: #3b82f6;
+        }
+        .record-footer span:active { opacity: 0.8; }
+        .records-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 14px;
+        }
+        .records-empty .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        /* 申请摘要 */
+        .apply-summary {
+            margin: 0 16px 16px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+        }
+        .apply-summary:active { opacity: 0.8; }
+        .summary-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        .summary-more {
+            font-size: 13px;
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .summary-stats {
+            display: flex;
+            gap: 0;
+        }
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        .stat-item:active { opacity: 0.7; }
+        .stat-item:last-child { border-right: none; }
+        .stat-num {
+            display: block;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .stat-num.pending { color: #999; }
+        .stat-num.review { color: #1890ff; }
+        .stat-num.approved { color: #52c41a; }
+        .stat-num.rejected { color: #ff4d4f; }
+        .stat-num.refused { color: #cf1322; }
+        .stat-lbl {
+            font-size: 11px;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -671,11 +956,13 @@
                     <div class="logo-icon">市</div>
                     <div class="logo-text">市场助手</div>
                 </div>
-                <div class="capsule-btn">
-                    <div class="capsule-dots">
-                        <span></span><span></span><span></span>
+                <div class="header-right">
+                    <div class="capsule-btn">
+                        <div class="capsule-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="capsule-circle"></div>
                     </div>
-                    <div class="capsule-circle"></div>
                 </div>
             </div>
             
@@ -686,18 +973,21 @@
                 <div class="top-tab active">服务</div>
             </div>
             
-            <!-- 供应链服务入口 -->
-            <div class="service-entry">
-                <div class="service-btn">
-                    <div class="service-icon">☰</div>
-                    <div class="service-text">供应链服务</div>
-                </div>
-            </div>
-            
             <!-- 中间内容：选择服务类型 -->
             <div class="select-body">
+                <!-- 我的申请摘要 -->
+                <div class="apply-summary">
+                    <div class="summary-top">
+                        <span onclick="goApplyRecords()" style="cursor:pointer;">📋 我的申请</span>
+                        <span class="summary-more" onclick="goApplyRecords()">查看全部 ›</span>
+                    </div>
+                    <div class="summary-stats" id="summaryStats">
+                        <!-- 由 JS 动态渲染并绑定点击事件 -->
+                    </div>
+                </div>
+
                 <div class="section-title-bar">请选择服务类型</div>
-                
+
                 <div class="type-list">
                     <div class="type-card selected" onclick="selectType(this)">
                         <div class="type-icon">📦</div>
@@ -708,7 +998,7 @@
                         </div>
                         <div class="type-check">✓</div>
                     </div>
-                    
+
                     <div class="type-card disabled" onclick="showToast('即将上线，敬请期待')">
                         <div class="type-icon">💰</div>
                         <div class="type-info">
@@ -719,7 +1009,7 @@
                         <div class="type-check"></div>
                     </div>
                 </div>
-                
+
                 <div class="agreement-box">
                     <input type="checkbox" id="agreeProtocol" onchange="toggleNextBtn()">
                     <label for="agreeProtocol" class="agreement-text">
@@ -884,8 +1174,66 @@
                 <button class="btn btn-primary" onclick="saveGoods()">保存</button>
             </div>
         </div>
+
+        <!-- ==================== 页面4：申请记录 ==================== -->
+        <div id="page-apply-records" class="page-section">
+            <div class="page-nav">
+                <div class="back-btn" onclick="goBackFromRecords()">‹</div>
+                <div class="page-nav-title" id="recordsPageTitle">申请记录</div>
+            </div>
+            <div class="records-body" id="recordsList">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+        </div>
+
+        <!-- 申请详情弹窗 -->
+        <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()">
+            <div class="detail-sheet" onclick="event.stopPropagation()">
+                <div class="detail-close" onclick="closeDetail()">关闭</div>
+                <div class="detail-title" id="detailNo">-</div>
+                <div class="detail-sub" id="detailTime">-</div>
+                <div style="margin-bottom:16px;"><span class="detail-status-tag" id="detailStatusTag">-</span></div>
+
+                <!-- 状态流程 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">审核进度</div>
+                    <div id="detailFlow"></div>
+                </div>
+
+                <!-- 基本信息 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">基本信息</div>
+                    <div class="detail-row">
+                        <span class="detail-label">入库仓库</span>
+                        <span class="detail-value" id="detailWarehouse">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">仓库地址</span>
+                        <span class="detail-value" id="detailAddress">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">货物数量</span>
+                        <span class="detail-value" id="detailQty">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">申请总金额</span>
+                        <span class="detail-value amount" id="detailAmount">-</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">申请时间</span>
+                        <span class="detail-value" id="detailTime2">-</span>
+                    </div>
+                </div>
+
+                <!-- 货物清单 -->
+                <div class="detail-section">
+                    <div class="detail-section-title">货物清单</div>
+                    <div id="detailGoods"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
     <script>
         var productData = {
             '苹果': {
@@ -910,12 +1258,13 @@
             }
         };
         
-        function showToast(msg) {
+        function showToast(msg, type) {
             var toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;top:40%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 18px;border-radius:6px;font-size:14px;z-index:9999;white-space:nowrap;';
-            toast.textContent = msg;
+            var bg = type === 'info' ? 'rgba(59,130,246,0.85)' : 'rgba(0,0,0,0.75)';
+            toast.style.cssText = 'position:fixed;top:40%;left:50%;transform:translateX(-50%);background:' + bg + ';color:#fff;padding:10px 18px;border-radius:6px;font-size:14px;z-index:9999;line-height:1.6;text-align:center;';
+            toast.innerHTML = msg.replace(/\n/g, '<br>');
             document.body.appendChild(toast);
-            setTimeout(function(){ toast.remove(); }, 2000);
+            setTimeout(function(){ toast.remove(); }, 2500);
         }
         
         function switchPage(pageId) {
@@ -1093,6 +1442,195 @@
             el.closest('.goods-card').remove();
             showToast('删除成功');
         }
+
+        // ====== 申请记录 ======
+        var applyRecords = [
+            { no: 'SQ20250909001', status: '审核中', statusClass: 'review', warehouse: '醒市仓储-上海仓', address: '上海市松江区xxx路xx号', qty: 100, amount: '¥899,900.00', time: '2026-09-09 10:00' },
+            { no: 'SQ20250907003', status: '已通过', statusClass: 'approved', warehouse: '醒市仓储-上海仓', address: '上海市松江区xxx路xx号', qty: 200, amount: '¥345,000.00', time: '2026-09-07 09:00' },
+            { no: 'SQ20250906004', status: '已驳回', statusClass: 'rejected', warehouse: '醒市仓储-北京仓', address: '北京市大兴区xxx路xx号', qty: 80, amount: '¥256,000.00', time: '2026-09-06 14:00' },
+            { no: 'SQ20250905005', status: '已拒绝', statusClass: 'refused', warehouse: '醒市仓储-深圳仓', address: '深圳市龙岗区xxx路xx号', qty: 60, amount: '¥456,000.00', time: '2026-09-05 16:00' }
+        ];
+
+        // 记录状态对应中文标签
+        var statusLabels = {
+            'pending': '待提交', 'review': '审核中', 'approved': '已通过', 'rejected': '已驳回', 'refused': '已拒绝'
+        };
+
+        // 可编辑的状态
+        var EDITABLE_STATUSES = ['待提交', '已驳回'];
+
+        // 状态名 → css class
+        var STATUS_CLASS = { '待提交': 'pending', '审核中': 'review', '已通过': 'approved', '已驳回': 'rejected', '已拒绝': 'refused' };
+
+        // 当前记录列表的过滤状态（空=全部）
+        var currentFilter = '';
+
+        // 刷新摘要统计
+        function refreshApplySummary() {
+            var counts = { '审核中': 0, '已通过': 0, '已驳回': 0, '已拒绝': 0 };
+            for (var i = 0; i < applyRecords.length; i++) {
+                var s = applyRecords[i].status;
+                if (counts.hasOwnProperty(s)) counts[s]++;
+            }
+            var statsEl = document.getElementById('summaryStats');
+            if (!statsEl) return;
+            var html = '';
+            var order = ['审核中', '已通过', '已驳回', '已拒绝'];
+            for (var j = 0; j < order.length; j++) {
+                var st = order[j];
+                html +=
+                    '<div class="stat-item" onclick="event.stopPropagation();goApplyRecords(\'' + st + '\')">' +
+                        '<span class="stat-num ' + STATUS_CLASS[st] + '">' + counts[st] + '</span>' +
+                        '<span class="stat-lbl">' + st + '</span>' +
+                    '</div>';
+            }
+            statsEl.innerHTML = html;
+        }
+
+        function renderApplyRecords(filter) {
+            var list = document.getElementById('recordsList');
+            var filtered = [];
+            for (var i = 0; i < applyRecords.length; i++) {
+                if (!filter || applyRecords[i].status === filter) {
+                    filtered.push(applyRecords[i]);
+                }
+            }
+            if (filtered.length === 0) {
+                var emptyMsg = filter ? '暂无' + filter + '的申请' : '暂无申请记录';
+                list.innerHTML = '<div class="records-empty"><div class="empty-icon">📋</div>' + emptyMsg + '</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var r = filtered[i];
+                var canEdit = EDITABLE_STATUSES.indexOf(r.status) !== -1;
+                html +=
+                    '<div class="record-card">' +
+                        '<div class="record-header">' +
+                            '<span class="record-no">' + r.no + '</span>' +
+                            '<span class="record-status ' + r.statusClass + '">' + r.status + '</span>' +
+                        '</div>' +
+                        '<div class="record-body">' +
+                            '<span><span class="label">仓库：</span><span class="value">' + r.warehouse + '</span></span>' +
+                            '<span><span class="label">地址：</span><span class="value">' + (r.address || '-') + '</span></span>' +
+                            '<span><span class="label">数量：</span><span class="value">' + r.qty + '台</span></span>' +
+                            '<span><span class="label">金额：</span><span class="value amount">' + r.amount + '</span></span>' +
+                            '<span><span class="label">时间：</span><span class="value">' + r.time + '</span></span>' +
+                        '</div>' +
+                        '<div class="record-footer">' +
+                            '<span class="btn-view" onclick="showApplyDetail(\'' + r.no + '\')">查看</span>';
+                if (canEdit) {
+                    html += '<span class="btn-edit" onclick="editApplyRecord(\'' + r.no + '\')">编辑</span>';
+                }
+                html +=
+                        '</div>' +
+                    '</div>';
+            }
+            list.innerHTML = html;
+        }
+
+        function goApplyRecords(filter) {
+            currentFilter = filter || '';
+            var titleEl = document.getElementById('recordsPageTitle');
+            if (currentFilter) {
+                titleEl.textContent = currentFilter + '申请';
+            } else {
+                titleEl.textContent = '申请记录';
+            }
+            renderApplyRecords(currentFilter);
+            switchPage('page-apply-records');
+        }
+
+        function goBackFromRecords() {
+            refreshApplySummary();
+            switchPage('page-select-type');
+        }
+
+        // 状态流程 HTML
+        function renderDetailFlow(status) {
+            var steps = [
+                { label: '提交申请', key: '提交' },
+                { label: '审核中', key: '审核中' },
+                { label: '审核结果', key: '结果' }
+            ];
+            var dotStates = [];
+            if (status === '待提交') {
+                dotStates = ['active', 'pending', 'pending'];
+            } else if (status === '审核中') {
+                dotStates = ['done', 'active', 'pending'];
+            } else if (status === '已通过') {
+                dotStates = ['done', 'done', 'done'];
+            } else if (status === '已驳回' || status === '已拒绝') {
+                dotStates = ['done', 'done', 'fail'];
+            }
+            var html = '<div style="display:flex;align-items:center;">';
+            for (var i = 0; i < steps.length; i++) {
+                html += '<div class="flow-dot ' + dotStates[i] + '">';
+                if (dotStates[i] === 'done') html += '✓';
+                else if (dotStates[i] === 'fail') html += '✕';
+                else html += (i + 1);
+                html += '</div>';
+                if (i < steps.length - 1) {
+                    html += '<div class="flow-line ' + dotStates[i] + '"></div>';
+                }
+            }
+            html += '</div><div class="flow-labels">';
+            for (var i = 0; i < steps.length; i++) {
+                html += '<span>' + steps[i].label + '</span>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function showApplyDetail(no) {
+            for (var i = 0; i < applyRecords.length; i++) {
+                if (applyRecords[i].no === no) {
+                    var r = applyRecords[i];
+                    document.getElementById('detailNo').textContent = r.no;
+                    document.getElementById('detailTime').textContent = '申请时间：' + r.time;
+
+                    var tag = document.getElementById('detailStatusTag');
+                    tag.textContent = r.status;
+                    tag.className = 'detail-status-tag ' + r.statusClass;
+
+                    document.getElementById('detailWarehouse').textContent = r.warehouse;
+                    document.getElementById('detailAddress').textContent = r.address || '-';
+                    document.getElementById('detailQty').textContent = r.qty + '台';
+                    document.getElementById('detailAmount').textContent = r.amount;
+                    document.getElementById('detailTime2').textContent = r.time;
+                    document.getElementById('detailFlow').innerHTML = renderDetailFlow(r.status);
+
+                    // 模拟货物清单
+                    document.getElementById('detailGoods').innerHTML =
+                        '<div class="detail-goods">' +
+                            '<div class="detail-goods-name">iPhone 15 Pro / 128GB 黑色</div>' +
+                            '<div class="detail-goods-row"><span>品牌：苹果</span><span>SKU编码：SKU001</span></div>' +
+                            '<div class="detail-goods-row"><span>数量：' + r.qty + '</span><span>单价：¥8,999.00</span></div>' +
+                            '<div class="detail-goods-row"><span>小计：<strong style="color:#ff6b35;">' + r.amount + '</strong></span></div>' +
+                        '</div>';
+
+                    document.getElementById('detailOverlay').classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    break;
+                }
+            }
+        }
+
+        function closeDetail() {
+            document.getElementById('detailOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function editApplyRecord(no) {
+            showToast('正在编辑申请 ' + no + ' ...', 'info');
+            // 实际场景：回填数据到 page-fill-form 并跳转
+            setTimeout(function() {
+                switchPage('page-fill-form');
+            }, 500);
+        }
+
+        // 页面加载时刷新申请摘要
+        refreshApplySummary();
     </script>
 </body>
 </html>
