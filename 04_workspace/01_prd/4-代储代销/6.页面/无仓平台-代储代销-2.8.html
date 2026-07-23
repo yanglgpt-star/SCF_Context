@@ -955,27 +955,27 @@
                 <div class="card" style="border-radius: 0 0 8px 8px;">
                     <!-- 库存总览 -->
                     <div class="inventory-overview">
-                        <div class="inv-card">
+                        <div class="inv-card" onclick="goInventoryDetail()" style="cursor:pointer;">
                             <div class="inv-label">申请总量</div>
                             <div class="inv-value" id="inv-total-qty">-</div>
                             <div class="inv-sub">审核通过批次累计</div>
                         </div>
-                        <div class="inv-card">
+                        <div class="inv-card" onclick="goInventoryDetail()" style="cursor:pointer;">
                             <div class="inv-label">已入库量</div>
                             <div class="inv-value blue" id="inv-in-qty">-</div>
                             <div class="inv-sub">入库率 <span class="highlight blue" id="inv-in-rate">-</span></div>
                         </div>
-                        <div class="inv-card">
+                        <div class="inv-card" onclick="goInventoryDetail()" style="cursor:pointer;">
                             <div class="inv-label">在库余量</div>
                             <div class="inv-value green" id="inv-stock-qty">-</div>
                             <div class="inv-sub">占总入库 <span class="highlight green" id="inv-stock-rate">-</span></div>
                         </div>
-                        <div class="inv-card">
+                        <div class="inv-card" onclick="goInventoryDetail()" style="cursor:pointer;">
                             <div class="inv-label">已售总量</div>
                             <div class="inv-value orange" id="inv-sold-qty">-</div>
                             <div class="inv-sub">占总入库 <span class="highlight orange" id="inv-sold-rate">-</span></div>
                         </div>
-                        <div class="inv-card">
+                        <div class="inv-card" onclick="goInventoryDetail()" style="cursor:pointer;">
                             <div class="inv-label">剩余金额</div>
                             <div class="inv-value red" id="inv-deposit">-</div>
                             <div class="inv-sub">拨付保证金-提货保证金</div>
@@ -1281,9 +1281,42 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- ========== 库存明细页面 ========== -->
+    <div id="page-inventory-detail" class="page-content hidden">
+        <div class="page-header">
+            <div class="page-title">库存明细</div>
+            <div class="page-subtitle">按商品维度查看库存明细信息</div>
+        </div>
+        <div class="card">
+            <div class="table-scroll" style="padding:0;"><table class="data-table" style="display:table;border-collapse:collapse;width:calc(100% - 48px);margin:0 24px 24px;">
+                <thead>
+                    <tr>
+                        <th>申请编号</th>
+                        <th>品牌</th>
+                        <th>商品</th>
+                        <th>SKU</th>
+                        <th>申请数量</th>
+                        <th>入库数量</th>
+                        <th>在库数量</th>
+                        <th>已售数量</th>
+                        <th>单价(元)</th>
+                        <th>总价(元)</th>
+                        <th>剩余金额</th>
+                    </tr>
+                </thead>
+                <tbody id="invDetailBody">
+                    <!-- 由 JS 动态渲染 -->
+                </tbody>
+            </table></div>
+            <div style="text-align:center;padding:16px 24px;border-top:1px solid #f0f0f0;">
+                <button class="btn btn-default" onclick="goBackFromInventoryDetail()">返回</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========== 弹窗 ========== -->
-    
+
     <!-- 拨付确认弹窗 -->
     <div class="modal-overlay" id="modal-payment-confirm" onclick="closeModalOnOverlay(event, 'modal-payment-confirm')">
         <div class="modal" style="max-width: 560px;">
@@ -2008,6 +2041,69 @@
             }
         }
         
+        // ====== 库存明细 ======
+        var invDetailData = [
+            { applyNo: 'SQ20250909001', brand: '苹果', product: 'iPhone 15 Pro', sku: '128GB 黑色', applyQty: 60, inQty: 50, stockQty: 40, soldQty: 10, price: '8,999.00', total: '539,940.00', remain: '377,958.00' },
+            { applyNo: 'SQ20250909001', brand: '苹果', product: 'iPhone 15 Pro', sku: '256GB 白色', applyQty: 40, inQty: 30, stockQty: 20, soldQty: 10, price: '9,999.00', total: '399,960.00', remain: '279,972.00' },
+            { applyNo: 'SQ20250907003', brand: '苹果', product: 'iPhone 17', sku: '白色 256GB', applyQty: 120, inQty: 110, stockQty: 80, soldQty: 30, price: '4,737.00', total: '568,440.00', remain: '397,908.00' },
+            { applyNo: 'SQ20250907003', brand: '苹果', product: 'iPhone 17', sku: '黑色 256GB', applyQty: 80, inQty: 70, stockQty: 40, soldQty: 30, price: '4,737.00', total: '378,960.00', remain: '265,272.00' },
+            { applyNo: 'SQ20250906004', brand: '华为', product: 'Mate 60 Pro', sku: '雅丹黑 256GB', applyQty: 50, inQty: 0, stockQty: 0, soldQty: 0, price: '6,999.00', total: '349,950.00', remain: '0.00' },
+            { applyNo: 'SQ20250906004', brand: '华为', product: 'Mate 60 Pro', sku: '南糯紫 512GB', applyQty: 30, inQty: 0, stockQty: 0, soldQty: 0, price: '7,999.00', total: '239,970.00', remain: '0.00' },
+            { applyNo: 'SQ20250905005', brand: '小米', product: '小米14', sku: '黑色 256GB', applyQty: 60, inQty: 0, stockQty: 0, soldQty: 0, price: '3,999.00', total: '239,940.00', remain: '0.00' },
+        ];
+
+        function goInventoryDetail() {
+            var body = document.getElementById('invDetailBody');
+            var html = '';
+            var sumApply = 0, sumIn = 0, sumStock = 0, sumSold = 0;
+            var sumTotal = 0, sumRemain = 0;
+            for (var i = 0; i < invDetailData.length; i++) {
+                var d = invDetailData[i];
+                sumApply += d.applyQty;
+                sumIn += d.inQty;
+                sumStock += d.stockQty;
+                sumSold += d.soldQty;
+                sumTotal += parseFloat(d.total.replace(/,/g, ''));
+                sumRemain += parseFloat(d.remain.replace(/,/g, ''));
+                html +=
+                    '<tr>' +
+                        '<td>' + d.applyNo + '</td>' +
+                        '<td>' + d.brand + '</td>' +
+                        '<td>' + d.product + '</td>' +
+                        '<td>' + d.sku + '</td>' +
+                        '<td>' + d.applyQty + '</td>' +
+                        '<td>' + d.inQty + '</td>' +
+                        '<td>' + d.stockQty + '</td>' +
+                        '<td>' + d.soldQty + '</td>' +
+                        '<td>¥' + d.price + '</td>' +
+                        '<td>¥' + d.total + '</td>' +
+                        '<td>¥' + d.remain + '</td>' +
+                    '</tr>';
+            }
+            // 汇总行
+            function fmt(n) { return '¥' + n.toLocaleString('zh-CN', {minimumFractionDigits: 2}); }
+            html +=
+                '<tr style="background:#fafafa;font-weight:600;">' +
+                    '<td colspan="4" style="text-align:right;color:#262626;">合计</td>' +
+                    '<td>' + sumApply + '</td>' +
+                    '<td>' + sumIn + '</td>' +
+                    '<td>' + sumStock + '</td>' +
+                    '<td>' + sumSold + '</td>' +
+                    '<td>-</td>' +
+                    '<td>' + fmt(sumTotal) + '</td>' +
+                    '<td>' + fmt(sumRemain) + '</td>' +
+                '</tr>';
+            body.innerHTML = html;
+            document.querySelectorAll('.page-content').forEach(function(p) { p.classList.add('hidden'); });
+            document.getElementById('page-inventory-detail').classList.remove('hidden');
+        }
+
+        function goBackFromInventoryDetail() {
+            document.querySelectorAll('.page-content').forEach(function(p) { p.classList.add('hidden'); });
+            document.getElementById('page-apply-record').classList.remove('hidden');
+            refreshInventoryOverview();
+        }
+
         // 页面加载时设置申请时间
         setCurrentApplyTime();
     </script>
