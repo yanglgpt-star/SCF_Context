@@ -388,17 +388,7 @@
                 </div>
                 <div class="search-item">
                     <label>拒绝原因</label>
-                    <select id="logSearchReason" onchange="filterLogs()">
-                        <option value="">全部</option>
-                        <option value="品牌不匹配">品牌不匹配</option>
-                        <option value="品类不匹配">品类不匹配</option>
-                        <option value="单价超出范围">单价超出范围</option>
-                        <option value="数量超出范围">数量超出范围</option>
-                        <option value="总价不符合">总价不符合</option>
-                        <option value="供应商开票率不足" disabled>🔄 二期：开票率不足</option>
-                        <option value="合作期限未达标" disabled>🔄 二期：合作期限未达标</option>
-                        <option value="贸易金额不足" disabled>🔄 二期：贸易金额不足</option>
-                    </select>
+                    <input type="text" id="logSearchReason" placeholder="模糊搜索拒绝原因" oninput="filterLogs()">
                 </div>
                 <div class="search-item">
                     <label>判断时间</label>
