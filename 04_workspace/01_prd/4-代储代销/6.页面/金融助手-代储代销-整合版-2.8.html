@@ -87,18 +87,18 @@
         .action-link:hover { text-decoration: underline; }
         .action-link.success { color: #52c41a; }
         .action-link.danger { color: #ff4d4f; }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay { position: fixed; inset: 0; padding: 24px; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; overflow: hidden; }
         .modal-overlay.active { display: flex; }
-        .modal { background: #fff; border-radius: 8px; width: 90%; max-width: 800px; max-height: 90vh; overflow: auto; }
+        .modal, .modal-content { background: #fff; border-radius: 8px; width: min(90vw, 800px); max-width: 800px; max-height: calc(100vh - 48px); overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,.2); }
         .modal.wide { max-width: 1200px; }
         .modal.medium { max-width: 900px; }
         .modal.small { max-width: 560px; }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex: 0 0 auto; }
         .modal-title { font-size: 18px; font-weight: 600; color: #262626; }
         .modal-close { font-size: 24px; color: #8c8c8c; cursor: pointer; line-height: 1; }
         .modal-close:hover { color: #262626; }
-        .modal-body { padding: 24px; max-height: calc(80vh - 140px); overflow-y: auto; }
-        .modal-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px; background: #fafafa; }
+        .modal-body { padding: 24px; max-height: none; min-height: 0; overflow: auto; flex: 1 1 auto; overscroll-behavior: contain; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; background: #fafafa; flex: 0 0 auto; }
         .info-card { background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .info-card.blue { background: #e6f7ff; border-color: #91d5ff; }
         .info-card.yellow { background: #fffbe6; border-color: #ffe58f; }
@@ -179,6 +179,36 @@
         .toast.info { background: #1890ff; }
         @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         .hidden { display: none !important; }
+        @media (max-width: 900px) {
+            .admin-layout { display: block; }
+            .sidebar { position: sticky; top: 0; width: 100%; height: auto; z-index: 101; }
+            .sidebar-header { padding: 10px 16px; }
+            .sidebar-menu { display: flex; padding: 0; overflow-x: auto; }
+            .sidebar-menu > div:not(.sidebar-item) { display: none; }
+            .sidebar-item, .sidebar-item[style] { flex: 0 0 auto; padding: 11px 14px !important; border-left: 0; border-bottom: 3px solid transparent; white-space: nowrap; }
+            .sidebar-item.active { border-bottom-color: #fff; }
+            .main-content { margin-left: 0; overflow: visible; }
+            .top-header { height: 52px; padding: 0 16px; }
+            .header-icon { display: none; }
+            .content-wrapper { padding: 12px; min-height: calc(100vh - 104px); overflow: visible; }
+            .search-area { padding: 16px; gap: 12px; }
+            .search-item { flex: 1 1 180px; }
+            .search-item .form-input, .search-item select.form-input { width: 100%; min-width: 0; }
+            .table-scroll { margin: 0 12px 18px; width: calc(100% - 24px); }
+        }
+        @media (max-width: 600px) {
+            .modal-overlay { padding: 8px; align-items: center; }
+            .modal, .modal-content { width: 100%; max-height: calc(100dvh - 16px); border-radius: 8px; }
+            .modal-header { padding: 14px 16px; }
+            .modal-title { font-size: 16px; }
+            .modal-body { padding: 16px; }
+            .modal-footer { padding: 12px 16px; }
+            .form-row { display: block; margin-bottom: 0; }
+            .form-group, .form-group.third { min-width: 0; width: 100%; margin-bottom: 16px; }
+            .info-grid, .summary-grid { grid-template-columns: 1fr !important; }
+            .pagination { overflow-x: auto; justify-content: flex-start; }
+            .toolbar { padding: 0 12px; flex-wrap: wrap; gap: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -188,7 +218,11 @@
             <nav class="sidebar-menu">
                 <div class="sidebar-item active" data-menu="audit" onclick="switchMenu('audit')">代储代销审核</div>
                 <div class="sidebar-item" data-menu="warehouse" onclick="switchMenu('warehouse')">电子仓单管理</div>
-                <div class="sidebar-item" data-menu="margin" onclick="switchMenu('margin')">保证金拨付</div>
+                <div style="padding:14px 24px 6px;color:rgba(255,255,255,.55);font-size:12px;">保证金管理</div>
+                <div class="sidebar-item" data-menu="margin" onclick="switchMenu('margin')" style="padding-left:36px;">保证金拨付</div>
+                <div class="sidebar-item" data-menu="compensation" onclick="switchMenu('compensation')" style="padding-left:36px;">差价补偿金应收</div>
+                <div class="sidebar-item" data-menu="collection" onclick="switchMenu('collection')" style="padding-left:36px;">收取记录</div>
+                <div class="sidebar-item" data-menu="actual" onclick="switchMenu('actual')" style="padding-left:36px;">实收信息</div>
                 <div class="sidebar-item" data-menu="order" onclick="switchMenu('order')">代储订单管理</div>
                 <div class="sidebar-item" data-menu="sale" onclick="switchMenu('sale')">销售订单管理</div>
                 <div class="sidebar-item" data-menu="outbound" onclick="switchMenu('outbound')">出库指令管理</div>
@@ -311,13 +345,13 @@
                         </div>
                         <div class="table-scroll">
                             <table class="data-table">
-                                <thead><tr><th>仓单编号</th><th>批次编号</th><th>代储订单编码</th><th>入库清单编号</th><th>供应商</th><th>货物信息</th><th style="text-align: right;">货物数量</th><th>入库日期</th><th style="text-align: right;">评估价值</th><th>仓单状态</th><th>操作</th></tr></thead>
+                                <thead><tr><th>仓单编号</th><th>批次编号</th><th>代储订单编码</th><th>送货码</th><th>入库清单编号</th><th>供应商</th><th>货物信息</th><th style="text-align: right;">货物数量</th><th>入库日期</th><th style="text-align: right;">评估价值</th><th>仓单状态</th><th>操作</th></tr></thead>
                                 <tbody>
-                                    <tr><td>CD20250909001</td><td>DCPC202609090001</td><td>DC20250909001</td><td>RK20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align: right;">100</td><td>2026-09-09</td><td style="text-align: right;">¥880,000.00</td><td><span class="status-tag status-normal">普通存单</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250909001')">详情</span></div></td></tr>
-                                    <tr><td>CD20250908002</td><td>DCPC202609080002</td><td>DC20250908001</td><td>RK20250908001</td><td>华为技术有限公司</td><td>Mate 60 Pro</td><td style="text-align: right;">200</td><td>2026-09-08</td><td style="text-align: right;">¥1,200,000.00</td><td><span class="status-tag status-pledged">已质押</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250908002')">详情</span></div></td></tr>
-                                    <tr><td>CD20250907003</td><td>DCPC202609070003</td><td>DC20250907001</td><td>RK20250907001</td><td>小米科技</td><td>小米14 Ultra</td><td style="text-align: right;">150</td><td>2026-09-07</td><td style="text-align: right;">¥750,000.00</td><td><span class="status-tag status-partial">部分释放</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250907003')">详情</span></div></td></tr>
-                                    <tr><td>CD20250906004</td><td>DCPC202609060004</td><td>DC20250906001</td><td>RK20250906001</td><td>OPPO广东移动通信</td><td>OPPO Find X7</td><td style="text-align: right;">80</td><td>2026-09-06</td><td style="text-align: right;">¥480,000.00</td><td><span class="status-tag status-pending">待生效</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250906004')">详情</span></div></td></tr>
-                                    <tr><td>CD20250905005</td><td>DCPC202609050005</td><td>DC20250905001</td><td>RK20250905001</td><td>vivo移动通信</td><td>vivo X100 Pro</td><td style="text-align: right;">120</td><td>2026-09-05</td><td style="text-align: right;">¥600,000.00</td><td><span class="status-tag status-cancelled">已核销</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250905005')">详情</span></div></td></tr>
+                                    <tr><td>CD20250909001</td><td>DCPC202609090001</td><td>DC20250909001</td><td>SH202509090001</td><td>RK20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align: right;">100</td><td>2026-09-09</td><td style="text-align: right;">¥880,000.00</td><td><span class="status-tag status-normal">普通存单</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250909001')">详情</span></div></td></tr>
+                                    <tr><td>CD20250908002</td><td>DCPC202609080002</td><td>DC20250908001</td><td>SH202509080002</td><td>RK20250908001</td><td>华为技术有限公司</td><td>Mate 60 Pro</td><td style="text-align: right;">200</td><td>2026-09-08</td><td style="text-align: right;">¥1,200,000.00</td><td><span class="status-tag status-pledged">已质押</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250908002')">详情</span></div></td></tr>
+                                    <tr><td>CD20250907003</td><td>DCPC202609070003</td><td>DC20250907001</td><td>SH202509070003</td><td>RK20250907001</td><td>小米科技</td><td>小米14 Ultra</td><td style="text-align: right;">150</td><td>2026-09-07</td><td style="text-align: right;">¥750,000.00</td><td><span class="status-tag status-partial">部分释放</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250907003')">详情</span></div></td></tr>
+                                    <tr><td>CD20250906004</td><td>DCPC202609060004</td><td>DC20250906001</td><td>SH202509060004</td><td>RK20250906001</td><td>OPPO广东移动通信</td><td>OPPO Find X7</td><td style="text-align: right;">80</td><td>2026-09-06</td><td style="text-align: right;">¥480,000.00</td><td><span class="status-tag status-pending">待生效</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250906004')">详情</span></div></td></tr>
+                                    <tr><td>CD20250905005</td><td>DCPC202609050005</td><td>DC20250905001</td><td>SH202509050005</td><td>RK20250905001</td><td>vivo移动通信</td><td>vivo X100 Pro</td><td style="text-align: right;">120</td><td>2026-09-05</td><td style="text-align: right;">¥600,000.00</td><td><span class="status-tag status-cancelled">已核销</span></td><td><div class="action-links"><span class="action-link" onclick="openWarehouseDetailModal('CD20250905005')">详情</span></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -338,6 +372,7 @@
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;• 待生效 → 普通存单 → 已质押 → 部分释放 → 已核销
                             <br>3. 编码规则
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;• 仓单编号（CD+年月日+4位流水号，例如：CD20250909001）
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;• 送货码（SH+年月日+4位流水号，例如：SH202509090001）
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;• 入库清单编号（RK+年月日+4位流水号，例如：RK20250909001）
                             <br>4. 接口，仓配同步入库信息
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;• 仓配系统通过接口将入库信息同步到金融助手系统，金融助手系统根据入库信息补充对应的仓单记录。
@@ -408,7 +443,54 @@
                     </div>
                 </div>
 
-                <!-- 模块4: 代储订单管理 -->
+                <!-- 模块4: 差价补偿金应收（本期人工创建、人工审核） -->
+                <div id="page-compensation" class="page-content">
+                    <div class="card">
+                        <div class="search-area">
+                            <div class="search-item"><label class="form-label">应收单号</label><input id="comp-search-no" class="form-input" placeholder="请输入应收单号"></div>
+                            <div class="search-item"><label class="form-label">供应商</label><input id="comp-search-supplier" class="form-input" placeholder="请输入供应商"></div>
+                            <div class="search-item"><label class="form-label">应收状态</label><select id="comp-search-status" class="form-input"><option>全部</option><option>草稿</option><option>待审核</option><option>待缴纳</option><option>部分缴纳</option><option>已缴清</option><option>已退回</option><option>已划转</option></select></div>
+                            <button class="btn btn-primary" onclick="queryCompensation()">查询</button><button class="btn btn-default" onclick="resetCompensation()">重置</button>
+                        </div>
+                        <div class="toolbar" style="padding:0 24px 16px;"><button class="btn btn-primary" onclick="openModal('modal-comp-create')">+ 新增应收单</button><div class="toolbar-right"><button class="btn btn-default" onclick="exportCompensation()">导出</button></div></div>
+                        <div class="table-scroll"><table class="data-table">
+                            <thead><tr><th>应收单号</th><th>代储订单编码</th><th>供应商</th><th>主体类型</th><th style="text-align:right;">应收金额</th><th style="text-align:right;">已收金额</th><th>缴款期限</th><th>应收状态</th><th>资金处置</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr><td><span class="link" onclick="showCompDetail('BCAR202609090001')">BCAR202609090001</span></td><td>DC20250909001</td><td>能良科技</td><td>企业</td><td style="text-align:right;">¥50,000.00</td><td style="text-align:right;">¥0.00</td><td>2026-09-15</td><td><span id="comp-list-status-001" class="tag tag-warning">待审核</span></td><td>-</td><td><div id="comp-list-actions-001" class="action-links"><span class="action-link" onclick="openCompAudit('BCAR202609090001')">审核</span><span class="action-link" onclick="showCompDetail('BCAR202609090001')">详情</span></div></td></tr>
+                                <tr><td><span class="link" onclick="showCompDetail('BCAR202609080002')">BCAR202609080002</span></td><td>DC20250909002</td><td>张三</td><td>个人</td><td style="text-align:right;">¥20,000.00</td><td style="text-align:right;">¥20,000.00</td><td>2026-09-12</td><td><span class="tag tag-success">已缴清</span></td><td><span class="tag tag-warning">待处置</span></td><td><div class="action-links"><span class="action-link" onclick="openManualDisposal('BCAR202609080002','张三','¥20,000.00')">未售处置</span><span class="action-link" onclick="showCompDetail('BCAR202609080002')">详情</span></div></td></tr>
+                                <tr><td><span class="link" onclick="showCompDetail('BCAR202609070003')">BCAR202609070003</span></td><td>DC20250907004</td><td>华东科技</td><td>企业</td><td style="text-align:right;">¥32,000.00</td><td style="text-align:right;">¥32,000.00</td><td>2026-09-10</td><td><span class="tag tag-success">已缴清</span></td><td><span class="tag tag-success">清结算完成·可退款</span></td><td><div class="action-links"><span class="action-link" onclick="openCompRefund('BCAR202609070003','华东科技','¥32,000.00')">整单退款</span><span class="action-link" onclick="showCompDetail('BCAR202609070003')">详情</span></div></td></tr>
+                            </tbody>
+                        </table></div>
+                        <div class="alert-info" style="margin:0 24px 24px;"><strong>本期规则：</strong>应收单由经办人手工创建并填写，必须人工审核后发布；不自动生成、不按 SKU 拆分退款。销售订单清结算完成后整单退款；未销售由平台人员手工创建处置单并审核划转。</div>
+                    </div>
+                </div>
+
+                <!-- 模块5: 收取记录 -->
+                <div id="page-collection" class="page-content">
+                    <div class="card">
+                        <div class="search-area"><div class="search-item"><label class="form-label">收取记录号</label><input id="collection-search-no" class="form-input" placeholder="请输入"></div><div class="search-item"><label class="form-label">应收单号</label><input id="collection-search-ar" class="form-input" placeholder="请输入"></div><div class="search-item"><label class="form-label">支付状态</label><select id="collection-search-status" class="form-input"><option>全部</option><option>待支付</option><option>处理中</option><option>支付成功</option><option>支付失败</option></select></div><button class="btn btn-primary" onclick="queryCollection()">查询</button><button class="btn btn-default" onclick="resetCollection()">重置</button></div>
+                        <div class="toolbar"><div></div><div class="toolbar-right"><button class="btn btn-default" onclick="exportCollection()">导出</button></div></div>
+                        <div class="table-scroll"><table class="data-table"><thead><tr><th>收取记录号</th><th>应收单号</th><th>供应商</th><th>支付端</th><th>付款方式</th><th style="text-align:right;">发起金额</th><th>通道流水号</th><th>支付状态</th><th>发起时间</th><th>操作</th></tr></thead><tbody>
+                            <tr><td><span class="link" onclick="showCollectionDetail('BCPAY202609080001')">BCPAY202609080001</span></td><td>BCAR202609080002</td><td>张三</td><td>市场助手</td><td>临时账户转账</td><td style="text-align:right;">¥20,000.00</td><td>PA202609080889</td><td><span class="tag tag-success">支付成功</span></td><td>2026-09-08 14:20</td><td><span class="action-link" onclick="showCollectionDetail('BCPAY202609080001')">详情</span></td></tr>
+                            <tr><td><span class="link" onclick="showCollectionDetail('BCPAY202609090002')">BCPAY202609090002</span></td><td>BCAR202609090004</td><td>无锡科技</td><td>无仓PC</td><td>平安钱包余额</td><td style="text-align:right;">¥28,000.00</td><td>-</td><td><span class="tag tag-processing">处理中</span></td><td>2026-09-09 11:08</td><td><div class="action-links"><span class="action-link" onclick="showCollectionDetail('BCPAY202609090002')">详情</span><span class="action-link" onclick="queryPaymentResult('BCPAY202609090002')">查询结果</span></div></td></tr>
+                        </tbody></table></div>
+                    </div>
+                </div>
+
+                <!-- 模块6: 实收信息 -->
+                <div id="page-actual" class="page-content">
+                    <div class="card">
+                        <div class="search-area"><div class="search-item"><label class="form-label">实收流水号</label><input id="actual-search-no" class="form-input" placeholder="请输入"></div><div class="search-item"><label class="form-label">匹配状态</label><select id="actual-search-status" class="form-input"><option>全部</option><option>待认领</option><option>自动匹配</option><option>人工匹配</option><option>已核销</option></select></div><button class="btn btn-primary" onclick="queryActual()">查询</button><button class="btn btn-default" onclick="resetActual()">重置</button></div>
+                        <div class="toolbar"><div></div><div class="toolbar-right"><button class="btn btn-default" onclick="exportActual()">导出</button></div></div>
+                        <div class="table-scroll"><table class="data-table"><thead><tr><th>实收流水号</th><th>银行流水号</th><th>应收单号</th><th>付款户名</th><th>到账账户</th><th style="text-align:right;">到账金额</th><th>到账时间</th><th>匹配状态</th><th>处置状态</th><th>操作</th></tr></thead><tbody>
+                            <tr><td><span class="link" onclick="showActualDetail('BCREC202609080001')">BCREC202609080001</span></td><td>PA202609080889</td><td>BCAR202609080002</td><td>张三</td><td>平安担保账户（尾号9001）</td><td style="text-align:right;">¥20,000.00</td><td>2026-09-08 14:25</td><td><span class="tag tag-success">已核销</span></td><td>待处置</td><td><span class="action-link" onclick="showActualDetail('BCREC202609080001')">详情</span></td></tr>
+                            <tr><td><span class="link" onclick="showActualDetail('BCREC202609090002')">BCREC202609090002</span></td><td>PA202609091102</td><td>-</td><td>李四</td><td>平安担保账户（尾号9001）</td><td style="text-align:right;">¥10,000.00</td><td>2026-09-09 11:02</td><td><span class="tag tag-warning">待认领</span></td><td>-</td><td><div class="action-links"><span class="action-link" onclick="openActualClaim('BCREC202609090002')">认领</span><span class="action-link" onclick="showActualDetail('BCREC202609090002')">详情</span></div></td></tr>
+                        </tbody></table></div>
+                        <div class="alert-info" style="margin:0 24px 24px;">支付成功只代表通道付款成功；资金进入平台平安担保账户并完成核销后，应收单才更新为已缴清。</div>
+                    </div>
+                </div>
+
+                <!-- 模块7: 代储订单管理 -->
                 <div id="page-order" class="page-content">
                     <div class="card">
                         <div class="search-area">
@@ -976,12 +1058,88 @@
         </div>
     </div>
 
+    <!-- 弹窗: 人工创建差价补偿金应收 -->
+    <div id="modal-comp-create" class="modal-overlay">
+        <div class="modal-content" style="max-width:820px;"><div class="modal-header"><div class="modal-title">新增差价补偿金应收单</div><div class="modal-close" onclick="closeModal('modal-comp-create')">×</div></div>
+            <div class="modal-body">
+                <div class="alert-info" style="margin-bottom:18px;">本期由经办人手工填写，保存后进入人工审核，审核通过前不会向供应商发布。</div>
+                <div class="form-row"><div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>供应商</label><select id="comp-create-supplier" class="form-input"><option value="">请选择</option><option>能良科技（企业）</option><option>张三（个人）</option></select></div><div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>代储订单编码</label><input id="comp-create-order" class="form-input" placeholder="请选择代储订单"></div></div>
+                <div class="form-row"><div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>关联仓单</label><input id="comp-create-warehouse" class="form-input" placeholder="请输入仓单编号"></div><div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>应收金额（元）</label><input id="comp-create-amount" class="form-input" type="number" placeholder="请输入大于0的金额"></div></div>
+                <div class="form-row"><div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>缴款期限</label><input id="comp-create-due" class="form-input" type="date"></div><div class="form-group half"><label class="form-label">货物说明</label><input class="form-input" placeholder="请输入货物说明"></div></div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>生成原因及计算依据</label><textarea id="comp-create-reason" class="form-input" rows="4" placeholder="请填写业务原因、金额依据及备注"></textarea></div>
+                <div class="form-group"><label class="form-label">附件</label><button class="btn btn-default" onclick="showToast('选择附件','info')">上传附件</button></div>
+            </div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-comp-create')">取消</button><button class="btn btn-default" onclick="saveCompensationDraft()">保存草稿</button><button class="btn btn-primary" onclick="submitCompensationAudit()">提交审核</button></div>
+        </div>
+    </div>
+
+    <!-- 弹窗: 未销售人工处置 -->
+    <div id="modal-manual-disposal" class="modal-overlay">
+        <div class="modal-content" style="max-width:720px;"><div class="modal-header"><div class="modal-title">未销售人工处置</div><div class="modal-close" onclick="closeModal('modal-manual-disposal')">×</div></div>
+            <div class="modal-body">
+                <div class="alert-warning" style="margin-bottom:18px;">系统不会自动判断未销售或自动划转。请人工核实后填写处置信息，提交审核。</div>
+                <div class="form-row"><div class="form-group half"><div class="info-label">应收单号</div><div id="disposal-comp-no" class="info-value">-</div></div><div class="form-group half"><div class="info-label">供应商</div><div id="disposal-supplier" class="info-value">-</div></div><div class="form-group half"><div class="info-label">可处置金额</div><div id="disposal-available" class="info-value" style="color:#cf1322;font-weight:600;">-</div></div></div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>划转金额（元）</label><input id="disposal-amount" class="form-input" value=""></div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>处置原因及依据</label><textarea id="disposal-reason" class="form-input" rows="4" placeholder="请填写未销售情况、人工核实过程和处置依据"></textarea></div>
+                <div class="form-group"><label class="form-label">划转账户</label><input class="form-input" value="平台平安钱包（尾号8001）" disabled></div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>处置凭证</label><button class="btn btn-default" onclick="showToast('选择处置凭证','info')">上传附件</button></div>
+            </div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-manual-disposal')">取消</button><button class="btn btn-primary" onclick="submitManualDisposal()">提交审核</button></div>
+        </div>
+    </div>
+
+    <!-- 弹窗: 差价补偿金应收审核 -->
+    <div id="modal-comp-audit" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-comp-audit')">
+        <div class="modal-content" style="max-width:820px;">
+            <div class="modal-header"><div class="modal-title">差价补偿金应收审核</div><div class="modal-close" onclick="closeModal('modal-comp-audit')">×</div></div>
+            <div class="modal-body">
+                <div class="alert-info" style="margin-bottom:18px;">请核对应收主体、关联业务及金额依据。审核通过后，应收单将发布至供应商端并进入待缴纳状态。</div>
+                <div class="info-card blue">
+                    <div class="info-card-title">应收基本信息</div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">应收单号</div><div id="comp-audit-no" class="info-value">-</div></div><div class="form-group half"><div class="info-label">审核状态</div><div class="info-value"><span class="tag tag-warning">待审核</span></div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">供应商</div><div id="comp-audit-supplier" class="info-value">-</div></div><div class="form-group half"><div class="info-label">主体类型</div><div id="comp-audit-type" class="info-value">-</div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">代储订单</div><div id="comp-audit-order" class="info-value">-</div></div><div class="form-group half"><div class="info-label">关联仓单</div><div id="comp-audit-warehouse" class="info-value">-</div></div></div>
+                </div>
+                <div class="info-card yellow">
+                    <div class="info-card-title">金额与缴款信息</div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">应收金额</div><div id="comp-audit-amount" class="info-value amount-negative">-</div></div><div class="form-group half"><div class="info-label">缴款期限</div><div id="comp-audit-due" class="info-value">-</div></div></div>
+                    <div class="info-row"><span class="info-label">生成原因</span><span id="comp-audit-reason" class="info-value">-</span></div>
+                    <div class="info-row"><span class="info-label">计算依据</span><span class="info-value">经办人根据业务情况手工填写，详见附件《差价补偿说明.pdf》</span></div>
+                    <div class="info-row"><span class="info-label">附件</span><span class="link" onclick="showToast('正在预览：差价补偿说明.pdf','info')">差价补偿说明.pdf</span></div>
+                </div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>审核意见</label><textarea id="comp-audit-comment" class="form-input" rows="4" placeholder="审核通过或驳回时均需填写审核意见"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-comp-audit')">取消</button><button class="btn btn-danger" onclick="rejectCompAudit()">驳回</button><button class="btn btn-primary" onclick="approveCompAudit()">审核通过并发布</button></div>
+        </div>
+    </div>
+
+    <!-- 弹窗: 三类台账通用详情 -->
+    <div id="modal-comp-business-detail" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-comp-business-detail')">
+        <div class="modal-content" style="max-width:760px;"><div class="modal-header"><div id="comp-business-detail-title" class="modal-title">详情</div><div class="modal-close" onclick="closeModal('modal-comp-business-detail')">×</div></div><div id="comp-business-detail-body" class="modal-body"></div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-comp-business-detail')">关闭</button></div></div>
+    </div>
+
+    <!-- 弹窗: 整单退款 -->
+    <div id="modal-comp-refund" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-comp-refund')">
+        <div class="modal-content" style="max-width:640px;"><div class="modal-header"><div class="modal-title">差价补偿金整单退款</div><div class="modal-close" onclick="closeModal('modal-comp-refund')">×</div></div><div class="modal-body">
+            <div class="alert-info" style="margin-bottom:18px;">关联代储订单已清结算完成，本期仅支持按应收单整单退款。</div>
+            <div class="info-row"><span class="info-label">应收单号</span><span id="refund-comp-no" class="info-value">-</span></div><div class="info-row"><span class="info-label">供应商</span><span id="refund-supplier" class="info-value">-</span></div><div class="info-row"><span class="info-label">退款金额</span><span id="refund-amount" class="info-value amount-negative">-</span></div><div class="info-row"><span class="info-label">退款渠道</span><span class="info-value">企业原平安钱包（尾号6688）</span></div>
+            <div class="form-group" style="margin-top:18px;"><label class="form-label"><span style="color:#ff4d4f;">*</span>退款说明</label><textarea id="refund-reason" class="form-input" rows="3" placeholder="请填写退款说明">关联代储订单已完成清结算，申请整单退回差价补偿金</textarea></div>
+        </div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-comp-refund')">取消</button><button class="btn btn-primary" onclick="submitCompRefund()">提交退款审核</button></div></div>
+    </div>
+
+    <!-- 弹窗: 实收人工认领 -->
+    <div id="modal-actual-claim" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-actual-claim')">
+        <div class="modal-content" style="max-width:680px;"><div class="modal-header"><div class="modal-title">实收流水人工认领</div><div class="modal-close" onclick="closeModal('modal-actual-claim')">×</div></div><div class="modal-body">
+            <div class="info-card yellow"><div class="info-row"><span class="info-label">实收流水号</span><span id="claim-actual-no" class="info-value">-</span></div><div class="info-row"><span class="info-label">付款户名</span><span class="info-value">李四</span></div><div class="info-row"><span class="info-label">到账金额</span><span class="info-value amount">¥10,000.00</span></div></div>
+            <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>匹配应收单</label><select id="claim-comp-no" class="form-input" style="width:100%;"><option value="">请选择应收单</option><option value="BCAR202609090005">BCAR202609090005｜李四｜未收 ¥10,000.00</option></select></div>
+            <div class="form-group" style="margin-top:16px;"><label class="form-label"><span style="color:#ff4d4f;">*</span>认领原因</label><textarea id="claim-reason" class="form-input" rows="3" placeholder="请填写付款人与应收主体的关系及认领依据"></textarea></div>
+        </div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-actual-claim')">取消</button><button class="btn btn-primary" onclick="submitActualClaim()">确认认领并核销</button></div></div>
+    </div>
+
     <script>
         // ========== 菜单切换 ==========
         function switchMenu(menu) {
             document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
             document.querySelector('.sidebar-item[data-menu="' + menu + '"]').classList.add('active');
-            var menuNames = {'audit': '代储代销审核', 'warehouse': '电子仓单管理', 'margin': '保证金拨付', 'order': '代储订单管理', 'sale': '销售订单管理', 'outbound': '出库指令管理', 'settlement': '清结算中心', 'invoice': '票据中心', 'receipt': '提货凭证管理'};
+            var menuNames = {'audit': '代储代销审核', 'warehouse': '电子仓单管理', 'margin': '保证金拨付', 'compensation': '差价补偿金应收', 'collection': '收取记录', 'actual': '实收信息', 'order': '代储订单管理', 'sale': '销售订单管理', 'outbound': '出库指令管理', 'settlement': '清结算中心', 'invoice': '票据中心', 'receipt': '提货凭证管理'};
             document.getElementById('current-menu').textContent = menuNames[menu];
             document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
             document.getElementById('page-' + menu).classList.add('active');
@@ -1004,6 +1162,97 @@
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
+
+        var compensationData = {
+            'BCAR202609090001': {order:'DC20250909001', warehouse:'CD20250909001', supplier:'能良科技', type:'企业', amount:'¥50,000.00', received:'¥0.00', due:'2026-09-15', status:'待审核', disposal:'-', reason:'代储代销差价补偿，金额由经办人手工填写'},
+            'BCAR202609080002': {order:'DC20250909002', warehouse:'CD20250909002', supplier:'张三', type:'个人', amount:'¥20,000.00', received:'¥20,000.00', due:'2026-09-12', status:'已缴清', disposal:'待处置', reason:'代储代销差价补偿，个人一单一临时账户缴纳'},
+            'BCAR202609070003': {order:'DC20250907004', warehouse:'CD20250907004', supplier:'华东科技', type:'企业', amount:'¥32,000.00', received:'¥32,000.00', due:'2026-09-10', status:'已缴清', disposal:'清结算完成，可整单退款', reason:'代储代销差价补偿'}
+        };
+        var collectionData = {
+            'BCPAY202609080001': {ar:'BCAR202609080002', supplier:'张三', terminal:'市场助手', method:'临时账户转账', amount:'¥20,000.00', channel:'PA202609080889', status:'支付成功', start:'2026-09-08 14:20', finish:'2026-09-08 14:25', note:'个人一单一户到账，已归集至平台平安担保账户'},
+            'BCPAY202609090002': {ar:'BCAR202609090004', supplier:'无锡科技', terminal:'无仓PC', method:'平安钱包余额', amount:'¥28,000.00', channel:'待返回', status:'处理中', start:'2026-09-09 11:08', finish:'-', note:'支付指令已提交，等待通道最终结果'}
+        };
+        var actualData = {
+            'BCREC202609080001': {bank:'PA202609080889', ar:'BCAR202609080002', payer:'张三', account:'平安担保账户（尾号9001）', amount:'¥20,000.00', time:'2026-09-08 14:25', match:'已核销', disposal:'待处置'},
+            'BCREC202609090002': {bank:'PA202609091102', ar:'-', payer:'李四', account:'平安担保账户（尾号9001）', amount:'¥10,000.00', time:'2026-09-09 11:02', match:'待认领', disposal:'-'}
+        };
+
+        function detailRow(label, value) { return '<div class="info-row"><span class="info-label">' + label + '</span><span class="info-value">' + value + '</span></div>'; }
+        function openBusinessDetail(title, html) {
+            document.getElementById('comp-business-detail-title').textContent = title;
+            document.getElementById('comp-business-detail-body').innerHTML = html;
+            openModal('modal-comp-business-detail');
+        }
+        function showCompDetail(no) {
+            var d = compensationData[no]; if (!d) return showToast('未找到应收单信息', 'error');
+            openBusinessDetail('差价补偿金应收详情', '<div class="info-card blue">' + detailRow('应收单号', no) + detailRow('代储订单', d.order) + detailRow('关联仓单', d.warehouse) + detailRow('供应商', d.supplier + '（' + d.type + '）') + '</div>' + detailRow('应收金额', d.amount) + detailRow('已收金额', d.received) + detailRow('缴款期限', d.due) + detailRow('应收状态', d.status) + detailRow('资金处置', d.disposal) + detailRow('生成原因', d.reason));
+        }
+        function showCollectionDetail(no) {
+            var d = collectionData[no]; if (!d) return showToast('未找到收取记录', 'error');
+            openBusinessDetail('收取记录详情', '<div class="info-card blue">' + detailRow('收取记录号', no) + detailRow('应收单号', d.ar) + detailRow('供应商', d.supplier) + '</div>' + detailRow('支付端', d.terminal) + detailRow('付款方式', d.method) + detailRow('发起金额', d.amount) + detailRow('通道流水', d.channel) + detailRow('支付状态', d.status) + detailRow('发起时间', d.start) + detailRow('完成时间', d.finish) + detailRow('处理说明', d.note));
+        }
+        function showActualDetail(no) {
+            var d = actualData[no]; if (!d) return showToast('未找到实收流水', 'error');
+            openBusinessDetail('实收信息详情', '<div class="info-card yellow">' + detailRow('实收流水号', no) + detailRow('银行流水号', d.bank) + detailRow('付款户名', d.payer) + '</div>' + detailRow('到账账户', d.account) + detailRow('到账金额', d.amount) + detailRow('到账时间', d.time) + detailRow('匹配应收单', d.ar) + detailRow('匹配状态', d.match) + detailRow('处置状态', d.disposal));
+        }
+        var currentCompAuditNo = '';
+        function openCompAudit(no) {
+            var d = compensationData[no];
+            if (!d) return showToast('未找到待审核应收单', 'error');
+            currentCompAuditNo = no;
+            document.getElementById('comp-audit-no').textContent = no;
+            document.getElementById('comp-audit-supplier').textContent = d.supplier;
+            document.getElementById('comp-audit-type').textContent = d.type;
+            document.getElementById('comp-audit-order').textContent = d.order;
+            document.getElementById('comp-audit-warehouse').textContent = d.warehouse;
+            document.getElementById('comp-audit-amount').textContent = d.amount;
+            document.getElementById('comp-audit-due').textContent = d.due;
+            document.getElementById('comp-audit-reason').textContent = d.reason;
+            document.getElementById('comp-audit-comment').value = '';
+            openModal('modal-comp-audit');
+        }
+        function approveCompAudit() {
+            var comment = document.getElementById('comp-audit-comment').value.trim();
+            if (!comment) return showToast('请填写审核意见', 'error');
+            compensationData[currentCompAuditNo].status = '待缴纳';
+            if (currentCompAuditNo === 'BCAR202609090001') {
+                var status = document.getElementById('comp-list-status-001');
+                status.className = 'tag tag-processing'; status.textContent = '待缴纳';
+                document.getElementById('comp-list-actions-001').innerHTML = '<span class="action-link" onclick="showCompDetail(\'BCAR202609090001\')">详情</span><span class="action-link" onclick="showToast(\'已向能良科技发送缴款提醒\',\'success\')">催缴</span>';
+            }
+            closeModal('modal-comp-audit');
+            showToast('审核通过，应收单已发布至供应商端', 'success');
+        }
+        function rejectCompAudit() {
+            var comment = document.getElementById('comp-audit-comment').value.trim();
+            if (!comment) return showToast('请填写驳回原因', 'error');
+            compensationData[currentCompAuditNo].status = '草稿';
+            closeModal('modal-comp-audit');
+            showToast('应收单已驳回创建人修改', 'warning');
+        }
+        function queryCompensation() { showToast('查询：' + (document.getElementById('comp-search-no').value || '全部应收单') + ' / ' + document.getElementById('comp-search-status').value, 'info'); }
+        function resetCompensation() { document.getElementById('comp-search-no').value=''; document.getElementById('comp-search-supplier').value=''; document.getElementById('comp-search-status').selectedIndex=0; showToast('应收查询条件已重置', 'success'); }
+        function exportCompensation() { showToast('已生成差价补偿金应收清单，共 3 条', 'success'); }
+        function queryCollection() { showToast('查询收取记录：' + (document.getElementById('collection-search-no').value || '全部') + ' / ' + document.getElementById('collection-search-status').value, 'info'); }
+        function resetCollection() { document.getElementById('collection-search-no').value=''; document.getElementById('collection-search-ar').value=''; document.getElementById('collection-search-status').selectedIndex=0; showToast('收取记录查询条件已重置', 'success'); }
+        function exportCollection() { showToast('已生成收取记录清单，共 2 条', 'success'); }
+        function queryActual() { showToast('查询实收信息：' + (document.getElementById('actual-search-no').value || '全部') + ' / ' + document.getElementById('actual-search-status').value, 'info'); }
+        function resetActual() { document.getElementById('actual-search-no').value=''; document.getElementById('actual-search-status').selectedIndex=0; showToast('实收信息查询条件已重置', 'success'); }
+        function exportActual() { showToast('已生成实收信息清单，共 2 条', 'success'); }
+        function queryPaymentResult(no) { showToast(no + ' 当前仍在处理中，已向平安通道发起结果查询', 'info'); }
+        function saveCompensationDraft() { showToast('应收单草稿已保存，可稍后继续编辑', 'success'); closeModal('modal-comp-create'); }
+        function submitCompensationAudit() {
+            var ids=['comp-create-supplier','comp-create-order','comp-create-warehouse','comp-create-amount','comp-create-due','comp-create-reason'];
+            if (ids.some(function(id){return !document.getElementById(id).value.trim();})) return showToast('请完整填写所有必填信息', 'error');
+            if (Number(document.getElementById('comp-create-amount').value) <= 0) return showToast('应收金额必须大于 0', 'error');
+            showToast('应收单已创建并提交人工审核', 'success'); closeModal('modal-comp-create');
+        }
+        function openManualDisposal(no, supplier, amount) { document.getElementById('disposal-comp-no').textContent=no; document.getElementById('disposal-supplier').textContent=supplier; document.getElementById('disposal-available').textContent=amount; document.getElementById('disposal-amount').value=amount.replace(/[¥,]/g,''); openModal('modal-manual-disposal'); }
+        function submitManualDisposal() { if (!document.getElementById('disposal-reason').value.trim()) return showToast('请填写处置原因及依据', 'error'); showToast('未售处置单已提交人工审核', 'success'); closeModal('modal-manual-disposal'); }
+        function openCompRefund(no, supplier, amount) { document.getElementById('refund-comp-no').textContent=no; document.getElementById('refund-supplier').textContent=supplier; document.getElementById('refund-amount').textContent=amount; openModal('modal-comp-refund'); }
+        function submitCompRefund() { if (!document.getElementById('refund-reason').value.trim()) return showToast('请填写退款说明', 'error'); showToast('整单退款申请已提交审核', 'success'); closeModal('modal-comp-refund'); }
+        function openActualClaim(no) { document.getElementById('claim-actual-no').textContent=no; openModal('modal-actual-claim'); }
+        function submitActualClaim() { if (!document.getElementById('claim-comp-no').value || !document.getElementById('claim-reason').value.trim()) return showToast('请选择应收单并填写认领原因', 'error'); showToast('实收流水已认领并提交核销', 'success'); closeModal('modal-actual-claim'); }
 
         // ========== 审核模块数据 ==========
         var auditData = {

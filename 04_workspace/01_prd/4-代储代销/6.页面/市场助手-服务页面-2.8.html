@@ -13,10 +13,13 @@
         }
         .mobile-container {
             max-width: 414px;
+            width: 100%;
             margin: 0 auto;
             background: #fff;
             min-height: 100vh;
+            min-height: 100dvh;
             position: relative;
+            overflow-x: hidden;
         }
         
         /* 状态栏 */
@@ -499,7 +502,7 @@
             width: 100%;
             max-width: 414px;
             background: #fff;
-            padding: 12px 16px 24px;
+            padding: 12px 16px max(24px, env(safe-area-inset-bottom));
             border-top: 1px solid #f0f0f0;
             display: flex;
             gap: 12px;
@@ -678,9 +681,12 @@
             width: 100%;
             max-width: 414px;
             max-height: 80vh;
+            max-height: 80dvh;
             overflow-y: auto;
             animation: sheetUp 0.25s ease;
             padding: 20px 20px 30px;
+            padding-bottom: max(30px, env(safe-area-inset-bottom));
+            overflow-wrap: anywhere;
         }
         @keyframes sheetUp {
             from { transform: translateY(100%); }
@@ -867,6 +873,10 @@
             color: #fff;
             background: #3b82f6;
         }
+        .record-footer .btn-code {
+            color: #ff6b35;
+            background: #fff7e6;
+        }
         .record-footer span:active { opacity: 0.8; }
         .records-empty {
             text-align: center;
@@ -930,6 +940,101 @@
             font-size: 11px;
             color: #999;
         }
+
+        /* SKU明细页面 */
+        .sku-body {
+            background: #f8f9fa;
+            min-height: calc(100vh - 44px);
+            padding: 12px 16px 100px;
+        }
+        .sku-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .sku-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .sku-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .sku-brand {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+        }
+        .sku-total {
+            font-size: 16px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        .sku-stats {
+            display: flex;
+            gap: 0;
+            border-top: 1px solid #f5f5f5;
+            padding-top: 10px;
+        }
+        .sku-stat {
+            flex: 1;
+            text-align: center;
+        }
+        .sku-stat .num {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .sku-stat .lbl {
+            font-size: 11px;
+            color: #999;
+        }
+        .sku-stat .num.review { color: #1890ff; }
+        .sku-stat .num.approved { color: #52c41a; }
+        .sku-stat .num.rejected { color: #ff4d4f; }
+        .sku-stat .num.refused { color: #cf1322; }
+
+        /* 送货码卡片 */
+        .code-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .code-goods-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .code-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .code-row:last-child { margin-bottom: 0; }
+        .code-no {
+            font-family: monospace;
+            font-weight: 600;
+            color: #333;
+        }
+        .code-status {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .code-status.pending { background: #fff2f0; color: #ff4d4f; }
+        .code-status.done { background: #f5f5f5; color: #999; }
     </style>
 </head>
 <body>
@@ -978,12 +1083,16 @@
                 <!-- 我的申请摘要 -->
                 <div class="apply-summary">
                     <div class="summary-top">
-                        <span onclick="goApplyRecords()" style="cursor:pointer;">📋 我的申请</span>
+                        <span onclick="goSkuDetail()" style="cursor:pointer;">📋 我的申请</span>
                         <span class="summary-more" onclick="goApplyRecords()">查看全部 ›</span>
                     </div>
                     <div class="summary-stats" id="summaryStats">
                         <!-- 由 JS 动态渲染并绑定点击事件 -->
                     </div>
+                </div>
+                <div onclick="goCompensationBills()" style="margin:0 0 14px;padding:14px 16px;background:linear-gradient(135deg,#fff7e6,#fff);border:1px solid #ffd591;border-radius:10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
+                    <div><div style="font-size:15px;font-weight:600;color:#262626;">差价补偿金</div><div style="font-size:12px;color:#8c8c8c;margin-top:4px;">1 笔待缴 · 人工审核后发布</div></div>
+                    <div style="text-align:right;"><div style="color:#cf1322;font-weight:700;">¥50,000.00</div><div style="font-size:12px;color:#1890ff;margin-top:4px;">去处理 ›</div></div>
                 </div>
 
                 <div class="section-title-bar">请选择服务类型</div>
@@ -1186,6 +1295,38 @@
             </div>
         </div>
 
+        <!-- ==================== 页面5：SKU明细 ==================== -->
+        <div id="page-sku-detail" class="page-section">
+            <div class="page-nav">
+                <div class="back-btn" onclick="goBackFromSku()">‹</div>
+                <div class="page-nav-title">库存明细</div>
+            </div>
+            <div class="sku-body" id="skuList">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+        </div>
+
+        <!-- ==================== 页面6：差价补偿金账单 ==================== -->
+        <div id="page-compensation-bills" class="page-section">
+            <div class="page-nav"><div class="back-btn" onclick="goBackFromCompensation()">‹</div><div class="page-nav-title">差价补偿金</div></div>
+            <div style="padding:12px;background:#f5f5f5;min-height:calc(100vh - 52px);">
+                <div style="padding:12px;background:#e6f7ff;border-radius:8px;color:#1677ff;font-size:12px;line-height:1.6;margin-bottom:12px;">企业使用平安钱包余额支付；个人按“一张应收单一个临时账户”银行转账。以资金进入平台平安担保账户并完成核销为缴清依据。</div>
+                <div style="background:#fff;border-radius:10px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;"><strong>BCAR202609090001</strong><span class="detail-status-tag" style="background:#fff7e6;color:#fa8c16;">待缴纳</span></div>
+                    <div style="font-size:12px;color:#8c8c8c;margin-top:6px;">代储订单 DC20250909001 · 企业</div>
+                    <div style="display:flex;justify-content:space-between;margin-top:16px;"><span style="color:#8c8c8c;">应缴金额</span><strong style="font-size:20px;color:#cf1322;">¥50,000.00</strong></div>
+                    <div style="font-size:12px;color:#8c8c8c;margin-top:8px;">缴款期限：2026-09-15</div>
+                    <button onclick="payCompanyCompensation()" style="width:100%;border:0;border-radius:6px;background:#1890ff;color:#fff;padding:11px;margin-top:14px;font-size:15px;">平安钱包余额支付</button>
+                </div>
+                <div style="background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;"><strong>个人账户支付说明</strong><span style="font-size:12px;color:#8c8c8c;">一单一户</span></div>
+                    <div style="margin-top:12px;padding:12px;background:#fafafa;border-radius:6px;font-size:13px;line-height:1.9;"><div>收款户名：平安担保账户</div><div>开户银行：平安银行上海分行</div><div>专属临时账号：<strong>3020 **** **** 0901</strong></div><div>转账附言：BCAR202609090001</div></div>
+                    <button onclick="showToast('临时账户信息已复制，请使用本人银行卡转账')" style="width:100%;border:1px solid #1890ff;border-radius:6px;background:#fff;color:#1890ff;padding:10px;margin-top:12px;font-size:14px;">复制转账信息</button>
+                    <div style="font-size:12px;color:#fa8c16;margin-top:10px;">转账后显示“等待到账确认”，不会立即标记为已缴清。</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 申请详情弹窗 -->
         <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()">
             <div class="detail-sheet" onclick="event.stopPropagation()">
@@ -1232,6 +1373,20 @@
                 </div>
             </div>
         </div>
+
+        <!-- 送货码详情弹窗 -->
+        <div class="detail-overlay" id="codeOverlay" onclick="closeDeliveryCodes()">
+            <div class="detail-sheet" onclick="event.stopPropagation()">
+                <div class="detail-close" onclick="closeDeliveryCodes()">关闭</div>
+                <div class="detail-title" id="codeApplyNo">-</div>
+                <div class="detail-sub" id="codeStatus">-</div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">送货码列表</div>
+                    <div id="codeList"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1273,6 +1428,14 @@
             });
             document.getElementById(pageId).classList.add('active');
             window.scrollTo(0, 0);
+        }
+
+        function goCompensationBills() { switchPage('page-compensation-bills'); }
+        function goBackFromCompensation() { switchPage('page-select-type'); }
+        function payCompanyCompensation() {
+            if (confirm('确认使用平安钱包余额支付 ¥50,000.00 吗？')) {
+                showToast('支付申请已提交，等待担保账户到账确认');
+            }
         }
         
         function goFillForm() {
@@ -1519,6 +1682,9 @@
                         '</div>' +
                         '<div class="record-footer">' +
                             '<span class="btn-view" onclick="showApplyDetail(\'' + r.no + '\')">查看</span>';
+                if (r.status === '已通过') {
+                    html += '<span class="btn-code" onclick="showDeliveryCodes(\'' + r.no + '\')">送货码</span>';
+                }
                 if (canEdit) {
                     html += '<span class="btn-edit" onclick="editApplyRecord(\'' + r.no + '\')">编辑</span>';
                 }
@@ -1627,6 +1793,97 @@
             setTimeout(function() {
                 switchPage('page-fill-form');
             }, 500);
+        }
+
+        // ====== 送货码 ======
+        var deliveryCodeData = {
+            'SQ20250907003': [
+                { product: 'iPhone 17', sku: '白色 256GB', brand: '苹果', qty: 120, code: 'SH202509070001', status: '未完成入库', statusClass: 'pending' },
+                { product: 'iPhone 17', sku: '黑色 256GB', brand: '苹果', qty: 80, code: 'SH202509070002', status: '已完成入库', statusClass: 'done' },
+            ]
+        };
+
+        function showDeliveryCodes(no) {
+            document.getElementById('codeApplyNo').textContent = '申请编号：' + no;
+            document.getElementById('codeStatus').textContent = '状态：已通过';
+
+            var list = document.getElementById('codeList');
+            var items = deliveryCodeData[no];
+            if (!items || items.length === 0) {
+                list.innerHTML = '<div class="records-empty"><div class="empty-icon">📦</div>暂无送货码</div>';
+            } else {
+                var html = '';
+                for (var i = 0; i < items.length; i++) {
+                    var c = items[i];
+                    html +=
+                        '<div class="code-card">' +
+                            '<div class="code-goods-name">' + c.product + ' / ' + c.sku + '</div>' +
+                            '<div class="code-row"><span>品牌：' + c.brand + '</span><span>数量：' + c.qty + '台</span></div>' +
+                            '<div class="code-row"><span>送货码：</span><span class="code-no">' + c.code + '</span></div>' +
+                            '<div class="code-row" style="margin-top:6px;"><span></span><span class="code-status ' + c.statusClass + '">' + c.status + '</span></div>' +
+                        '</div>';
+                }
+                list.innerHTML = html;
+            }
+
+            document.getElementById('codeOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeliveryCodes() {
+            document.getElementById('codeOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ====== SKU明细 ======
+        var skuData = [
+            { brand: '苹果', product: 'iPhone 15 Pro', sku: '128GB 黑色', qty: 100, statuses: { '审核中': 100, '已通过': 0, '已驳回': 0, '已拒绝': 0 } },
+            { brand: '苹果', product: 'iPhone 17', sku: '白色 256GB', qty: 200, statuses: { '审核中': 0, '已通过': 200, '已驳回': 0, '已拒绝': 0 } },
+            { brand: '华为', product: 'Mate 60 Pro', sku: '雅丹黑 256GB', qty: 80, statuses: { '审核中': 0, '已通过': 0, '已驳回': 80, '已拒绝': 0 } },
+            { brand: '小米', product: '小米14', sku: '黑色 256GB', qty: 60, statuses: { '审核中': 0, '已通过': 0, '已驳回': 0, '已拒绝': 60 } },
+        ];
+
+        var STATUS_ORDER = ['审核中', '已通过', '已驳回', '已拒绝'];
+
+        function renderSkuDetail() {
+            var list = document.getElementById('skuList');
+            var html = '';
+            for (var i = 0; i < skuData.length; i++) {
+                var s = skuData[i];
+                var total = 0;
+                var statsHtml = '';
+                for (var j = 0; j < STATUS_ORDER.length; j++) {
+                    var st = STATUS_ORDER[j];
+                    var q = s.statuses[st] || 0;
+                    total += q;
+                    statsHtml +=
+                        '<div class="sku-stat">' +
+                            '<span class="num ' + STATUS_CLASS[st] + '">' + q + '</span>' +
+                            '<span class="lbl">' + st + '</span>' +
+                        '</div>';
+                }
+                html +=
+                    '<div class="sku-card">' +
+                        '<div class="sku-header">' +
+                            '<div>' +
+                                '<div class="sku-name">' + s.product + ' / ' + s.sku + '</div>' +
+                                '<div class="sku-brand">' + s.brand + '</div>' +
+                            '</div>' +
+                            '<div class="sku-total">' + total + '台</div>' +
+                        '</div>' +
+                        '<div class="sku-stats">' + statsHtml + '</div>' +
+                    '</div>';
+            }
+            list.innerHTML = html;
+        }
+
+        function goSkuDetail() {
+            renderSkuDetail();
+            switchPage('page-sku-detail');
+        }
+
+        function goBackFromSku() {
+            switchPage('page-select-type');
         }
 
         // 页面加载时刷新申请摘要
