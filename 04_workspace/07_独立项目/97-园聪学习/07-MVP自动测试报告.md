@@ -28,7 +28,7 @@
 执行命令：
 
 ```bash
-cd 04_workspace/01_prd/97-园聪学习
+cd 04_workspace/07_独立项目/97-园聪学习
 node tests/run-tests.js
 ```
 
