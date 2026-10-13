@@ -1,0 +1,9 @@
+<view class="safe-page result device-{{deviceType}}">
+  <view class="confetti">✨　🌟　✨</view><view class="rabbit">🐰</view>
+  <view class="title">5 道题完成啦！</view><view class="subtitle">加法和减法都认真完成了！</view>
+  <view class="card reward">⭐ 获得 {{reward}} 颗星星</view>
+  <view class="stats"><view class="stat card"><text>{{firstCorrect}}</text><view>自己答对</view></view><view class="stat card"><text>{{counted}}</text><view>认真数了</view></view></view>
+  <view class="total">现在一共有 ⭐ {{stars}} 颗</view>
+  <button class="primary" bindtap="home">回到首页</button><button class="again" bindtap="again">再玩一局</button>
+  <view class="rest">🌿 玩完一局，看一看远处，让眼睛休息一下</view>
+</view><orientation-guard/><rest-overlay/>

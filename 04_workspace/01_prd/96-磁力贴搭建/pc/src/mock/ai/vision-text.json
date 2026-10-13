@@ -1,0 +1,23 @@
+{
+  "_fixture": {
+    "what": "「AI 给了坏数据」的第二种：整段回复里**一个 JSON 都没有**。",
+    "why": "模型没照格式走是常态（尤其提示词长、图又模糊的时候）。这条路要验的是 parse.js 那一层：firstJsonObject 必须返回 null，页面必须把它当成一种正常回答报出来（连同原文），而不是抛异常、留下一块白。注意内容是**故意选过**的 —— 全是自然语言，连一个未配平的花括号都没有，所以 firstJsonObject 真的挖不到东西；塞一段看着像 JSON 的文字进去反而会被它正确地挖出来，那就测不到这条了。",
+    "honest": "手写的，不是真实调用抓下来的。方舟的模型还没开通，抓不到。",
+    "shape": "没有形状，回复里没有 JSON"
+  },
+  "id": "mock-vision-0004",
+  "model": "doubao-seed-2-1-pro-260915",
+  "object": "chat.completion",
+  "created": 1789000003,
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "这张图里是一栋带尖屋顶的小房子，颜色是红色屋顶配黄色墙面。\n\n不过我没法把它准确地放进格子里：屋顶的斜边看不准角度，墙面的左右两条边在图里也不是完全竖直的，硬给一组顶点坐标只会是猜的。\n\n建议换一张主体更大、边界更清楚的图，或者直接告诉我想要的形状，我再给顶点。"
+      }
+    }
+  ],
+  "usage": { "prompt_tokens": 1183, "completion_tokens": 118, "total_tokens": 1301 }
+}

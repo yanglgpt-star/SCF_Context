@@ -1,0 +1,106 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 橙色主题色 */
+:root {
+  --primary-color: #FF6B00;
+}
+
+/* 布局 */
+.ant-layout-sider {
+  background: #fff !important;
+}
+
+/* 菜单 */
+.ant-menu-light {
+  color: #666;
+}
+
+/* 菜单层级字号 */
+.ant-menu-inline .ant-menu-item,
+.ant-menu-inline .ant-menu-submenu-title {
+  font-size: 14px;
+}
+
+.ant-menu-sub.ant-menu-inline .ant-menu-item,
+.ant-menu-sub.ant-menu-inline .ant-menu-submenu-title {
+  font-size: 13px;
+}
+
+.ant-menu-sub.ant-menu-inline .ant-menu-item {
+  font-size: 13px;
+}
+
+/* 三级菜单（子菜单） */
+.ant-menu-inline .ant-menu-item-group-title {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 一二级菜单选中效果 - 主题色 */
+.ant-menu-light .ant-menu-item-selected {
+  background: #fff7ed !important;
+  color: #FF6B00 !important;
+}
+
+.ant-menu-light .ant-menu-item-selected::after {
+  border-color: #FF6B00 !important;
+}
+
+/* 子菜单选中效果 */
+.ant-menu-light .ant-menu-submenu-selected {
+  color: #FF6B00 !important;
+}
+
+.ant-menu-light .ant-menu-submenu-selected::after {
+  border-color: #FF6B00 !important;
+}
+
+/* 主色调按钮 */
+.ant-btn-primary {
+  background: #FF6B00 !important;
+  border-color: #FF6B00 !important;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background: #ff8533 !important;
+  border-color: #ff8533 !important;
+}
+
+.ant-btn-primary:active {
+  background: #e65c00 !important;
+  border-color: #e65c00 !important;
+}
+
+/* 标签页激活 */
+.ant-tabs-tab-active .ant-tabs-tab {
+  color: #FF6B00 !important;
+}
+
+.ant-tabs-tab:hover {
+  color: #FF6B00 !important;
+}
+
+/* 表格表头 */
+.ant-table-thead > tr > th {
+  background: #fafafa !important;
+}
+
+/* 统计卡片数字 */
+.ant-statistic-content {
+  color: inherit;
+}

@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "star-effect": "/components/star-effect/star-effect"
+  },
+  "navigationBarTitleText": "任务完成"
+}

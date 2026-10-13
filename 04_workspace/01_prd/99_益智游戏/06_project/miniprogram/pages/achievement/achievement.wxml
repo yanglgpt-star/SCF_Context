@@ -1,0 +1,54 @@
+<view class="page-container fade-in">
+  <!-- 统计概览 -->
+  <view class="card stats-card">
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-number">{{stats.totalCompleted}}</text>
+        <text class="stat-label">完成任务</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-number">{{stats.totalStars}}</text>
+        <text class="stat-label">获得星星</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-number">{{stats.currentStreak}}</text>
+        <text class="stat-label">连续天数</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 虚拟树 -->
+  <view class="card tree-card">
+    <view class="tree-header">
+      <text class="tree-title">🌳 成长树</text>
+      <text class="tree-level" wx:if="{{stats.treeGrowth < 20}}">🌱 种子</text>
+      <text class="tree-level" wx:elif="{{stats.treeGrowth < 40}}">🌿 发芽</text>
+      <text class="tree-level" wx:elif="{{stats.treeGrowth < 60}}">🌱 小苗</text>
+      <text class="tree-level" wx:elif="{{stats.treeGrowth < 80}}">🌳 小树</text>
+      <text class="tree-level" wx:elif="{{stats.treeGrowth < 100}}">🌸 开花</text>
+      <text class="tree-level" wx:else>🍎 结果</text>
+    </view>
+    <view class="tree-visual">
+      <text class="tree-emoji" wx:if="{{stats.treeGrowth < 20}}">🌰</text>
+      <text class="tree-emoji" wx:elif="{{stats.treeGrowth < 40}}">🌱</text>
+      <text class="tree-emoji" wx:elif="{{stats.treeGrowth < 60}}">🌿</text>
+      <text class="tree-emoji" wx:elif="{{stats.treeGrowth < 80}}">🌳</text>
+      <text class="tree-emoji" wx:elif="{{stats.treeGrowth < 100}}">🌸</text>
+      <text class="tree-emoji" wx:else>🍎</text>
+    </view>
+    <progress-bar percent="{{stats.treeGrowth}}"></progress-bar>
+    <text class="tree-hint">每完成一个任务成长 +3%，100% 后重置</text>
+  </view>
+
+  <!-- 勋章墙 -->
+  <view class="section-title">🏅 勋章墙</view>
+  <view class="badges-grid">
+    <view class="badge-item {{!badge.owned ? 'locked' : ''}}" wx:for="{{allBadges}}" wx:key="id">
+      <view class="badge-circle {{badge.owned ? 'owned' : ''}}">
+        <text class="badge-emoji">{{badge.owned ? badge.emoji : '🔒'}}</text>
+      </view>
+      <text class="badge-name">{{badge.name}}</text>
+      <text class="badge-desc">{{badge.desc}}</text>
+    </view>
+  </view>
+</view>

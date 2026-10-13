@@ -1,0 +1,1327 @@
+/* 配色方案 A「纸感工作台」的 CSS 变量。
+   值必须与 src/theme.js 的 tokens 一致——antd 管组件，这里管布局与自绘部分。 */
+:root {
+  --ground: #f5f3ee;
+  --panel: #ffffff;
+  --rail: #ffffff;
+  --canvas: #fbfaf6;
+  --rule: #e4e1d8;
+  --ink: #1c1b18;
+  --ink-2: #5c5a52;
+  --ink-3: #96938a;
+  --brand: #b23a2e;
+  --brand-ink: #ffffff;
+  --brand-wash: #f8e7e4;
+  --ok: #2e6b4f;
+  --ok-line: #bfd9cb;
+  --ok-wash: #eaf3ee;
+  --grid: #e9e6dc;
+
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Segoe UI', sans-serif;
+  color: var(--ink);
+  background: var(--ground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- 通用小块 ---------- */
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.page {
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.page-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.page-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  max-width: 720px;
+}
+
+/* 面板：全站唯一的卡片语言 */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+.panel + .panel {
+  margin-top: 14px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel-body {
+  padding: 14px;
+}
+
+.panel-foot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--rule);
+  background: #faf9f5;
+  border-radius: 0 0 8px 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.muted {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.faint {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+/* 状态点：通过 / 待办 */
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.dot--ok {
+  background: var(--ok);
+}
+
+.dot--brand {
+  background: var(--brand);
+}
+
+/* 占位页：里程碑未落地时用它，不装样子 */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 320px;
+  padding: 40px 24px;
+  text-align: center;
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink-2);
+}
+
+.placeholder h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.placeholder p {
+  font-size: 12px;
+  line-height: 1.7;
+  max-width: 460px;
+}
+
+.placeholder .milestone {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+
+/* ---------- 左侧菜单 ---------- */
+
+.app-sider {
+  background: var(--rail);
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-brand {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--rule);
+  flex: 0 0 56px;
+}
+
+.app-brand__mark {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  color: var(--brand);
+}
+
+.app-brand__name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.app-brand__sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-left: auto;
+}
+
+.app-sider__menu {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 6px;
+  border-right: 0 !important;
+}
+
+.app-sider__foot {
+  flex: 0 0 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+/* ---------- 顶部标签栏 ---------- */
+
+.app-tabnav {
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+  padding: 6px 12px 0;
+  flex: 0 0 auto;
+}
+
+.app-tabnav .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.app-tabnav .ant-tabs-nav::before {
+  border-bottom: 0;
+}
+
+/* ---------- 表格微调 ---------- */
+
+.ant-table-thead > tr > th {
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.ant-table-tbody > tr > td {
+  font-size: 13px;
+}
+
+/* 可编辑单元格：看起来就该点 */
+.cell-edit {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  padding-bottom: 1px;
+}
+
+.cell-edit:hover {
+  border-bottom-color: var(--ink-3);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d9d5c9;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c4bfb0;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------- 磁力贴画布 ---------------- */
+
+.mc-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mc-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  /* 不加这条，触控板上拖画布会被浏览器当成滚动页面 */
+  touch-action: none;
+}
+
+.mc-svg:active {
+  cursor: grabbing;
+}
+
+.mc-sheet {
+  fill: var(--canvas);
+}
+
+.mc-grid {
+  fill: none;
+  stroke: var(--grid);
+  stroke-width: 1;
+}
+
+.mc-frame {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+/* 目标轮廓。虚线的深灰：任何片色上（红黄绿白）都读得出来，
+   用 brand 红的话压在红色片上就消失了。pointer-events 由 .mc-host 那层的
+   覆盖层约定统一为 none —— 它不能挡住底下 tile 的事件 */
+.mc-contour {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 7 5;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.mc-tile {
+  cursor: pointer;
+}
+
+/* 锁定片。用 brand 描边而不是改片本身的透明度 —— 透明度一降，颜色就跟着变浅，
+   而「这片是什么颜色」在搭建时是要照着搭的信息，不能因为锁定就读不准。
+
+   注意这一条**只作用于画布**：导出的成品图与步骤图走 exportSvg.js 的
+   tileSvgAttrs()，那里没有这条规则，所以锁角标不会出现在出图里。 */
+.mc-tile[data-locked] > path:first-child {
+  stroke-width: 2.4;
+}
+
+/* 锁角标：纸色圆底 + 墨色小挂锁。底片是必需的 —— 片色有深有浅（深蓝片），
+   纯黑的锁压上去糊成一团。理由同下面的 .mc-select-halo。 */
+.mc-lock {
+  pointer-events: none;
+}
+
+.mc-lock-dot {
+  fill: var(--canvas);
+  stroke: var(--ink-3);
+  stroke-width: 0.9;
+  opacity: 0.94;
+}
+
+.mc-lock-body {
+  fill: var(--ink-2);
+}
+
+.mc-lock-shackle {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* 幽灵预览：这一下点下去会放在哪儿。半透明 brand 填充 + 实线描边，
+   和 .mc-hover（灰、无填充）区分开 —— 两者可能同时显示。 */
+.mc-place {
+  fill: var(--brand);
+  fill-opacity: 0.2;
+  stroke: var(--brand);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* 重解之后新添的片：加一道 brand 外描边（不动填充色），
+   让「求解器动了哪儿」一眼看得出来，而片的颜色仍然照常读得准。 */
+.mc-tile[data-new] > path:first-child {
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+
+/* 原子细分线：每个被占用的格子上画两条对角线，看到的就是象限原子本身 */
+.mc-atoms {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 0.8;
+  stroke-dasharray: 3 3;
+  opacity: 0.55;
+}
+
+.mc-hover,
+.mc-select-halo,
+.mc-select {
+  fill: none;
+  pointer-events: none;
+}
+
+.mc-hover {
+  stroke: var(--ink-2);
+  stroke-width: 1.6;
+  opacity: 0.4;
+}
+
+/* 垫在选中描边底下的纸色晕圈。选中态是 brand 红，而磁力片本身就有红色，
+   #E8443A 的片上压一条 #b23a2e 等于看不见 —— 所以先拿纸色把片边"咬"出来一道。 */
+.mc-select-halo {
+  stroke: var(--canvas);
+  stroke-width: 5;
+}
+
+.mc-select {
+  stroke: var(--brand);
+  stroke-width: 2.4;
+}
+
+.mc-zoom {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 5px 7px;
+  font: 11px/1 var(--mono);
+  color: var(--ink-3);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.mc-controls {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 4px;
+}
+
+.mc-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.mc-controls button:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+}
+
+.mc-controls button:nth-child(3) {
+  width: 40px;
+}
+
+/* ---------------- 实物搭建页的三栏 ---------------- */
+
+/* 工具 | 画布 | JSON。三栏而不是两栏，是因为 M6 多了「点放式编辑」这套工具，
+   塞进画布面板的头部会把网格/原子/撤销那一排挤没；而 JSON 面板不能删 ——
+   它是「画布是文档」之后唯一还能直接看文档的地方。
+   画布那栏给 1fr：它是主角，工具与 JSON 都能窄。 */
+.build-split {
+  display: grid;
+  grid-template-columns: minmax(190px, 16%) 1fr minmax(280px, 26%);
+  gap: 14px;
+  /* 撑满剩余视口：减去 TabNav、页头、页面内边距 */
+  height: calc(100vh - 226px);
+  min-height: 440px;
+}
+
+.build-col {
+  display: flex;
+  min-height: 0;
+}
+
+/* 左栏是纵向堆叠的（工具 + 实物照片），它自己滚。
+   面板之间的间距交给 .panel + .panel 那条规则，所以这里不设 gap，免得变成两倍。 */
+.build-stack {
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* ---- 工具面板 ---- */
+
+.build-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tool-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tool-label {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* 形状按钮竖排：ShapeGlyph 是方的，横排三个会把 190px 的栏撑爆 */
+.tool-shapes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tool-shape {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tool-shape:hover {
+  border-color: var(--ink-3);
+}
+
+.tool-shape.is-on {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+
+.tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tool-chip {
+  min-width: 42px;
+  padding: 3px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.tool-chip:hover {
+  border-color: var(--ink-3);
+}
+
+.tool-chip.is-on {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+
+/* 色板。白片在黑底上会消失，所以每个色块都自带一圈描边 */
+.tool-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tool-color {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tool-color.is-on {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+/* ---- 实物照片 ---- */
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+.photo-grid a {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* JSON 面板只读时是 <pre>，要填满整栏 —— .draft-pre 的 max-height:220px
+   在那是给折叠块用的，在这儿会把大半栏空着 */
+.build-pre {
+  height: 100%;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 面板在双栏里要自己撑满高度，内部三段纵向排布 */
+.panel.is-flex {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.build-editor,
+.build-canvas {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+}
+
+.build-editor textarea {
+  height: 100% !important;
+  font-family: var(--mono);
+}
+
+/* 画布本身不滚，缩放靠视口变换 */
+.build-canvas {
+  overflow: hidden;
+}
+
+/* 窄屏改成上下堆叠。这里高度必须显式给死：父容器高度变成 auto 之后，
+   flex:1 会绕回来依赖内容高度，撑不起来 */
+@media (max-width: 1280px) {
+  .build-split {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .build-col,
+  .build-stack,
+  .panel.is-flex {
+    flex: none;
+  }
+
+  .build-stack {
+    overflow: visible;
+  }
+
+  /* 工具面板横过来：形状那三个改成横排，省掉大半屏高度 */
+  .tool-shapes {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .tool-shape {
+    width: auto;
+  }
+
+  .build-editor {
+    height: 300px;
+  }
+
+  .build-canvas {
+    height: 440px;
+  }
+}
+
+/* ---- 模拟求解页 ---- */
+
+/* 用例清单自己滚，面板高度由 .panel.is-flex 撑着 */
+.solve-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px 0;
+}
+
+/* 用 <button> 而不是 <div>：键盘能 Tab 过来、回车能选。
+   浏览器默认样式得一个个清掉，不然会冒出一个灰底边框 */
+.solve-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 14px;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.solve-item:hover {
+  background: var(--ground);
+}
+
+.solve-item.is-on {
+  background: var(--brand-wash);
+  border-left-color: var(--brand);
+}
+
+.contour-thumb {
+  flex: none;
+}
+
+.solve-meta {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.solve-name {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 草稿生成页 ---- */
+
+/* 三栏：草稿+轮廓 | 工作台画布 | 导出预览。
+   后两栏必须**并排** —— 「导出的图和画布所见一致」这句话，只有摆在一起才验得了；
+   上下排的话得靠记忆比对，等于没验。 */
+.draft-split {
+  display: grid;
+  grid-template-columns: minmax(230px, 20%) 1fr 1fr;
+  gap: 14px;
+  /* 和 .build-split 一样给死高度：不给的话 flex:1 会绕回来依赖内容高度，撑不起来 */
+  height: 520px;
+  margin-top: 14px;
+}
+
+/* 左栏是纵向堆叠的（草稿图 + 轮廓 + 提示词），它自己滚。
+   面板之间的间距交给 .panel + .panel 那条规则，所以这里不设 gap，免得变成两倍。 */
+.draft-stack {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 面板内容区居中放图。min-height:0 是关键：没有它，img 的固有高度会把
+   面板顶开，.build-canvas 的 overflow:hidden 也拦不住 */
+.draft-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+}
+
+/* 图外面套一层，好把 mock 角标绝对定位压在图上 */
+.draft-shot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+}
+
+.draft-shot__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+/* 角标压在图上。mock 出的图从肉眼看和模型画的没区别，唯一的区别就是这块牌子，
+   所以它不能是可关的、也不能只在页面顶上写一句 */
+.draft-shot__badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  margin-inline-end: 0;
+}
+
+/* 链路阶段条：五段横向排开，窄屏横向滚 */
+.stage-strip {
+  display: flex;
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+
+.stage {
+  display: flex;
+  flex: 1;
+  min-width: 168px;
+  padding-right: 12px;
+}
+
+.stage__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.stage__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stage__summary {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  word-break: break-word;
+}
+
+.stage--failed .stage__name {
+  color: var(--brand);
+}
+
+/* 轮廓的附注（notes）与问题（problems）分成两种颜色：
+   notes 是「还算正常，但值得知道」，problems 是「这块得管」。混在一起会让人
+   把一条「取整挪了 0.02 格」当成出事了 */
+.draft-list {
+  margin: 10px 0 0;
+  padding-left: 16px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.draft-list--warn {
+  color: var(--brand);
+}
+
+.draft-details {
+  margin-top: 10px;
+  font-size: 11px;
+}
+
+.draft-details > summary {
+  cursor: pointer;
+  color: var(--ink-3);
+  padding: 2px 0;
+}
+
+.draft-pre {
+  margin-top: 6px;
+  padding: 8px 10px;
+  max-height: 220px;
+  overflow: auto;
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.draft-pre--tall {
+  max-height: 320px;
+}
+
+@media (max-width: 1280px) {
+  .draft-split {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .draft-stack,
+  .draft-split .panel.is-flex {
+    flex: none;
+    overflow: visible;
+  }
+
+  .draft-split .build-canvas {
+    height: 380px;
+  }
+}
+
+/* ---------------------------------------------------------- 实测录入 --- */
+
+.measure-split {
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 340px);
+  gap: 14px;
+  /* 和 .build-split 一样给死高度：靠内容撑的话面板宽度一变高度就跟着跳 */
+  height: calc(100vh - 226px);
+  min-height: 520px;
+}
+
+.measure-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  /* 右栏自己滚。面板之间的间距走 .panel 那套，不设 gap 免得变成两倍 */
+}
+
+.measure-body {
+  padding: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.measure-drop {
+  display: block;
+}
+
+/* 照片的滚动容器。放大到 2×/4× 之后照片比容器宽，靠这里横向滚 */
+.measure-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+/* 包住 img 与覆盖层。宽度由内联的 zoom 决定，覆盖层跟着它走，
+   所以「显示多大」和「坐标在哪」永远不会分家 */
+.measure-stage {
+  position: relative;
+  line-height: 0;
+}
+
+.measure-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.measure-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+/* 描边与字号都按照片边长算（见页面里的 overlayStroke / overlayFont）：
+   4000px 的照片和 600px 的照片，线条在屏幕上该一样粗 */
+.measure-seg line {
+  stroke: var(--brand);
+  stroke-linecap: round;
+}
+
+.measure-seg circle {
+  fill: var(--brand);
+}
+
+.measure-seg__no {
+  fill: var(--brand);
+  font-family: var(--mono);
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--ground);
+  stroke-width: 2px;
+}
+
+/* 参考边用另一档色：它既是比例尺的锚，也是「这块是基准」的视觉提示 */
+.measure-seg--ref line,
+.measure-seg--ref circle {
+  stroke: var(--ink);
+  fill: var(--ink);
+}
+
+.measure-seg--ref circle {
+  stroke: none;
+}
+
+.measure-seg--bad line {
+  stroke: var(--brand);
+  stroke-dasharray: 6 4;
+  opacity: 0.55;
+}
+
+.measure-seg--bad circle {
+  fill: var(--ink-3);
+}
+
+.measure-pending {
+  fill: none;
+  stroke: var(--brand);
+}
+
+.measure-ref {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
+.measure-list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.measure-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.measure-list li.is-bad {
+  color: var(--ink-3);
+}
+
+.measure-list__no {
+  flex: none;
+  width: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--brand);
+}
+
+.measure-list li.is-bad .measure-list__no {
+  color: var(--ink-3);
+}
+
+.measure-list__what {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.measure-list__val {
+  flex: none;
+  font-size: 11px;
+}
+
+.measure-result {
+  padding: 8px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.measure-result:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.measure-result__shape {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.measure-result__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.measure-result__n {
+  margin-left: auto;
+}
+
+.measure-confirm {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.measure-confirm__warn {
+  margin-top: 8px;
+  color: var(--brand);
+}
+
+@media (max-width: 1280px) {
+  .measure-split {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .measure-col {
+    overflow: visible;
+  }
+
+  .measure-host {
+    height: 420px;
+  }
+}
+
+/* ---------------------------------------------------------- 资产库 --- */
+
+/* 筛选条：贴在表头上方的一条，用一条横线跟表格分开。
+   panel-body 自带的 14px 内边距全留，只把底边压薄一点 */
+.lib-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* 列表封面。固定 56×40 而不是跟图比例走 —— 一行里高矮不一会让表格看起来在抖。
+   `contain` 是因为拼贴图有横有竖，`cover` 会把竖版作品裁掉一半 */
+.lib-cover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 40px;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.lib-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.lib-cover--none {
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.lib-name {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.35;
+}
+
+.lib-id {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.lib-title {
+  font-size: 12px;
+}
+
+.lib-time {
+  white-space: nowrap;
+}
+
+/* 难度：一条细进度条 + 数字。数字要在，因为「0.49 和 0.51 差在哪」是会被追问的 */
+.lib-diff {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 详情里的左右并排。**页内视图**，所以高度交给内容，不学 .draft-split 那套固定高度 */
+.lib-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+/* 并排的两块是兄弟 `.panel`，会被 `.panel + .panel { margin-top: 14px }` 顶歪一截 ——
+   一左一右的东西不该有上下间距 */
+.lib-split > .panel {
+  margin-top: 0;
+}
+
+.lib-split > .panel + .panel {
+  margin-top: 0;
+}
+
+.lib-vs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.lib-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.lib-figure__cap {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* 图框固定最小高度：图还没出的时候那一格不能塌掉，否则「方案 vs 实物」的并排会错位 */
+.lib-figure__box {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 170px;
+  padding: 8px;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.lib-figure__box > img {
+  max-width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+}
+
+.lib-figure__box > .photo-grid {
+  align-self: stretch;
+}
+
+/* 步骤图格子。宽高给死，一张张排开就一眼看得出顺序和进度 */
+.lib-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lib-steps figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.lib-steps img {
+  width: 176px;
+  height: 132px;
+  object-fit: contain;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.lib-steps figcaption {
+  font-size: 11px;
+}
+
+/* 盘上真实有的文件名。work.json 里存的是引用，这一栏是「引用落地了没有」的答案 */
+.assets-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.assets-list > span {
+  padding: 2px 7px;
+  font-size: 11px;
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+@media (max-width: 1280px) {
+  .lib-split,
+  .lib-vs {
+    grid-template-columns: 1fr;
+  }
+}

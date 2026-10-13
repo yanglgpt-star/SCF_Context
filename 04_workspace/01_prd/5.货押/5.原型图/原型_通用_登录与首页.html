@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>登录与首页 - 货押平台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; min-height: 100vh; }
+/* Login page */
+.login-page { display: flex; min-height: 100vh; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+.login-left { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 60px; color: #fff; }
+.login-left h1 { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+.login-left h1 span { color: #60a5fa; }
+.login-left p { font-size: 16px; color: #94a3b8; line-height: 1.8; }
+.login-left .features { margin-top: 40px; display: flex; flex-direction: column; gap: 16px; }
+.login-left .features .feat { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+.login-left .features .feat .dot { width: 8px; height: 8px; border-radius: 50%; background: #60a5fa; }
+.login-right { width: 440px; display: flex; flex-direction: column; justify-content: center; padding: 40px; background: #fff; }
+.login-right .logo-area { text-align: center; margin-bottom: 28px; }
+.login-right .logo-area h2 { font-size: 22px; font-weight: 700; color: #1e293b; }
+.login-right .logo-area h2 span { color: #2563eb; }
+.login-right .logo-area p { font-size: 13px; color: #6b7280; margin-top: 4px; }
+.login-tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.login-tab { flex: 1; padding: 10px; text-align: center; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+.login-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.login-form { display: none; }
+.login-form.active { display: block; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; transition: border-color .2s; background: #fff; }
+.form-group input:focus, .form-group select:focus { border-color: #2563eb; outline: none; box-shadow: 0 0 0 2px rgba(37,99,235,.1); }
+.password-wrap { position: relative; }
+.password-wrap input { padding-right: 36px; }
+.password-wrap .eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 16px; user-select: none; }
+.captcha-row { display: flex; gap: 10px; align-items: center; }
+.captcha-row input { flex: 1; }
+.captcha-img { width: 80px; height: 36px; background: #e5e7eb; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #374151; letter-spacing: 3px; cursor: pointer; user-select: none; }
+.captcha-refresh { font-size: 12px; color: #2563eb; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.form-options { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 14px; }
+.form-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
+.form-options a { color: #2563eb; text-decoration: none; }
+.radio-group { display: flex; gap: 24px; padding: 4px 0; }
+.radio-group label { font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.ukey-notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; color: #92400e; line-height: 1.6; }
+.field-hint { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.btn { width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.login-footer { margin-top: 20px; text-align: center; font-size: 12px; color: #9ca3af; line-height: 1.8; }
+.login-footer a { color: #2563eb; text-decoration: none; }
+
+/* Role select modal */
+.role-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+.role-modal.show { display: flex; }
+.role-modal .modal { background: #fff; border-radius: 16px; padding: 32px; width: 520px; text-align: center; }
+.role-modal .modal h3 { font-size: 18px; margin-bottom: 8px; }
+.role-modal .modal p { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+.role-options { display: flex; flex-direction: column; gap: 12px; }
+.role-card { border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px 20px; cursor: pointer; text-align: left; transition: all .2s; display: flex; gap: 16px; align-items: flex-start; }
+.role-card:hover { border-color: #2563eb; background: #f8faff; }
+.role-card.selected { border-color: #2563eb; background: #eff6ff; }
+.role-card .r-radio { margin-top: 2px; }
+.role-card .r-info .r-name { font-size: 15px; font-weight: 600; color: #1f2937; }
+.role-card .r-info .r-desc { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.role-btn-group { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+.role-btn-group .btn { width: auto; padding: 8px 32px; }
+
+/* Dashboard */
+.dashboard { display: none; min-height: 100vh; }
+.dashboard.show { display: flex; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.sidebar .user-info { padding: 16px 20px; border-top: 1px solid #334155; font-size: 13px; color: #94a3b8; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left { font-size: 16px; font-weight: 600; }
+.topbar-left .role-tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; background: #dbeafe; color: #1e40af; margin-left: 8px; font-weight: 400; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.topbar-right .notif { position: relative; cursor: pointer; }
+.topbar-right .notif .badge { position: absolute; top: -4px; right: -8px; width: 16px; height: 16px; background: #ef4444; border-radius: 50%; font-size: 9px; color: #fff; display: flex; align-items: center; justify-content: center; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; background: #f3f4f6; }
+
+/* Dashboard layout: quick-entry left + main right */
+.dashboard-layout { display: flex; gap: 20px; align-items: flex-start; }
+.quick-entry { width: 150px; flex-shrink: 0; }
+.qe-card { background: #fff; border-radius: 10px; padding: 16px 12px; text-align: center; cursor: pointer; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: all .2s; border: 1px solid transparent; }
+.qe-card:hover { border-color: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+.qe-card .qe-num { font-size: 28px; font-weight: 700; }
+.qe-card .qe-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.main-content { flex: 1; min-width: 0; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 18px 20px; }
+.stat-card .stat-label { font-size: 13px; color: #6b7280; margin-bottom: 4px; }
+.stat-card .stat-num { font-size: 26px; font-weight: 700; }
+.stat-card .stat-change { font-size: 12px; margin-top: 4px; }
+.stat-card .stat-change.up { color: #10b981; }
+.stat-card .stat-change.down { color: #ef4444; }
+
+.card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 18px 20px; margin-bottom: 16px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #374151; display: flex; justify-content: space-between; align-items: center; }
+.card-title .more { font-size: 12px; font-weight: 400; color: #2563eb; cursor: pointer; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 8px 10px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-orange { background: #ffedd5; color: #9a3412; }
+
+.todo-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+.todo-item:last-child { border-bottom: none; }
+.todo-item .todo-info { flex: 1; }
+.todo-item .todo-info .todo-title { font-weight: 500; cursor: pointer; }
+.todo-item .todo-info .todo-title:hover { color: #2563eb; }
+.todo-item .todo-info .todo-deadline { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.todo-item .todo-info .todo-deadline.urgent { color: #ef4444; font-weight: 500; }
+
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qa-btn { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all .2s; background: #fff; font-size: 14px; }
+.qa-btn:hover { border-color: #2563eb; background: #f8faff; }
+.qa-btn .qa-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.qa-btn .qa-label { font-weight: 500; }
+.qa-btn .qa-desc { font-size: 11px; color: #6b7280; }
+
+.announcement-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+.announcement-item:last-child { border-bottom: none; }
+.announcement-item .ann-icon { font-size: 16px; flex-shrink: 0; }
+.announcement-item .ann-content { flex: 1; }
+.announcement-item .ann-content .ann-title { font-weight: 500; }
+.announcement-item .ann-content .ann-time { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+</style>
+</head>
+<body>
+<!-- Login Page -->
+<div class="login-page" id="loginPage">
+  <div class="login-left">
+    <div>
+      <h1><span>◈</span> 货押平台</h1>
+      <p>供应链金融货物融资管理平台<br>为核心企业、经销商、银行提供一站式货押融资服务</p>
+    </div>
+    <div class="features">
+      <div class="feat"><div class="dot"></div> 智能风控体系，实时监控质押物价值</div>
+      <div class="feat"><div class="dot"></div> 电子签章 + 区块链存证，全流程合规</div>
+      <div class="feat"><div class="dot"></div> 多端协同，运营端/企业端/银行端数据互通</div>
+      <div class="feat"><div class="dot"></div> 自动化货权管理，出入库全链路监管</div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="logo-area">
+      <h2><span>◈</span> 用户登录</h2>
+      <p>欢迎使用货押平台</p>
+    </div>
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="switchLoginTab('ops', this)">运营端登录</div>
+      <div class="login-tab" onclick="switchLoginTab('enterprise', this)">企业端登录</div>
+      <div class="login-tab" onclick="switchLoginTab('bank', this)">银行端登录</div>
+    </div>
+
+    <!-- 运营端登录 -->
+    <div class="login-form active" id="formOps">
+      <div class="form-group"><label>账号</label><input placeholder="请输入账号（工号/邮箱/手机号）" value="admin"></div>
+      <div class="form-group"><label>密码</label><div class="password-wrap"><input type="password" class="pwd-input" placeholder="请输入密码" value="******"><span class="eye" onclick="togglePwd(this)">👁️</span></div></div>
+      <div class="form-group">
+        <label>验证码</label>
+        <div class="captcha-row">
+          <input placeholder="请输入验证码">
+          <div class="captcha-img" onclick="refreshCaptcha()">AB12</div>
+          <a class="captcha-refresh" onclick="refreshCaptcha();return false;">换一张</a>
+        </div>
+      </div>
+      <div class="form-options">
+        <label><input type="checkbox"> 记住我（7天）</label>
+        <div><a href="#">忘记密码？</a><span style="margin:0 4px;color:#d1d5db;">|</span><a href="#">联系管理员</a></div>
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()">立 即 登 录</button>
+    </div>
+
+    <!-- 企业端登录 -->
+    <div class="login-form" id="formEnterprise">
+      <div class="form-group">
+        <label>企业类型</label>
+        <div class="radio-group">
+          <label><input type="radio" name="entType" checked> 核心企业</label>
+          <label><input type="radio" name="entType"> 融资企业</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>企业名称</label>
+        <select><option>请选择企业名称</option><option>XX科技有限公司</option><option>XX商贸有限公司</option><option>YY电子科技</option><option>ZZ食品经销</option></select>
+      </div>
+      <div class="form-group"><label>账号</label><input placeholder="请输入企业账号" value="enterprise_user"></div>
+      <div class="form-group"><label>密码</label><div class="password-wrap"><input type="password" class="pwd-input" placeholder="请输入密码" value="******"><span class="eye" onclick="togglePwd(this)">👁️</span></div></div>
+      <button class="btn btn-primary" onclick="handleLogin()">立 即 登 录</button>
+    </div>
+
+    <!-- 银行端登录 -->
+    <div class="login-form" id="formBank">
+      <div class="form-group"><label>银行编码</label><input placeholder="请输入银行编码，如ICBC-001" value="ICBC-001"><div class="field-hint">如：ICBC-001、CCB-002</div></div>
+      <div class="form-group"><label>账号</label><input placeholder="请输入银行操作员账号" value="bank_user"></div>
+      <div class="form-group"><label>密码</label><div class="password-wrap"><input type="password" class="pwd-input" placeholder="请输入密码" value="******"><span class="eye" onclick="togglePwd(this)">👁️</span></div></div>
+      <div class="ukey-notice">
+        <strong>⚠️ 提示：</strong>银行端登录需插入UKey并进行数字证书认证<br>
+        请确保UKey已正确插入USB接口。
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()">立 即 登 录</button>
+    </div>
+
+    <div class="login-footer">
+      <span>还没有账号？<a href="#">立即注册</a></span><br>
+      <span>© 2026 货押平台 v2.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Role Selection Modal (MD spec: sub-roles within 运营端) -->
+<div class="role-modal" id="roleModal">
+  <div class="modal">
+    <h3>👋 选择登录角色</h3>
+    <p>您的账号拥有多个角色权限，请选择本次登录的角色：</p>
+    <div class="role-options">
+      <div class="role-card selected" onclick="selectRole(this, '催收专员')">
+        <div class="r-radio"><input type="radio" name="roleSel" checked style="width:auto;"></div>
+        <div class="r-info"><div class="r-name">催收专员</div><div class="r-desc">权限范围：催收任务处理、催收记录录入、协同催收跟踪</div></div>
+      </div>
+      <div class="role-card" onclick="selectRole(this, '催收主管')">
+        <div class="r-radio"><input type="radio" name="roleSel" style="width:auto;"></div>
+        <div class="r-info"><div class="r-name">催收主管</div><div class="r-desc">权限范围：任务分配、团队催收数据查看、督办管理</div></div>
+      </div>
+      <div class="role-card" onclick="selectRole(this, '风控经理')">
+        <div class="r-radio"><input type="radio" name="roleSel" style="width:auto;"></div>
+        <div class="r-info"><div class="r-name">风控经理</div><div class="r-desc">权限范围：处置评估审批、核销申请审批、风险看板</div></div>
+      </div>
+    </div>
+    <div class="role-btn-group">
+      <button class="btn btn-outline" onclick="document.getElementById('roleModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="enterDashboard('运营端')">确认登录</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard">
+  <div class="sidebar">
+    <div class="logo"><span>◈</span> 货押平台</div>
+    <div class="menu">
+      <div class="menu-item active">📊 工作台</div>
+      <div class="menu-item">👥 客户管理</div>
+      <div class="menu-item">💰 融资业务</div>
+      <div class="menu-item">📦 货权管理</div>
+      <div class="menu-item">⚠️ 风险监控</div>
+      <div class="menu-item">📋 贷后管理</div>
+      <div class="menu-item">🧾 结算管理</div>
+      <div class="menu-divider"></div>
+      <div class="menu-item">⚙️ 系统管理</div>
+    </div>
+    <div class="user-info" id="userInfoSection">
+      <div><strong id="roleDisplay">运营专员</strong></div>
+      <div style="font-size:12px;">admin@huoya.com</div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        工作台 <span class="role-tag" id="roleTag">运营端</span>
+      </div>
+      <div class="topbar-right">
+        <div class="notif">🔔 <span class="badge">3</span></div>
+        <span id="dashboardUser">👤 王经理</span>
+        <span style="cursor:pointer;" onclick="logout()">退出</span>
+      </div>
+    </div>
+    <div class="content">
+      <div class="dashboard-layout">
+        <!-- Left: Quick Entry Panel (快捷入口) -->
+        <div class="quick-entry">
+          <div class="qe-card" onclick="alert('跳转审批列表')">
+            <div class="qe-num" style="color:#2563eb;">8</div>
+            <div class="qe-label">待审批</div>
+          </div>
+          <div class="qe-card" onclick="alert('跳转出库审批')">
+            <div class="qe-num" style="color:#f59e0b;">3</div>
+            <div class="qe-label">待出库</div>
+          </div>
+          <div class="qe-card" onclick="alert('跳转预警列表')">
+            <div class="qe-num" style="color:#ef4444;">5</div>
+            <div class="qe-label">待预警</div>
+          </div>
+          <div class="qe-card" onclick="alert('跳转催收工作台')">
+            <div class="qe-num" style="color:#8b5cf6;">12</div>
+            <div class="qe-label">待催收</div>
+          </div>
+        </div>
+
+        <!-- Right: Main Content -->
+        <div class="main-content">
+          <!-- Stats Cards -->
+          <div class="stats" id="statsArea">
+            <div class="stat-card">
+              <div class="stat-label">本月放款金额</div>
+              <div class="stat-num" style="color:#2563eb;">¥12,580万</div>
+              <div class="stat-change up">↑ 15.2% 同比上月</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">本月新增客户</div>
+              <div class="stat-num" style="color:#10b981;">23家</div>
+              <div class="stat-change up">↑ 8.7% 同比上月</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">在库货值总额</div>
+              <div class="stat-num" style="color:#f59e0b;">¥8,650万</div>
+              <div class="stat-change down">↓ 3.1% 环比上周</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">本月服务费收入</div>
+              <div class="stat-num" style="color:#10b981;">¥386,500</div>
+              <div class="stat-change up">↑ 22.4% 同比上月</div>
+            </div>
+          </div>
+
+          <!-- Two column: Todo + Quick Actions -->
+          <div class="two-col">
+            <!-- Todo List -->
+            <div class="card">
+              <div class="card-title">📌 待办事项 <span class="more">查看全部</span></div>
+              <div class="todo-item">
+                <div><span class="tag tag-red">紧急</span></div>
+                <div class="todo-info">
+                  <div class="todo-title">融资申请审批-xx科技</div>
+                  <div class="todo-deadline urgent">截止时间：今天 14:00</div>
+                </div>
+                <button class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;" onclick="alert('跳转处理')">去处理</button>
+              </div>
+              <div class="todo-item">
+                <div><span class="tag tag-orange">高</span></div>
+                <div class="todo-info">
+                  <div class="todo-title">出库审批-yy贸易</div>
+                  <div class="todo-deadline urgent">截止时间：今天 17:00</div>
+                </div>
+                <button class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;" onclick="alert('跳转处理')">去处理</button>
+              </div>
+              <div class="todo-item">
+                <div><span class="tag tag-yellow">中</span></div>
+                <div class="todo-info">
+                  <div class="todo-title">风险预警-在库货值波动</div>
+                  <div class="todo-deadline">截止时间：明天 10:00</div>
+                </div>
+                <button class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;" onclick="alert('跳转处理')">去处理</button>
+              </div>
+              <div class="todo-item">
+                <div><span class="tag tag-yellow">中</span></div>
+                <div class="todo-info">
+                  <div class="todo-title">催收任务-M2逾期客户跟进</div>
+                  <div class="todo-deadline">截止时间：明天 12:00</div>
+                </div>
+                <button class="btn btn-sm" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;" onclick="alert('跳转处理')">去处理</button>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+              <div class="card-title">⚡ 快捷操作</div>
+              <div class="quick-actions">
+                <div class="qa-btn" onclick="alert('快速放款查询')">
+                  <div class="qa-icon" style="background:#eff6ff;">💰</div>
+                  <div><div class="qa-label">快速放款查询</div><div class="qa-desc">查询放款业务</div></div>
+                </div>
+                <div class="qa-btn" onclick="alert('快速客户查询')">
+                  <div class="qa-icon" style="background:#f0fdf4;">👥</div>
+                  <div><div class="qa-label">快速客户查询</div><div class="qa-desc">查询客户信息</div></div>
+                </div>
+                <div class="qa-btn" onclick="alert('跳转预警中心')">
+                  <div class="qa-icon" style="background:#fffbeb;">⚠️</div>
+                  <div><div class="qa-label">预警入口</div><div class="qa-desc">风险预警中心</div></div>
+                </div>
+                <div class="qa-btn" onclick="alert('新增融资申请')">
+                  <div class="qa-icon" style="background:#fef2f2;">📄</div>
+                  <div><div class="qa-label">新增融资申请</div><div class="qa-desc">创建融资申请</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Announcements -->
+          <div class="card">
+            <div class="card-title">📢 通知公告 <span class="more">更多</span></div>
+            <div class="announcement-item">
+              <div class="ann-icon">📢</div>
+              <div class="ann-content">
+                <div class="ann-title"><span class="tag tag-red" style="margin-right:6px;">系统公告</span>平台将于4月30日22:00-24:00进行系统升级维护</div>
+                <div class="ann-time">2026-04-26 09:00</div>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="ann-icon">📋</div>
+              <div class="ann-content">
+                <div class="ann-title"><span class="tag tag-blue" style="margin-right:6px;">业务通知</span>新费率规则V2.0将于5月1日起生效，请提前做好通知准备</div>
+                <div class="ann-time">2026-04-25 14:30</div>
+              </div>
+            </div>
+            <div class="announcement-item">
+              <div class="ann-icon">⚠️</div>
+              <div class="ann-content">
+                <div class="ann-title"><span class="tag tag-yellow" style="margin-right:6px;">风险提醒</span>本月新增3笔M2逾期，请关注贷后管理模块</div>
+                <div class="ann-time">2026-04-24 16:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchLoginTab(tab, el) {
+  document.querySelectorAll('.login-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('.login-form').forEach(function(f) { f.classList.remove('active'); });
+  var formMap = { ops: 'formOps', enterprise: 'formEnterprise', bank: 'formBank' };
+  document.getElementById(formMap[tab]).classList.add('active');
+}
+
+function togglePwd(el) {
+  var inp = el.parentElement.querySelector('.pwd-input');
+  if (inp.type === 'password') { inp.type = 'text'; el.textContent = '🙈'; }
+  else { inp.type = 'password'; el.textContent = '👁️'; }
+}
+
+function refreshCaptcha() {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = '';
+  for (var i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  var imgs = document.querySelectorAll('.captcha-img');
+  for (var j = 0; j < imgs.length; j++) imgs[j].textContent = code;
+}
+
+function handleLogin() {
+  document.getElementById('roleModal').classList.add('show');
+}
+
+function selectRole(el, role) {
+  document.querySelectorAll('.role-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+}
+
+function enterDashboard(role) {
+  document.getElementById('roleModal').classList.remove('show');
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('dashboard').classList.add('show');
+
+  var roleTag = document.getElementById('roleTag');
+  var roleDisplay = document.getElementById('roleDisplay');
+  var userDisplay = document.getElementById('dashboardUser');
+  var statsArea = document.getElementById('statsArea');
+
+  if (role === '运营端') {
+    roleTag.textContent = '运营端';
+    roleDisplay.textContent = '运营专员';
+    userDisplay.textContent = '👤 王经理';
+    statsArea.innerHTML =
+      '<div class="stat-card"><div class="stat-label">本月放款金额</div><div class="stat-num" style="color:#2563eb;">¥12,580万</div><div class="stat-change up">↑ 15.2% 同比上月</div></div>' +
+      '<div class="stat-card"><div class="stat-label">本月新增客户</div><div class="stat-num" style="color:#10b981;">23家</div><div class="stat-change up">↑ 8.7% 同比上月</div></div>' +
+      '<div class="stat-card"><div class="stat-label">在库货值总额</div><div class="stat-num" style="color:#f59e0b;">¥8,650万</div><div class="stat-change down">↓ 3.1% 环比上周</div></div>' +
+      '<div class="stat-card"><div class="stat-label">本月服务费收入</div><div class="stat-num" style="color:#10b981;">¥386,500</div><div class="stat-change up">↑ 22.4% 同比上月</div></div>';
+  } else if (role === '企业端') {
+    roleTag.textContent = '企业端';
+    roleDisplay.textContent = '企业管理员';
+    userDisplay.textContent = '👤 XX商贸有限公司';
+    statsArea.innerHTML =
+      '<div class="stat-card"><div class="stat-label">可用额度</div><div class="stat-num" style="color:#10b981;">¥500万</div><div class="stat-change up">↑ 总额度 ¥1,000万</div></div>' +
+      '<div class="stat-card"><div class="stat-label">进行中融资</div><div class="stat-num" style="color:#2563eb;">3</div><div class="stat-change">本周期 5 笔</div></div>' +
+      '<div class="stat-card"><div class="stat-label">质押物总值</div><div class="stat-num" style="color:#f59e0b;">¥680万</div><div class="stat-change">当前覆盖 136%</div></div>' +
+      '<div class="stat-card"><div class="stat-label">待处理事项</div><div class="stat-num" style="color:#ef4444;">2</div><div class="stat-change">还款提醒 1 · 到期 1</div></div>';
+  } else {
+    roleTag.textContent = '银行端';
+    roleDisplay.textContent = '银行审批员';
+    userDisplay.textContent = '👤 赵审批';
+    statsArea.innerHTML =
+      '<div class="stat-card"><div class="stat-label">待审批业务</div><div class="stat-num" style="color:#2563eb;">8</div><div class="stat-change up">↑ 3 较昨日</div></div>' +
+      '<div class="stat-card"><div class="stat-label">待放款</div><div class="stat-num" style="color:#f59e0b;">5</div><div class="stat-change">金额 ¥320万</div></div>' +
+      '<div class="stat-card"><div class="stat-label">已放款总额</div><div class="stat-num" style="color:#10b981;">¥1.2亿</div><div class="stat-change up">↑ 8.3% 较上月</div></div>' +
+      '<div class="stat-card"><div class="stat-label">逾期率</div><div class="stat-num" style="color:#ef4444;">2.1%</div><div class="stat-change down">↑ 0.3% 较上月</div></div>';
+  }
+}
+
+function logout() {
+  document.getElementById('dashboard').classList.remove('show');
+  document.getElementById('loginPage').style.display = 'flex';
+}
+</script>
+</body>
+</html>

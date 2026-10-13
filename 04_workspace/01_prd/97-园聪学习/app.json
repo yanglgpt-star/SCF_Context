@@ -1,0 +1,24 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/count/count",
+    "pages/split/split",
+    "pages/game/game",
+    "pages/dice/dice",
+    "pages/result/result",
+    "pages/parent/parent"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#F7F2E9",
+    "backgroundColor": "#F7F2E9"
+  },
+  "style": "v2",
+  "usingComponents": {
+    "orientation-guard": "/components/orientation-guard/orientation-guard",
+    "rest-overlay": "/components/rest-overlay/rest-overlay"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

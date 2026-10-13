@@ -1,0 +1,3908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资产管理 - 原型图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* 顶部导航栏 */
+        .header {
+            background: #fff;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .header-logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1890ff;
+            margin-right: 40px;
+        }
+        .header-nav {
+            display: flex;
+            gap: 32px;
+            flex: 1;
+        }
+        .header-nav-item {
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .header-nav-item:hover {
+            color: #1890ff;
+        }
+        .header-nav-item.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-user {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* 左侧菜单 */
+        .sidebar {
+            width: 220px;
+            background: #001529;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            z-index: 999;
+            overflow-y: auto;
+        }
+        .sidebar-menu {
+            padding: 16px 0;
+        }
+        .menu-item {
+            position: relative;
+        }
+        .menu-title {
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+        .menu-title:hover {
+            color: #fff;
+        }
+        .menu-title.active {
+            background: #1890ff;
+            color: #fff;
+        }
+        .menu-title .arrow {
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+        .menu-item.expanded .arrow {
+            transform: rotate(90deg);
+        }
+        .submenu {
+            display: none;
+            background: #000c17;
+        }
+        .menu-item.expanded .submenu {
+            display: block;
+        }
+        .submenu-item {
+            padding: 10px 24px 10px 48px;
+            color: rgba(255,255,255,0.65);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .submenu-item:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+        .submenu-item.active {
+            color: #fff;
+            background: #1890ff;
+        }
+        .submenu-item .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.45);
+        }
+        .submenu-item.active .dot {
+            background: #fff;
+        }
+        
+        /* 主内容区 */
+        .main-container {
+            margin-left: 220px;
+            margin-top: 60px;
+            padding: 24px;
+            min-height: calc(100vh - 60px);
+        }
+        
+        /* 页面标题 */
+        .page-header {
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        .page-desc {
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+        
+        /* 内容卡片 */
+        .content-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        
+        /* 面包屑导航 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .breadcrumb-item {
+            color: #8c8c8c;
+            cursor: pointer;
+        }
+        .breadcrumb-item:hover {
+            color: #1890ff;
+        }
+        .breadcrumb-item.active {
+            color: #262626;
+            font-weight: 500;
+        }
+        .breadcrumb-separator {
+            color: #d9d9d9;
+        }
+        
+        /* 搜索区域 */
+        .search-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+        }
+        .form-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-label {
+            font-size: 14px;
+            color: #595959;
+            min-width: 80px;
+            font-weight: 500;
+        }
+        .form-input, .form-select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 160px;
+            background: #fff;
+            transition: all 0.3s;
+        }
+        .form-input:hover, .form-select:hover {
+            border-color: #40a9ff;
+        }
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: #1890ff;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+        .btn-default {
+            background: #fff;
+            color: #595959;
+            border: 1px solid #d9d9d9;
+        }
+        .btn-default:hover {
+            color: #1890ff;
+            border-color: #1890ff;
+        }
+        .btn-success {
+            background: #52c41a;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #73d13d;
+        }
+        .btn-danger {
+            background: #ff4d4f;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #ff7875;
+        }
+        .btn-warning {
+            background: #faad14;
+            color: #fff;
+        }
+        .btn-warning:hover {
+            background: #ffc53d;
+        }
+        .btn-text {
+            background: transparent;
+            color: #1890ff;
+            padding: 4px 8px;
+        }
+        .btn-text:hover {
+            background: #e6f7ff;
+        }
+        .btn-text-danger {
+            color: #ff4d4f;
+        }
+        .btn-text-danger:hover {
+            background: #fff1f0;
+        }
+        .btn-icon {
+            font-size: 14px;
+        }
+        
+        /* 操作栏 */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .action-left, .action-right {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 4px;
+            border: 1px solid #f0f0f0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        tr:hover {
+            background: #fafafa;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* 状态标签 */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .tag-default {
+            background: #f5f5f5;
+            color: #595959;
+            border: 1px solid #d9d9d9;
+        }
+        .tag-processing {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        .tag-warning {
+            background: #fffbe6;
+            color: #d48806;
+            border: 1px solid #ffe58f;
+        }
+        .tag-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .tag-error {
+            background: #fff2f0;
+            color: #f5222d;
+            border: 1px solid #ffccc7;
+        }
+        .tag-purple {
+            background: #f9f0ff;
+            color: #722ed1;
+            border: 1px solid #d3adf7;
+        }
+        
+        /* 操作按钮组 */
+        .operation-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .op-btn {
+            font-size: 13px;
+            color: #1890ff;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .op-btn:hover {
+            background: #e6f7ff;
+        }
+        .op-btn-danger {
+            color: #ff4d4f;
+        }
+        .op-btn-danger:hover {
+            background: #fff1f0;
+        }
+        .op-btn.disabled {
+            color: #bfbfbf;
+            cursor: not-allowed;
+        }
+        .op-btn.disabled:hover {
+            background: transparent;
+        }
+        
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .page-total {
+            font-size: 14px;
+            color: #595959;
+            margin-right: 8px;
+        }
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #595959;
+            transition: all 0.3s;
+        }
+        .page-btn:hover:not(.active):not(:disabled) {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        .page-btn.active {
+            background: #1890ff;
+            color: #fff;
+            border-color: #1890ff;
+        }
+        .page-btn:disabled {
+            cursor: not-allowed;
+            color: #bfbfbf;
+            border-color: #d9d9d9;
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 700px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .modal-content.large {
+            max-width: 1000px;
+        }
+        .modal-content.small {
+            max-width: 420px;
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+        }
+        .modal-close {
+            font-size: 20px;
+            cursor: pointer;
+            color: #8c8c8c;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .modal-close:hover {
+            background: #f5f5f5;
+            color: #262626;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        /* 表单样式 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+        }
+        .form-group label .required {
+            color: #ff4d4f;
+            margin-left: 4px;
+        }
+        .form-control {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .form-control:hover {
+            border-color: #40a9ff;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+        .form-control:disabled {
+            background: #f5f5f5;
+            color: #595959;
+            cursor: not-allowed;
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* 详情展示 */
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+        .detail-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            padding-left: 12px;
+            border-left: 3px solid #1890ff;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px 24px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .detail-label {
+            font-size: 13px;
+            color: #8c8c8c;
+        }
+        .detail-value {
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+        }
+        
+        /* 上传区域 */
+        .upload-area {
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            padding: 48px;
+            text-align: center;
+            color: #8c8c8c;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+            background: #e6f7ff;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .upload-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .upload-hint {
+            font-size: 13px;
+            color: #bfbfbf;
+        }
+        
+        /* Tab导航 */
+        .tabs-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .tab-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-size: 14px;
+            color: #595959;
+            transition: all 0.3s;
+        }
+        .tab-item:hover {
+            color: #1890ff;
+        }
+        .tab-item.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+            font-weight: 500;
+        }
+        
+        /* 步骤条 */
+        .steps {
+            display: flex;
+            margin-bottom: 32px;
+        }
+        .step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            color: #8c8c8c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .step.active .step-icon {
+            background: #1890ff;
+            color: #fff;
+        }
+        .step.completed .step-icon {
+            background: #52c41a;
+            color: #fff;
+        }
+        .step-line {
+            flex: 1;
+            height: 1px;
+            background: #f0f0f0;
+            margin: 0 12px;
+        }
+        .step.completed .step-line {
+            background: #52c41a;
+        }
+        .step-title {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #8c8c8c;
+        }
+        .step.active .step-title {
+            color: #1890ff;
+        }
+        .step.completed .step-title {
+            color: #52c41a;
+        }
+        
+        /* 提示信息 */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .alert-info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #096dd9;
+        }
+        .alert-warning {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            color: #d48806;
+        }
+        .alert-error {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #cf1322;
+        }
+        
+        /* 统计卡片 */
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+        }
+        .stat-value.primary { color: #1890ff; }
+        .stat-value.success { color: #52c41a; }
+        .stat-value.warning { color: #faad14; }
+        .stat-value.error { color: #ff4d4f; }
+        
+        /* 对齐工具类 */
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        
+        /* 模块标题 */
+        .module-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1890ff;
+            padding: 8px 12px;
+            background: #e6f7ff;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        
+        /* 复选框 */
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: #8c8c8c;
+        }
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        .empty-text {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-logo">供应链金融平台</div>
+        <nav class="header-nav">
+            <span class="header-nav-item">首页</span>
+            <span class="header-nav-item active">业务中心</span>
+            <span class="header-nav-item">数据中心</span>
+            <span class="header-nav-item">系统管理</span>
+        </nav>
+        <div class="header-right">
+            <span class="header-user">欢迎，管理员</span>
+            <button class="btn btn-default btn-icon">退出</button>
+        </div>
+    </header>
+
+    <!-- 左侧菜单 -->
+    <aside class="sidebar">
+        <div class="sidebar-menu">
+            <!-- 一级菜单：资产管理 -->
+            <div class="menu-item expanded">
+                <div class="menu-title active" onclick="toggleMenu(this)">
+                    <span>📊 资产管理</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="submenu">
+                    <div class="submenu-item active" onclick="showSection('protocol')">
+                        <span class="dot"></span>
+                        <span>代采中心</span>
+                    </div>
+                    <div class="submenu-item" onclick="showSection('deposit')">
+                        <span class="dot"></span>
+                        <span>保证金</span>
+                    </div>
+                    <div class="submenu-item" onclick="showSection('purchase')">
+                        <span class="dot"></span>
+                        <span>采购管理</span>
+                    </div>
+                    <div class="submenu-item" onclick="showSection('refund')">
+                        <span class="dot"></span>
+                        <span>退款管理</span>
+                    </div>
+                    <div class="submenu-item" onclick="showSection('sales')">
+                        <span class="dot"></span>
+                        <span>销售管理</span>
+                    </div>
+                    <div class="submenu-item" onclick="showSection('supervision')">
+                        <span class="dot"></span>
+                        <span>监管管理</span>
+                    </div>
+                    <div class="submenu-item" onclick="showSection('xianhuo')">
+                        <span class="dot"></span>
+                        <span>先货后款</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-container">
+        <!-- ==================== 代采中心 ==================== -->
+        <div id="protocol" class="section-content">
+            <!-- 协议列表页 -->
+            <div id="protocol-list">
+                <div class="page-header">
+                    <nav class="breadcrumb">
+                        <span class="breadcrumb-item">资产管理</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-item active">代采中心</span>
+                    </nav>
+                    <h1 class="page-title">代采协议管理</h1>
+                    <p class="page-desc">管理代采销售协议的创建、审批、执行等全生命周期</p>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <div class="stat-label">协议总数</div>
+                        <div class="stat-value">156</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">生效中协议</div>
+                        <div class="stat-value primary">89</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">待处理协议</div>
+                        <div class="stat-value warning">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">本月新增</div>
+                        <div class="stat-value success">23</div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <!-- 搜索区域 -->
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">协议编码</span>
+                            <input type="text" class="form-input" placeholder="请输入协议编码">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">委托方</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>醒市</option>
+                                <option>能良</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">代采方</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>能良</option>
+                                <option>醒市</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">供应商</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>能良科技</option>
+                                <option>天音</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">协议状态</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>保存</option>
+                                <option>待签署合同</option>
+                                <option>待交保证金</option>
+                                <option>生效</option>
+                                <option>执行中</option>
+                                <option>已结清</option>
+                                <option>已违约</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">保证金状态</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>待生效</option>
+                                <option>待支付</option>
+                                <option>已支付</option>
+                                <option>已退回</option>
+                                <option>已抵扣</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">创建日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">
+                                <span class="btn-icon">↺</span> 重置
+                            </button>
+                            <button class="btn btn-primary">
+                                <span class="btn-icon">🔍</span> 搜索
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 操作栏 -->
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-primary" onclick="showCreateProtocol()">
+                                <span class="btn-icon">+</span> 创建代采协议
+                            </button>
+                            <button class="btn btn-default">导出</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">共 156 条记录</span>
+                        </div>
+                    </div>
+
+                    <!-- 表格 -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>协议编号</th>
+                                    <th>委托方</th>
+                                    <th>代采方</th>
+                                    <th>供应商</th>
+                                    <th class="text-right">采购总量</th>
+                                    <th class="text-right">代采总额</th>
+                                    <th class="text-right">剩余数量</th>
+                                    <th class="text-center">提货截止</th>
+                                    <th class="text-center">协议状态</th>
+                                    <th class="text-center">保证金状态</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>DCXY20260900090</strong></td>
+                                    <td>能良</td>
+                                    <td>醒市</td>
+                                    <td>天音</td>
+                                    <td class="text-right">8,312</td>
+                                    <td class="text-right">¥3,368.00</td>
+                                    <td class="text-right">300</td>
+                                    <td class="text-center">2026-12-31</td>
+                                    <td class="text-center"><span class="tag tag-success">生效</span></td>
+                                    <td class="text-center"><span class="tag tag-success">已支付</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('protocolDetail')">详情</span>
+                                            <span class="op-btn" onclick="showModal('createPurchase')">创建采购</span>
+                                            <span class="op-btn" onclick="showModal('createDistribution')">创建分销</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DCXY20260900091</strong></td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td>能良科技</td>
+                                    <td class="text-right">5,000</td>
+                                    <td class="text-right">¥2,100.00</td>
+                                    <td class="text-right">500</td>
+                                    <td class="text-center">2026-11-30</td>
+                                    <td class="text-center"><span class="tag tag-processing">执行中</span></td>
+                                    <td class="text-center"><span class="tag tag-success">已支付</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('protocolDetail')">详情</span>
+                                            <span class="op-btn" onclick="showModal('createPurchase')">创建采购</span>
+                                            <span class="op-btn" onclick="showModal('createDistribution')">创建分销</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DCXY20260900092</strong></td>
+                                    <td>采购商1</td>
+                                    <td>代采方1</td>
+                                    <td>供应商1</td>
+                                    <td class="text-right">100</td>
+                                    <td class="text-right">¥50,000.00</td>
+                                    <td class="text-right">0</td>
+                                    <td class="text-center">2026-10-15</td>
+                                    <td class="text-center"><span class="tag tag-warning">待签署合同</span></td>
+                                    <td class="text-center"><span class="tag tag-default">待生效</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('protocolDetail')">详情</span>
+                                            <span class="op-btn" onclick="showModal('editProtocol')">编辑</span>
+                                            <span class="op-btn op-btn-danger" onclick="showModal('deleteConfirm')">删除</span>
+                                            <span class="op-btn" onclick="showModal('submitConfirm')">提交</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DCXY20260900093</strong></td>
+                                    <td>采购商2</td>
+                                    <td>代采方2</td>
+                                    <td>供应商2</td>
+                                    <td class="text-right">200</td>
+                                    <td class="text-right">¥80,000.00</td>
+                                    <td class="text-right">50</td>
+                                    <td class="text-center">2026-09-30</td>
+                                    <td class="text-center"><span class="tag tag-warning">待交保证金</span></td>
+                                    <td class="text-center"><span class="tag tag-warning">待支付</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('protocolDetail')">详情</span>
+                                            <span class="op-btn" onclick="showModal('uploadContract')">上传合同</span>
+                                            <span class="op-btn" onclick="showModal('revokeConfirm')">撤销</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DCXY20260900094</strong></td>
+                                    <td>采购商3</td>
+                                    <td>代采方3</td>
+                                    <td>供应商3</td>
+                                    <td class="text-right">1,000</td>
+                                    <td class="text-right">¥500,000.00</td>
+                                    <td class="text-right">0</td>
+                                    <td class="text-center">2026-08-31</td>
+                                    <td class="text-center"><span class="tag tag-success">已结清</span></td>
+                                    <td class="text-center"><span class="tag tag-default">已退回</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('protocolDetail')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DCXY20260900095</strong></td>
+                                    <td>采购商4</td>
+                                    <td>代采方4</td>
+                                    <td>供应商4</td>
+                                    <td class="text-right">500</td>
+                                    <td class="text-right">¥200,000.00</td>
+                                    <td class="text-right">200</td>
+                                    <td class="text-center">2026-09-01</td>
+                                    <td class="text-center"><span class="tag tag-error">已违约</span></td>
+                                    <td class="text-center"><span class="tag tag-success">已支付</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('protocolDetail')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <span class="page-total">共 156 条</span>
+                        <button class="page-btn" disabled>&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">5</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 协议创建页 -->
+            <div id="protocol-create" style="display: none;">
+                <div class="page-header">
+                    <nav class="breadcrumb">
+                        <span class="breadcrumb-item">资产管理</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-item" onclick="backToList()" style="cursor: pointer;">代采中心</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-item active">创建代采协议</span>
+                    </nav>
+                    <h1 class="page-title">创建代采协议</h1>
+                    <p class="page-desc">完成代采协议的基础信息录入、业务条款设置、商品信息添加</p>
+                </div>
+
+                <!-- 步骤条 -->
+                <div class="content-card">
+                    <div class="steps">
+                        <div class="step active">
+                            <div class="step-icon">1</div>
+                            <div class="step-line"></div>
+                            <div class="step-title">基础信息</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">2</div>
+                            <div class="step-line"></div>
+                            <div class="step-title">业务条款</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">3</div>
+                            <div class="step-line"></div>
+                            <div class="step-title">商品信息</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">4</div>
+                            <div class="step-title">附件信息</div>
+                        </div>
+                    </div>
+
+                    <!-- Tab导航 -->
+                    <div class="tabs-nav">
+                        <div class="tab-item active" onclick="switchTab('basic')">基础信息</div>
+                        <div class="tab-item" onclick="switchTab('business')">业务条款</div>
+                        <div class="tab-item" onclick="switchTab('products')">商品信息</div>
+                        <div class="tab-item" onclick="switchTab('attachments')">附件信息</div>
+                    </div>
+
+                    <!-- 基础信息 -->
+                    <div id="tab-basic" class="tab-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>协议名称 <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="请输入协议名称">
+                            </div>
+                            <div class="form-group">
+                                <label>协议编号</label>
+                                <input type="text" class="form-control" value="DCXY20260900096" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>委托方 <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option>请选择</option>
+                                    <option>采购商1</option>
+                                    <option>醒市</option>
+                                    <option>能良</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>代采方 <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option>请选择</option>
+                                    <option>代采方1</option>
+                                    <option>能良</option>
+                                    <option>醒市</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>供应商 <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option>请选择</option>
+                                    <option>供应商1</option>
+                                    <option>能良科技</option>
+                                    <option>天音</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>代采总额</label>
+                                <input type="text" class="form-control" value="¥0.00" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>提货起始日期 <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="请选择日期">
+                            </div>
+                            <div class="form-group">
+                                <label>提货截止日期 <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="请选择日期">
+                            </div>
+                            <div class="form-group">
+                                <label>创建人</label>
+                                <input type="text" class="form-control" value="张三" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>创建日期</label>
+                                <input type="text" class="form-control" value="2026-09-09" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 业务条款 -->
+                    <div id="tab-business" class="tab-content" style="display: none;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>业务模式</label>
+                                <input type="text" class="form-control" value="代采垫资" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>服务费率（日）‱ <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="请输入服务费率">
+                            </div>
+                            <div class="form-group">
+                                <label>保证金比例% <span class="required">*</span></label>
+                                <input type="text" class="form-control" placeholder="请输入保证金比例">
+                            </div>
+                            <div class="form-group">
+                                <label>保证金金额</label>
+                                <input type="text" class="form-control" value="¥0.00" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>保证金最迟付款日期</label>
+                                <input type="text" class="form-control" value="-" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 商品信息 -->
+                    <div id="tab-products" class="tab-content" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>提示：</strong>请添加本次代采协议涉及的商品信息，支持批量添加
+                        </div>
+                        <div class="action-bar" style="margin-bottom: 16px;">
+                            <button class="btn btn-primary" onclick="showModal('productSelect')">
+                                <span class="btn-icon">+</span> 添加代采商品
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>品牌名称</th>
+                                        <th>商品名称</th>
+                                        <th>SKU</th>
+                                        <th>无仓SKU编码</th>
+                                        <th>商家SKU编码</th>
+                                        <th class="text-right">采购单价</th>
+                                        <th class="text-right">采购数量</th>
+                                        <th class="text-right">采购总价</th>
+                                        <th class="text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>苹果</td>
+                                        <td>苹果12</td>
+                                        <td>256G黑色</td>
+                                        <td>123</td>
+                                        <td>12123245342</td>
+                                        <td class="text-right">100.00</td>
+                                        <td class="text-right">40</td>
+                                        <td class="text-right">4,000.00</td>
+                                        <td class="text-center"><span class="op-btn op-btn-danger">删除</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>苹果</td>
+                                        <td>苹果17</td>
+                                        <td>128G白色</td>
+                                        <td>12312</td>
+                                        <td>121</td>
+                                        <td class="text-right">100.00</td>
+                                        <td class="text-right">60</td>
+                                        <td class="text-right">6,000.00</td>
+                                        <td class="text-center"><span class="op-btn op-btn-danger">删除</span></td>
+                                    </tr>
+                                    <tr style="background: #fafafa; font-weight: 600;">
+                                        <td colspan="5" class="text-right">合计</td>
+                                        <td class="text-right">-</td>
+                                        <td class="text-right">100</td>
+                                        <td class="text-right">10,000.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 附件信息 -->
+                    <div id="tab-attachments" class="tab-content" style="display: none;">
+                        <div class="upload-area">
+                            <div class="upload-icon">📎</div>
+                            <div class="upload-text">点击或拖拽文件至此处上传</div>
+                            <div class="upload-hint">支持 PDF、DOC、DOCX、JPG、PNG 格式，单个文件不超过20MB</div>
+                        </div>
+                    </div>
+
+                    <!-- 底部操作按钮 -->
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px;">
+                        <button class="btn btn-default" onclick="backToList()">取消</button>
+                        <button class="btn btn-default">保存草稿</button>
+                        <button class="btn btn-primary">提交协议</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 保证金 ==================== -->
+        <div id="deposit" class="section-content" style="display: none;">
+            <div class="page-header">
+                <nav class="breadcrumb">
+                    <span class="breadcrumb-item">资产管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">保证金</span>
+                </nav>
+                <h1 class="page-title">保证金管理</h1>
+                <p class="page-desc">管理代采协议保证金收取、退回、抵扣等资金操作</p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-label">待收款保证金</div>
+                    <div class="stat-value warning">¥128,456.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已收款保证金</div>
+                    <div class="stat-value success">¥986,234.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已退回保证金</div>
+                    <div class="stat-value">¥325,678.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已抵扣货款</div>
+                    <div class="stat-value primary">¥156,890.00</div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <!-- 搜索区域 -->
+                <div class="search-area">
+                    <div class="form-item">
+                        <span class="form-label">单据编码</span>
+                        <input type="text" class="form-input" placeholder="请输入单据编码">
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">协议编号</span>
+                        <input type="text" class="form-input" placeholder="请输入协议编号">
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">保证金状态</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                            <option>待生效</option>
+                            <option>待支付</option>
+                            <option>已支付</option>
+                            <option>已退回</option>
+                            <option>已抵扣</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">账单日期</span>
+                        <div class="date-range">
+                            <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                            <span>至</span>
+                            <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                        </div>
+                    </div>
+                    <div class="form-item">
+                        <button class="btn btn-default">重置</button>
+                        <button class="btn btn-primary">搜索</button>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>单据编码</th>
+                                <th>协议编号</th>
+                                <th class="text-right">应收金额</th>
+                                <th class="text-center">账单日期</th>
+                                <th class="text-center">最迟付款日期</th>
+                                <th class="text-right">实收金额</th>
+                                <th class="text-center">实收日期</th>
+                                <th class="text-center">保证金状态</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>DCBZJ202609000023</strong></td>
+                                <td>DCXY202609000909</td>
+                                <td class="text-right">¥5,981.00</td>
+                                <td class="text-center">2026-08-15</td>
+                                <td class="text-center">2025-06-05</td>
+                                <td class="text-right">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center"><span class="tag tag-warning">待支付</span></td>
+                                <td class="text-center">
+                                    <div class="operation-btns">
+                                        <span class="op-btn" onclick="showModal('confirmReceive')">确认收款</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>DCBZJ202609000024</strong></td>
+                                <td>DCXY202609000910</td>
+                                <td class="text-right">¥6,824.00</td>
+                                <td class="text-center">2026-10-19</td>
+                                <td class="text-center">2025-03-06</td>
+                                <td class="text-right">¥6,824.00</td>
+                                <td class="text-center">2025-12-27</td>
+                                <td class="text-center"><span class="tag tag-success">已支付</span></td>
+                                <td class="text-center">
+                                    <div class="operation-btns">
+                                        <span class="op-btn" onclick="showModal('refundBack')">原路退回</span>
+                                        <span class="op-btn" onclick="showModal('convertPayment')">转货款抵扣</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>DCBZJ202609000025</strong></td>
+                                <td>DCXY202609000911</td>
+                                <td class="text-right">¥6,936.00</td>
+                                <td class="text-center">2025-12-16</td>
+                                <td class="text-center">2025-06-15</td>
+                                <td class="text-right">¥6,936.00</td>
+                                <td class="text-center">2026-12-04</td>
+                                <td class="text-center"><span class="tag tag-default">已退回</span></td>
+                                <td class="text-center">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DCBZJ202609000026</strong></td>
+                                <td>DCXY202609000912</td>
+                                <td class="text-right">¥7,719.00</td>
+                                <td class="text-center">2025-01-14</td>
+                                <td class="text-center">2026-04-23</td>
+                                <td class="text-right">¥7,719.00</td>
+                                <td class="text-center">2025-05-24</td>
+                                <td class="text-center"><span class="tag tag-processing">已抵扣</span></td>
+                                <td class="text-center">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>DCBZJ202609000027</strong></td>
+                                <td>DCXY202609000913</td>
+                                <td class="text-right">¥1,872.00</td>
+                                <td class="text-center">2025-01-14</td>
+                                <td class="text-center">2026-08-15</td>
+                                <td class="text-right">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center"><span class="tag tag-default">待生效</span></td>
+                                <td class="text-center">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <span class="page-total">共 89 条</span>
+                    <button class="page-btn" disabled>&lt;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">&gt;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 采购管理 ==================== -->
+        <div id="purchase" class="section-content" style="display: none;">
+            <div class="page-header">
+                <nav class="breadcrumb">
+                    <span class="breadcrumb-item">资产管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">采购管理</span>
+                </nav>
+                <h1 class="page-title">采购管理</h1>
+                <p class="page-desc">管理代采协议相关的采购订单，支持退款申请和数据同步</p>
+            </div>
+
+            <div class="content-card">
+                <!-- 搜索区域 -->
+                <div class="search-area">
+                    <div class="form-item">
+                        <span class="form-label">协议编号</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">采购单号</span>
+                        <input type="text" class="form-input" placeholder="请输入">
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">供应商</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">订单状态</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                            <option>待发货</option>
+                            <option>已发货</option>
+                            <option>已取消</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">下单日期</span>
+                        <div class="date-range">
+                            <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                            <span>至</span>
+                            <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                        </div>
+                    </div>
+                    <div class="form-item">
+                        <button class="btn btn-default">重置</button>
+                        <button class="btn btn-primary">搜索</button>
+                    </div>
+                </div>
+
+                <!-- 功能按钮 -->
+                <div class="action-bar">
+                    <div class="action-left">
+                        <button class="btn btn-default">导出</button>
+                        <button class="btn btn-primary" onclick="showModal('batchRefund')">批量申请退款</button>
+                        <button class="btn btn-success">获取采购单数据</button>
+                    </div>
+                    <div class="action-right">
+                        <span style="color: #8c8c8c; font-size: 14px;">同步时间：2026-09-09 12:10:10</span>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="checkbox"></th>
+                                <th>采购单号</th>
+                                <th>协议编号</th>
+                                <th>供应商</th>
+                                <th>商品名称</th>
+                                <th class="text-right">采购数量</th>
+                                <th class="text-right">采购总价</th>
+                                <th class="text-right">拣货数量</th>
+                                <th class="text-center">是否完成拣货</th>
+                                <th class="text-right">未拣货数量</th>
+                                <th class="text-center">状态</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="checkbox"></td>
+                                <td><strong>8ea62f881</strong></td>
+                                <td>60900090</td>
+                                <td>醒市</td>
+                                <td>华为1</td>
+                                <td class="text-right">90</td>
+                                <td class="text-right">¥9,000.00</td>
+                                <td class="text-right">70</td>
+                                <td class="text-center">是</td>
+                                <td class="text-right" style="color: #ff4d4f; font-weight: 500;">20</td>
+                                <td class="text-center"><span class="tag tag-warning">待发货</span></td>
+                                <td class="text-center">
+                                    <div class="operation-btns">
+                                        <span class="op-btn" onclick="showModal('refundApply')">退款申请</span>
+                                        <span class="op-btn">查看串码</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="checkbox"></td>
+                                <td><strong>8ea62f882</strong></td>
+                                <td>60900090</td>
+                                <td>醒市</td>
+                                <td>华为2</td>
+                                <td class="text-right">80</td>
+                                <td class="text-right">¥16,000.00</td>
+                                <td class="text-right">70</td>
+                                <td class="text-center">是</td>
+                                <td class="text-right" style="color: #ff4d4f; font-weight: 500;">10</td>
+                                <td class="text-center"><span class="tag tag-warning">待发货</span></td>
+                                <td class="text-center">
+                                    <div class="operation-btns">
+                                        <span class="op-btn" onclick="showModal('refundApply')">退款申请</span>
+                                        <span class="op-btn">查看串码</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="checkbox"></td>
+                                <td><strong>8ea62f883</strong></td>
+                                <td>60900091</td>
+                                <td>能良</td>
+                                <td>华为3</td>
+                                <td class="text-right">75</td>
+                                <td class="text-right">¥21,000.00</td>
+                                <td class="text-right">70</td>
+                                <td class="text-center">否</td>
+                                <td class="text-right">5</td>
+                                <td class="text-center"><span class="tag tag-success">已发货</span></td>
+                                <td class="text-center">
+                                    <div class="operation-btns">
+                                        <span class="op-btn">查看串码</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <span class="page-total">共 245 条</span>
+                    <button class="page-btn" disabled>&lt;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">&gt;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 退款管理 ==================== -->
+        <div id="refund" class="section-content" style="display: none;">
+            <div class="page-header">
+                <nav class="breadcrumb">
+                    <span class="breadcrumb-item">资产管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">退款管理</span>
+                </nav>
+                <h1 class="page-title">退款管理</h1>
+                <p class="page-desc">处理采购订单的退款申请，确认实收金额和退款状态</p>
+            </div>
+
+            <div class="content-card">
+                <!-- 搜索区域 -->
+                <div class="search-area">
+                    <div class="form-item">
+                        <span class="form-label">退款申请编码</span>
+                        <input type="text" class="form-input" placeholder="请输入">
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">协议编号</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">采购单号</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">退款状态</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                            <option>待退款</option>
+                            <option>已退款</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">申请日期</span>
+                        <div class="date-range">
+                            <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                            <span>至</span>
+                            <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                        </div>
+                    </div>
+                    <div class="form-item">
+                        <button class="btn btn-default">重置</button>
+                        <button class="btn btn-primary">搜索</button>
+                    </div>
+                </div>
+
+                <!-- 功能按钮 -->
+                <div class="action-bar">
+                    <div class="action-left">
+                        <button class="btn btn-default">导出</button>
+                        <button class="btn btn-primary" onclick="showModal('batchRefundConfirm')">批量确认</button>
+                    </div>
+                    <div class="action-right">
+                        <span style="color: #8c8c8c; font-size: 14px;">共 78 条记录</span>
+                    </div>
+                </div>
+
+                <!-- 表格 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="checkbox"></th>
+                                <th>退款申请编码</th>
+                                <th class="text-center">申请日期</th>
+                                <th>采购单号</th>
+                                <th>商品名称</th>
+                                <th class="text-right">待退款金额</th>
+                                <th class="text-right">退货数量</th>
+                                <th class="text-right">实收金额</th>
+                                <th class="text-center">确认日期</th>
+                                <th class="text-center">状态</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="checkbox"></td>
+                                <td><strong>DCTK202309002211</strong></td>
+                                <td class="text-center">2026-09-14</td>
+                                <td>8ea62f881</td>
+                                <td>华为1</td>
+                                <td class="text-right">¥2,000.00</td>
+                                <td class="text-right">20</td>
+                                <td class="text-right">-</td>
+                                <td class="text-center">-</td>
+                                <td class="text-center"><span class="tag tag-warning">待退款</span></td>
+                                <td class="text-center">
+                                    <div class="operation-btns">
+                                        <span class="op-btn" onclick="showModal('refundConfirm')">确认收款</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="checkbox" disabled></td>
+                                <td><strong>DCTK202309002212</strong></td>
+                                <td class="text-center">2026-04-08</td>
+                                <td>8ea62f882</td>
+                                <td>华为2</td>
+                                <td class="text-right">¥2,000.00</td>
+                                <td class="text-right">10</td>
+                                <td class="text-right">¥2,000.00</td>
+                                <td class="text-center">2025-10-21</td>
+                                <td class="text-center"><span class="tag tag-success">已退款</span></td>
+                                <td class="text-center">
+                                    <span class="op-btn disabled">已处理</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="checkbox" disabled></td>
+                                <td><strong>DCTK202309002213</strong></td>
+                                <td class="text-center">2025-07-11</td>
+                                <td>8ea62f883</td>
+                                <td>华为3</td>
+                                <td class="text-right">¥1,500.00</td>
+                                <td class="text-right">5</td>
+                                <td class="text-right">¥1,500.00</td>
+                                <td class="text-center">2026-12-09</td>
+                                <td class="text-center"><span class="tag tag-success">已退款</span></td>
+                                <td class="text-center">
+                                    <span class="op-btn disabled">已处理</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <span class="page-total">共 78 条</span>
+                    <button class="page-btn" disabled>&lt;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">&gt;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 销售管理 ==================== -->
+        <div id="sales" class="section-content" style="display: none;">
+            <div class="page-header">
+                <nav class="breadcrumb">
+                    <span class="breadcrumb-item">资产管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">销售管理</span>
+                </nav>
+                <h1 class="page-title">销售管理</h1>
+                <p class="page-desc">管理分销活动和销售订单，查看销售数据和同步状态</p>
+            </div>
+
+            <!-- Tab切换 -->
+            <div class="content-card">
+                <div class="tabs-nav" style="margin-bottom: 24px;">
+                    <div class="tab-item active" onclick="switchSalesTab('distribution')">分销活动</div>
+                    <div class="tab-item" onclick="switchSalesTab('salesOrder')">销售订单</div>
+                </div>
+
+                <!-- 分销活动 -->
+                <div id="distribution-tab">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">协议编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">活动ID</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">活动状态</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>发布中</option>
+                                <option>已下架</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">共 312 条记录</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>活动ID</th>
+                                    <th>协议编号</th>
+                                    <th>采购单号</th>
+                                    <th>创建人</th>
+                                    <th>品牌</th>
+                                    <th>产品型号</th>
+                                    <th class="text-right">数量</th>
+                                    <th class="text-right">集采入仓价格</th>
+                                    <th class="text-center">发布时间</th>
+                                    <th class="text-center">失效时间</th>
+                                    <th class="text-center">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>8e9ab7880561e00</strong></td>
+                                    <td>DCXY202609000909</td>
+                                    <td>8ea62f881d8605</td>
+                                    <td>赵雨</td>
+                                    <td>小米</td>
+                                    <td>小米12</td>
+                                    <td class="text-right">10</td>
+                                    <td class="text-right">¥100.00</td>
+                                    <td class="text-center">2026-06-02</td>
+                                    <td class="text-center">2026-12-31</td>
+                                    <td class="text-center"><span class="tag tag-success">发布中</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>8e9ab7880561e01</strong></td>
+                                    <td>DCXY202609000909</td>
+                                    <td>8ea62f881d8605</td>
+                                    <td>王五</td>
+                                    <td>小米</td>
+                                    <td>小米13</td>
+                                    <td class="text-right">10</td>
+                                    <td class="text-right">¥200.00</td>
+                                    <td class="text-center">2025-01-23</td>
+                                    <td class="text-center">2025-07-11</td>
+                                    <td class="text-center"><span class="tag tag-default">已下架</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>8e9ab7880561e02</strong></td>
+                                    <td>DCXY202609000909</td>
+                                    <td>8ea62f881d8605</td>
+                                    <td>李书易</td>
+                                    <td>小米</td>
+                                    <td>小米15</td>
+                                    <td class="text-right">10</td>
+                                    <td class="text-right">¥300.00</td>
+                                    <td class="text-center">2025-04-15</td>
+                                    <td class="text-center">2025-10-02</td>
+                                    <td class="text-center"><span class="tag tag-default">已下架</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 销售订单 -->
+                <div id="salesOrder-tab" style="display: none;">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">订单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">协议编号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">活动ID</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">订单状态</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                                <option>待发货</option>
+                                <option>已发货</option>
+                                <option>已收货</option>
+                                <option>已取消</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                            <button class="btn btn-success">获取分销订单数据</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">同步时间：2026-09-09 12:10:10</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>销售订单号</th>
+                                    <th>活动ID</th>
+                                    <th>协议编号</th>
+                                    <th>产品型号</th>
+                                    <th class="text-right">成交价</th>
+                                    <th class="text-right">数量</th>
+                                    <th class="text-right">总金额</th>
+                                    <th>分销商</th>
+                                    <th class="text-center">付款状态</th>
+                                    <th class="text-center">发货时间</th>
+                                    <th class="text-center">签收时间</th>
+                                    <th class="text-center">订单状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>8e7b1758055e604</strong></td>
+                                    <td>8e9ab788056</td>
+                                    <td>DCXY202609000909</td>
+                                    <td>小米12</td>
+                                    <td class="text-right">¥100.00</td>
+                                    <td class="text-right">10</td>
+                                    <td class="text-right">¥1,000.00</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-success">已确认收款</span></td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center"><span class="tag tag-warning">待发货</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>8e7b1758055e605</strong></td>
+                                    <td>8e9ab788056</td>
+                                    <td>DCXY202609000909</td>
+                                    <td>小米12</td>
+                                    <td class="text-right">¥200.00</td>
+                                    <td class="text-right">10</td>
+                                    <td class="text-right">¥2,000.00</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-success">已确认收款</span></td>
+                                    <td class="text-center">2025-09-15</td>
+                                    <td class="text-center">2025-12-21</td>
+                                    <td class="text-center"><span class="tag tag-success">已收货</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>8e7b1758055e606</strong></td>
+                                    <td>8e9ab788056</td>
+                                    <td>DCXY202609000909</td>
+                                    <td>小米12</td>
+                                    <td class="text-right">¥200.00</td>
+                                    <td class="text-right">10</td>
+                                    <td class="text-right">¥2,000.00</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-success">已确认收款</span></td>
+                                    <td class="text-center">2025-09-15</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center"><span class="tag tag-processing">已发货</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <span class="page-total">共 567 条</span>
+                    <button class="page-btn" disabled>&lt;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">&gt;</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 监管管理 ==================== -->
+        <div id="supervision" class="section-content" style="display: none;">
+            <div class="page-header">
+                <nav class="breadcrumb">
+                    <span class="breadcrumb-item">资产管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">监管管理</span>
+                </nav>
+                <h1 class="page-title">监管管理</h1>
+                <p class="page-desc">实时追踪和监控商品的入库、出库及库存状态，确保账实相符</p>
+            </div>
+
+            <!-- Tab切换 -->
+            <div class="content-card">
+                <div class="tabs-nav" style="margin-bottom: 24px;">
+                    <div class="tab-item active" onclick="switchSupervisionTab('inbound')">入库数据</div>
+                    <div class="tab-item" onclick="switchSupervisionTab('outbound')">出库数据</div>
+                    <div class="tab-item" onclick="switchSupervisionTab('inventory')">库存数据</div>
+                </div>
+
+                <!-- 入库数据 -->
+                <div id="inbound-tab">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">协议编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">无仓采购单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">入库单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">入库日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">商品编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">仓库名称</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">聚水潭采购单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                            <button class="btn btn-success">同步入库数据</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">最近同步时间：2026-09-09 23:00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>协议编码</th>
+                                    <th>无仓采购单号</th>
+                                    <th>入库单号</th>
+                                    <th>入库子单号</th>
+                                    <th>聚水潭采购单号</th>
+                                    <th class="text-center">入库日期</th>
+                                    <th>仓库名称</th>
+                                    <th class="text-center">进仓类型</th>
+                                    <th>商品编码</th>
+                                    <th>商品名称</th>
+                                    <th class="text-right">入库数量</th>
+                                    <th>供应商名称</th>
+                                    <th>分仓编码</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>123432</td>
+                                    <td>2132324</td>
+                                    <td>23232</td>
+                                    <td>2323</td>
+                                    <td class="text-center">2025-01-13</td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-center"><span class="tag tag-success">采购入仓</span></td>
+                                    <td>1324542323</td>
+                                    <td>苹果手机</td>
+                                    <td class="text-right">1,000</td>
+                                    <td>能良</td>
+                                    <td>1212</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>123342</td>
+                                    <td>23232323</td>
+                                    <td>2323</td>
+                                    <td>2323</td>
+                                    <td class="text-center">2026-08-27</td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-center"><span class="tag tag-success">采购入仓</span></td>
+                                    <td>1324542323</td>
+                                    <td>苹果手机</td>
+                                    <td class="text-right">100</td>
+                                    <td>能良</td>
+                                    <td>1212</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>2323242</td>
+                                    <td>2323232</td>
+                                    <td>232323</td>
+                                    <td>2323</td>
+                                    <td class="text-center">2025-08-13</td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-center"><span class="tag tag-success">采购入仓</span></td>
+                                    <td>1324542323</td>
+                                    <td>苹果手机</td>
+                                    <td class="text-right">200</td>
+                                    <td>能良</td>
+                                    <td>1212</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="page-total">共 50 条</span>
+                        <button class="page-btn" disabled>&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                </div>
+
+                <!-- 出库数据 -->
+                <div id="outbound-tab" style="display: none;">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">协议编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">无仓销售单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">出库单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">出库日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">商品编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">仓库名称</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                            <button class="btn btn-success">同步出库信息</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">最近同步时间：2026-09-09 12:30:00</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>协议编码</th>
+                                    <th>无仓销售单号</th>
+                                    <th>出库单号</th>
+                                    <th>分仓编号</th>
+                                    <th class="text-center">出库时间</th>
+                                    <th class="text-right">出库数量</th>
+                                    <th>商品编码</th>
+                                    <th>商品名称</th>
+                                    <th>仓库名称</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>123432</td>
+                                    <td>2132324</td>
+                                    <td>23232</td>
+                                    <td class="text-center">2025-09-05</td>
+                                    <td class="text-right">100</td>
+                                    <td>12121313</td>
+                                    <td>苹果手机</td>
+                                    <td>无仓大仓</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>123342</td>
+                                    <td>23232323</td>
+                                    <td>2323</td>
+                                    <td class="text-center">2025-08-27</td>
+                                    <td class="text-right">200</td>
+                                    <td>131212</td>
+                                    <td>苹果手机</td>
+                                    <td>无仓大仓</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>2323242</td>
+                                    <td>2323232</td>
+                                    <td>232323</td>
+                                    <td class="text-center">2025-03-01</td>
+                                    <td class="text-right">300</td>
+                                    <td>121313</td>
+                                    <td>苹果手机</td>
+                                    <td>无仓大仓</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="page-total">共 86 条</span>
+                        <button class="page-btn" disabled>&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                </div>
+
+                <!-- 库存数据 -->
+                <div id="inventory-tab" style="display: none;">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">协议编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">无仓采购单号</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">商品编码</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">仓库名称</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                            <button class="btn btn-success">同步库存信息</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">最近同步时间：2026-09-09 22:00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>协议编码</th>
+                                    <th>无仓采购单号</th>
+                                    <th>商品编码</th>
+                                    <th>商品名称</th>
+                                    <th>分仓编码</th>
+                                    <th>仓库名称</th>
+                                    <th class="text-right">实际库存数</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>123432</td>
+                                    <td>2132324</td>
+                                    <td>苹果手机</td>
+                                    <td>1231312</td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-right" style="color: #1890ff; font-weight: 600;">100</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>123342</td>
+                                    <td>23232323</td>
+                                    <td>小米手机</td>
+                                    <td>1231312</td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-right" style="color: #1890ff; font-weight: 600;">99</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>123131</strong></td>
+                                    <td>2323242</td>
+                                    <td>2323232</td>
+                                    <td>小米柜子</td>
+                                    <td>1231312</td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-right" style="color: #1890ff; font-weight: 600;">200</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="page-total">共 50 条</span>
+                        <button class="page-btn" disabled>&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 先货后款 ==================== -->
+        <div id="xianhuo" class="section-content" style="display: none;">
+            <div class="page-header">
+                <nav class="breadcrumb">
+                    <span class="breadcrumb-item">资产管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">先货后款</span>
+                </nav>
+                <h1 class="page-title">先货后款管理</h1>
+                <p class="page-desc">先收货后付款业务模式的全流程管理，支持订单确认和分销发布</p>
+            </div>
+
+            <!-- Tab切换 -->
+            <div class="content-card">
+                <div class="tabs-nav" style="margin-bottom: 24px;">
+                    <div class="tab-item active" onclick="switchXianhuoTab('purchaseOrder')">采购订单</div>
+                    <div class="tab-item" onclick="switchXianhuoTab('confirmList')">确认列表</div>
+                </div>
+
+                <!-- 采购订单 -->
+                <div id="purchaseOrder-tab">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">采购单号</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">供应商</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">采购商</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">下单日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">付款日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">共 156 条记录</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>采购单号</th>
+                                    <th>供应商</th>
+                                    <th>采购商</th>
+                                    <th>集采标签</th>
+                                    <th>收货仓库</th>
+                                    <th class="text-center">下单时间</th>
+                                    <th class="text-center">入库时间</th>
+                                    <th>品牌</th>
+                                    <th>商品名称</th>
+                                    <th>SKU</th>
+                                    <th class="text-right">采购单价</th>
+                                    <th class="text-right">采购数量</th>
+                                    <th class="text-right">采购总价</th>
+                                    <th class="text-center">付款时间</th>
+                                    <th class="text-right">付款金额</th>
+                                    <th class="text-center">附件</th>
+                                    <th class="text-center">状态</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>8ea62f8811d8605</strong></td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-error">货押</span></td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-center">2026-05-16</td>
+                                    <td class="text-center">2026-05-16</td>
+                                    <td>华为</td>
+                                    <td>手机</td>
+                                    <td>黑色</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">90</td>
+                                    <td class="text-right">9,000.00</td>
+                                    <td class="text-center">2026-05-16</td>
+                                    <td class="text-right">9,000.00</td>
+                                    <td class="text-center"><span class="op-btn">付款凭证</span></td>
+                                    <td class="text-center"><span class="tag tag-warning">未确认</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('confirmOrder')">确认订单</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>8ea62f8811d8605</strong></td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-error">货押</span></td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-center">2026-05-04</td>
+                                    <td class="text-center">2026-05-04</td>
+                                    <td>华为</td>
+                                    <td>手机</td>
+                                    <td>黑色</td>
+                                    <td class="text-right">200.00</td>
+                                    <td class="text-right">80</td>
+                                    <td class="text-right">16,000.00</td>
+                                    <td class="text-center">2026-05-04</td>
+                                    <td class="text-right">16,000.00</td>
+                                    <td class="text-center"><span class="op-btn">付款凭证</span></td>
+                                    <td class="text-center"><span class="tag tag-warning">未确认</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('confirmOrder')">确认订单</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>8ea62f8811d8605</strong></td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-error">货押</span></td>
+                                    <td>无仓大仓</td>
+                                    <td class="text-center">2025-02-07</td>
+                                    <td class="text-center">2025-02-07</td>
+                                    <td>华为</td>
+                                    <td>手机</td>
+                                    <td>黑色</td>
+                                    <td class="text-right">300.00</td>
+                                    <td class="text-right">70</td>
+                                    <td class="text-right">21,000.00</td>
+                                    <td class="text-center">2025-02-07</td>
+                                    <td class="text-right">21,000.00</td>
+                                    <td class="text-center"><span class="op-btn">付款凭证</span></td>
+                                    <td class="text-center"><span class="tag tag-success">已确认</span></td>
+                                    <td class="text-center">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="page-total">共 156 条</span>
+                        <button class="page-btn" disabled>&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                </div>
+
+                <!-- 确认列表 -->
+                <div id="confirmList-tab" style="display: none;">
+                    <div class="search-area">
+                        <div class="form-item">
+                            <span class="form-label">采购单号</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">供应商</span>
+                            <select class="form-select">
+                                <option>全部</option>
+                            </select>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">采购商</span>
+                            <input type="text" class="form-input" placeholder="请输入">
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">下单日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <span class="form-label">服务截止日期</span>
+                            <div class="date-range">
+                                <input type="text" class="form-input" placeholder="开始日期" style="width: 120px;">
+                                <span>至</span>
+                                <input type="text" class="form-input" placeholder="结束日期" style="width: 120px;">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <button class="btn btn-default">重置</button>
+                            <button class="btn btn-primary">搜索</button>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <div class="action-left">
+                            <button class="btn btn-default">导出</button>
+                            <button class="btn btn-primary" onclick="showModal('batchDistribution')">批量创建分销</button>
+                        </div>
+                        <div class="action-right">
+                            <span style="color: #8c8c8c; font-size: 14px;">共 89 条记录</span>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" class="checkbox"></th>
+                                    <th>确认编码</th>
+                                    <th class="text-center">确认时间</th>
+                                    <th>采购单号</th>
+                                    <th>供应商</th>
+                                    <th>采购商</th>
+                                    <th>集采标签</th>
+                                    <th>收货仓库</th>
+                                    <th>SKU编码</th>
+                                    <th class="text-right">采购单价</th>
+                                    <th class="text-right">采购数量</th>
+                                    <th class="text-right">采购总价</th>
+                                    <th class="text-center">付款时间</th>
+                                    <th class="text-right">冻结数量</th>
+                                    <th class="text-right">销售数量</th>
+                                    <th class="text-right">剩余数量</th>
+                                    <th class="text-right">服务费率(日)‱</th>
+                                    <th class="text-center">服务起始日期</th>
+                                    <th class="text-center">服务截止日期</th>
+                                    <th class="text-center">确认状态</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="checkbox" class="checkbox"></td>
+                                    <td><strong>XHHK121343</strong></td>
+                                    <td class="text-center">2025-01-21</td>
+                                    <td>8ea62f8811d8605</td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-error">货押</span></td>
+                                    <td>无仓大仓</td>
+                                    <td>1232</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">90</td>
+                                    <td class="text-right">9,000.00</td>
+                                    <td class="text-center">2026-05-16</td>
+                                    <td class="text-right">47</td>
+                                    <td class="text-right">90</td>
+                                    <td class="text-right" style="color: #1890ff; font-weight: 600;">37</td>
+                                    <td class="text-right">2.50</td>
+                                    <td class="text-center">2025-11-07</td>
+                                    <td class="text-center">2025-07-03</td>
+                                    <td class="text-center"><span class="tag tag-processing">执行中</span></td>
+                                    <td class="text-center">
+                                        <div class="operation-btns">
+                                            <span class="op-btn" onclick="showModal('batchDistribution')">创建分销</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox" class="checkbox"></td>
+                                    <td><strong>XHHK121344</strong></td>
+                                    <td class="text-center">2026-03-02</td>
+                                    <td>8ea62f8811d8605</td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-error">货押</span></td>
+                                    <td>无仓大仓</td>
+                                    <td>1231</td>
+                                    <td class="text-right">200.00</td>
+                                    <td class="text-right">80</td>
+                                    <td class="text-right">16,000.00</td>
+                                    <td class="text-center">2026-05-04</td>
+                                    <td class="text-right">66</td>
+                                    <td class="text-right">14</td>
+                                    <td class="text-right" style="color: #52c41a; font-weight: 600;">0</td>
+                                    <td class="text-right">2.40</td>
+                                    <td class="text-center">2025-01-14</td>
+                                    <td class="text-center">2025-09-23</td>
+                                    <td class="text-center"><span class="tag tag-success">已结清</span></td>
+                                    <td class="text-center">-</td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox" class="checkbox"></td>
+                                    <td><strong>XHHK121345</strong></td>
+                                    <td class="text-center">2025-06-10</td>
+                                    <td>8ea62f8811d8605</td>
+                                    <td>醒市</td>
+                                    <td>能良</td>
+                                    <td class="text-center"><span class="tag tag-error">货押</span></td>
+                                    <td>无仓大仓</td>
+                                    <td>1213</td>
+                                    <td class="text-right">300.00</td>
+                                    <td class="text-right">70</td>
+                                    <td class="text-right">21,000.00</td>
+                                    <td class="text-center">2025-02-07</td>
+                                    <td class="text-right">34</td>
+                                    <td class="text-right">88</td>
+                                    <td class="text-right" style="color: #ff4d4f; font-weight: 600;">9</td>
+                                    <td class="text-right">3.00</td>
+                                    <td class="text-center">2026-09-22</td>
+                                    <td class="text-center">2025-07-14</td>
+                                    <td class="text-center"><span class="tag tag-error">已违约</span></td>
+                                    <td class="text-center">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <span class="page-total">共 89 条</span>
+                        <button class="page-btn" disabled>&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">&gt;</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== 弹窗区域 ==================== -->
+
+    <!-- 弹窗：协议详情 -->
+    <div id="protocolDetail" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <span class="modal-title">代采协议详情</span>
+                <span class="modal-close" onclick="closeModal('protocolDetail')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div class="detail-title">基础信息</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">协议编号</div>
+                            <div class="detail-value">DCXY20260900090</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">协议名称</div>
+                            <div class="detail-value">能良-醒市-天音代采协议</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">委托方</div>
+                            <div class="detail-value">能良</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">代采方</div>
+                            <div class="detail-value">醒市</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">供应商</div>
+                            <div class="detail-value">天音</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">代采总额</div>
+                            <div class="detail-value">¥3,368.00</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">提货截止日期</div>
+                            <div class="detail-value">2026-12-31</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">协议状态</div>
+                            <div class="detail-value"><span class="tag tag-success">生效</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-title">业务条款</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">业务模式</div>
+                            <div class="detail-value">代采垫资</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">服务费率（日）</div>
+                            <div class="detail-value">0.05‱</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">保证金比例</div>
+                            <div class="detail-value">20%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">保证金金额</div>
+                            <div class="detail-value">¥673.60</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-title">数量统计</div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">采购总量</div>
+                            <div class="detail-value">8,312</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">实际抵货总数量</div>
+                            <div class="detail-value">8,000</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">锁定总数量</div>
+                            <div class="detail-value">12</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">实际销售总数量</div>
+                            <div class="detail-value">7,000</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">退款总数量</div>
+                            <div class="detail-value">0</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">剩余总数量</div>
+                            <div class="detail-value" style="color: #52c41a; font-weight: 600;">300</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-title">商品明细</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>品牌</th>
+                                    <th>商品名称</th>
+                                    <th>SKU</th>
+                                    <th class="text-right">采购单价</th>
+                                    <th class="text-right">采购数量</th>
+                                    <th class="text-right">采购总价</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>苹果</td>
+                                    <td>苹果12</td>
+                                    <td>256G黑色</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">40</td>
+                                    <td class="text-right">4,000.00</td>
+                                </tr>
+                                <tr>
+                                    <td>苹果</td>
+                                    <td>苹果17</td>
+                                    <td>128G白色</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">60</td>
+                                    <td class="text-right">6,000.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('protocolDetail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：创建采购 -->
+    <div id="createPurchase" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">创建采购单</span>
+                <span class="modal-close" onclick="closeModal('createPurchase')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>提示：</strong>基于代采协议创建采购单，向供应商下达采购指令
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>协议编号</label>
+                        <input type="text" class="form-control" value="DCXY20260900090" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>委托方</label>
+                        <input type="text" class="form-control" value="能良" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>代采方（付款主体）</label>
+                        <input type="text" class="form-control" value="醒市" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>供应商</label>
+                        <input type="text" class="form-control" value="天音" disabled>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; display: block;">采购商品</label>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>商品名称</th>
+                                    <th>SKU</th>
+                                    <th class="text-right">采购数量</th>
+                                    <th class="text-right">采购单价</th>
+                                    <th class="text-right">小计</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>苹果12</td>
+                                    <td>256G黑色</td>
+                                    <td class="text-right">40</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">4,000.00</td>
+                                </tr>
+                                <tr>
+                                    <td>苹果17</td>
+                                    <td>128G白色</td>
+                                    <td class="text-right">60</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">6,000.00</td>
+                                </tr>
+                                <tr style="background: #fafafa; font-weight: 600;">
+                                    <td colspan="2" class="text-right">合计</td>
+                                    <td class="text-right">100</td>
+                                    <td class="text-right">-</td>
+                                    <td class="text-right">¥10,000.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>备注</label>
+                    <textarea class="form-control" placeholder="请输入采购备注"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('createPurchase')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('createPurchase')">确认创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：创建分销 -->
+    <div id="createDistribution" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">创建分销活动</span>
+                <span class="modal-close" onclick="closeModal('createDistribution')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>协议编号</label>
+                        <input type="text" class="form-control" value="DCXY20260900090" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>选择采购单 <span class="required">*</span></label>
+                        <select class="form-control">
+                            <option>请选择采购单</option>
+                            <option>8ea62f881 - 华为1</option>
+                            <option>8ea62f882 - 华为2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px; display: block;">分销商品</label>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>商品名称</th>
+                                    <th>SKU</th>
+                                    <th class="text-right">可分销数量</th>
+                                    <th class="text-right">分销数量</th>
+                                    <th class="text-right">集采入仓价</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>苹果12</td>
+                                    <td>256G黑色</td>
+                                    <td class="text-right">40</td>
+                                    <td class="text-right"><input type="text" value="40" style="width: 80px; text-align: right; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px;"></td>
+                                    <td class="text-right">120.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label>失效时间 <span class="required">*</span></label>
+                        <input type="text" class="form-control" placeholder="请选择失效时间">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>备注</label>
+                        <textarea class="form-control" placeholder="请输入备注信息"></textarea>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning" style="margin-top: 16px;">
+                    <strong>集采含税价计算规则：</strong>max(采购单价×1.2，采购单价+采购单价×服务费率(日)‱×天数)，结果向上取整保留两位小数
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('createDistribution')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('createDistribution')">确认发布</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：上传合同 -->
+    <div id="uploadContract" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">上传合同文件</span>
+                <span class="modal-close" onclick="closeModal('uploadContract')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>协议编号</label>
+                    <input type="text" class="form-control" value="DCXY20260900093" disabled>
+                </div>
+                <div class="form-group">
+                    <label>合同文件 <span class="required">*</span></label>
+                    <div class="upload-area" style="padding: 32px;">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">点击或拖拽合同文件至此处上传</div>
+                        <div class="upload-hint">支持 PDF、DOC、DOCX 格式，单个文件不超过50MB</div>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>注意：</strong>合同上传完成后，保证金账单将生效，系统将通知采购商线下支付保证金。请确保合同已经签署完成。
+                </div>
+                <div class="form-group">
+                    <label>备注说明</label>
+                    <textarea class="form-control" rows="2" placeholder="请输入备注信息"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('uploadContract')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('uploadContract')">确认上传</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：编辑协议 -->
+    <div id="editProtocol" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <span class="modal-title">编辑代采协议</span>
+                <span class="modal-close" onclick="closeModal('editProtocol')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>协议名称 <span class="required">*</span></label>
+                        <input type="text" class="form-control" value="采购商1-代采方1-供应商1代采协议">
+                    </div>
+                    <div class="form-group">
+                        <label>协议编号</label>
+                        <input type="text" class="form-control" value="DCXY20260900092" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>委托方 <span class="required">*</span></label>
+                        <select class="form-control">
+                            <option selected>采购商1</option>
+                            <option>醒市</option>
+                            <option>能良</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>代采方 <span class="required">*</span></label>
+                        <select class="form-control">
+                            <option selected>代采方1</option>
+                            <option>能良</option>
+                            <option>醒市</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>供应商 <span class="required">*</span></label>
+                        <select class="form-control">
+                            <option selected>供应商1</option>
+                            <option>能良科技</option>
+                            <option>天音</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>提货起始日期 <span class="required">*</span></label>
+                        <input type="text" class="form-control" value="2026-09-01">
+                    </div>
+                    <div class="form-group">
+                        <label>提货截止日期 <span class="required">*</span></label>
+                        <input type="text" class="form-control" value="2026-10-15">
+                    </div>
+                    <div class="form-group">
+                        <label>服务费率（日）‱ <span class="required">*</span></label>
+                        <input type="text" class="form-control" value="0.05">
+                    </div>
+                    <div class="form-group">
+                        <label>保证金比例% <span class="required">*</span></label>
+                        <input type="text" class="form-control" value="25">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('editProtocol')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('editProtocol')">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：删除确认 -->
+    <div id="deleteConfirm" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <span class="modal-title">确认删除</span>
+                <span class="modal-close" onclick="closeModal('deleteConfirm')">&times;</span>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 32px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                <div style="font-size: 16px; color: #262626; font-weight: 500; margin-bottom: 8px;">确定要删除该代采协议吗？</div>
+                <div style="font-size: 14px; color: #8c8c8c;">删除后无法恢复，请谨慎操作</div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-default" onclick="closeModal('deleteConfirm')">取消</button>
+                <button class="btn btn-danger" onclick="closeModal('deleteConfirm')">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：提交确认 -->
+    <div id="submitConfirm" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <span class="modal-title">确认提交</span>
+                <span class="modal-close" onclick="closeModal('submitConfirm')">&times;</span>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 32px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">❓</div>
+                <div style="font-size: 16px; color: #262626; font-weight: 500; margin-bottom: 8px;">确定要提交该代采协议吗？</div>
+                <div style="font-size: 14px; color: #8c8c8c;">提交后将进入审批流程，并生成保证金应收数据</div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-default" onclick="closeModal('submitConfirm')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('submitConfirm')">确认提交</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：撤销确认 -->
+    <div id="revokeConfirm" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <span class="modal-title">确认撤销</span>
+                <span class="modal-close" onclick="closeModal('revokeConfirm')">&times;</span>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 32px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                <div style="font-size: 16px; color: #262626; font-weight: 500; margin-bottom: 8px;">确定要撤销该代采协议吗？</div>
+                <div style="font-size: 14px; color: #8c8c8c;">撤销后将恢复到保存状态，并删除已生成的保证金数据</div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-default" onclick="closeModal('revokeConfirm')">取消</button>
+                <button class="btn btn-warning" onclick="closeModal('revokeConfirm')">确认撤销</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：商品选择 -->
+    <div id="productSelect" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <span class="modal-title">选择代采商品</span>
+                <span class="modal-close" onclick="closeModal('productSelect')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- 搜索区域 -->
+                <div class="search-area" style="margin-bottom: 16px; padding: 16px;">
+                    <div class="form-item">
+                        <span class="form-label">商品名称</span>
+                        <input type="text" class="form-input" placeholder="请输入商品名称">
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">品牌</span>
+                        <select class="form-select">
+                            <option>全部</option>
+                            <option>苹果</option>
+                            <option>华为</option>
+                            <option>小米</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <span class="form-label">SKU编码</span>
+                        <input type="text" class="form-input" placeholder="请输入SKU编码">
+                    </div>
+                    <div class="form-item">
+                        <button class="btn btn-default">重置</button>
+                        <button class="btn btn-primary">搜索</button>
+                    </div>
+                </div>
+
+                <!-- 商品列表 -->
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="text-center"><input type="checkbox" class="checkbox"></th>
+                                <th>品牌名称</th>
+                                <th>商品名称</th>
+                                <th>SKU</th>
+                                <th>无仓SKU编码</th>
+                                <th>商家SKU编码</th>
+                                <th class="text-right">采购单价</th>
+                                <th class="text-right">采购数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-center"><input type="checkbox" class="checkbox" checked></td>
+                                <td>苹果</td>
+                                <td>苹果12</td>
+                                <td>256G黑色</td>
+                                <td>123</td>
+                                <td>12123245342</td>
+                                <td class="text-right">100.00</td>
+                                <td class="text-right"><input type="text" value="40" style="width: 80px; text-align: right; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px;"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center"><input type="checkbox" class="checkbox"></td>
+                                <td>苹果</td>
+                                <td>苹果17</td>
+                                <td>128G白色</td>
+                                <td>12312</td>
+                                <td>121</td>
+                                <td class="text-right">100.00</td>
+                                <td class="text-right"><input type="text" value="" style="width: 80px; text-align: right; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px;"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center"><input type="checkbox" class="checkbox"></td>
+                                <td>华为</td>
+                                <td>华为Mate60</td>
+                                <td>256G黑色</td>
+                                <td>456</td>
+                                <td>HW123456</td>
+                                <td class="text-right">5,999.00</td>
+                                <td class="text-right"><input type="text" value="" style="width: 80px; text-align: right; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px;"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-center"><input type="checkbox" class="checkbox"></td>
+                                <td>小米</td>
+                                <td>小米14</td>
+                                <td>512G白色</td>
+                                <td>789</td>
+                                <td>XM789012</td>
+                                <td class="text-right">3,999.00</td>
+                                <td class="text-right"><input type="text" value="" style="width: 80px; text-align: right; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination" style="margin-top: 12px;">
+                    <span class="page-total">共 50 条</span>
+                    <button class="page-btn" disabled>&lt;</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">&gt;</button>
+                </div>
+
+                <!-- 已选商品 -->
+                <div style="margin-top: 24px;">
+                    <div style="font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 12px;">已选商品</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>品牌名称</th>
+                                    <th>商品名称</th>
+                                    <th>SKU</th>
+                                    <th class="text-right">采购单价</th>
+                                    <th class="text-right">采购数量</th>
+                                    <th class="text-right">采购总价</th>
+                                    <th class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>苹果</td>
+                                    <td>苹果12</td>
+                                    <td>256G黑色</td>
+                                    <td class="text-right">100.00</td>
+                                    <td class="text-right">40</td>
+                                    <td class="text-right">4,000.00</td>
+                                    <td class="text-center"><span class="op-btn op-btn-danger">删除</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('productSelect')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('productSelect')">确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：确认收款 -->
+    <div id="confirmReceive" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">确认收款</span>
+                <span class="modal-close" onclick="closeModal('confirmReceive')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>收款金额</label>
+                    <input type="text" class="form-control" value="¥5,981.00" disabled>
+                </div>
+                <div class="form-group">
+                    <label>收款日期 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请选择日期">
+                </div>
+                <div class="form-group">
+                    <label>支付流水号</label>
+                    <input type="text" class="form-control" placeholder="请输入支付流水号">
+                </div>
+                <div class="form-group">
+                    <label>收款凭证</label>
+                    <div class="upload-area" style="padding: 24px;">
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">点击上传文件</div>
+                        <div class="upload-hint">支持 PDF、JPG、PNG 格式</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('confirmReceive')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('confirmReceive')">确认收款</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：原路退回 -->
+    <div id="refundBack" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">原路退回</span>
+                <span class="modal-close" onclick="closeModal('refundBack')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>退回金额</label>
+                    <input type="text" class="form-control" value="¥6,824.00" disabled>
+                </div>
+                <div class="form-group">
+                    <label>退回日期 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请选择日期">
+                </div>
+                <div class="alert alert-warning">
+                    <strong>注意：</strong>目前原路退回线上标记，线下退款。请确认线下退款操作已完成。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('refundBack')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('refundBack')">确认退回</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：转货款抵扣 -->
+    <div id="convertPayment" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">转货款抵扣</span>
+                <span class="modal-close" onclick="closeModal('convertPayment')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>抵扣金额</label>
+                    <input type="text" class="form-control" value="¥7,719.00" disabled>
+                </div>
+                <div class="form-group">
+                    <label>抵扣日期 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请选择日期">
+                </div>
+                <div class="alert alert-info">
+                    <strong>说明：</strong>转货款线上标记，线下通过将保证金抵扣到客户预付钱包，进行支付货款。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('convertPayment')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('convertPayment')">确认抵扣</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：退款申请 -->
+    <div id="refundApply" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">退款申请</span>
+                <span class="modal-close" onclick="closeModal('refundApply')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>采购单号</label>
+                        <input type="text" class="form-control" value="8ea62f881" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>商品名称</label>
+                        <input type="text" class="form-control" value="华为1" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>采购数量</label>
+                        <input type="text" class="form-control" value="90" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>未拣货数量</label>
+                        <input type="text" class="form-control" value="20" disabled>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>退货数量 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请输入退货数量（不能超过未拣货数量）">
+                </div>
+                <div class="form-group">
+                    <label>退款金额 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请输入退款金额">
+                </div>
+                <div class="form-group">
+                    <label>退款原因 <span class="required">*</span></label>
+                    <select class="form-control">
+                        <option>请选择退款原因</option>
+                        <option>采购数量错误</option>
+                        <option>商品质量问题</option>
+                        <option>客户需求变更</option>
+                        <option>其他原因</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备注说明</label>
+                    <textarea class="form-control" placeholder="请输入备注信息"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('refundApply')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('refundApply')">提交申请</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：退款确认（财务确认） -->
+    <div id="refundConfirm" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">确认退款收款</span>
+                <span class="modal-close" onclick="closeModal('refundConfirm')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>退款申请编码</label>
+                    <div class="form-control" style="background: #f5f5f5;">DCTK202309002211</div>
+                </div>
+                <div class="form-group">
+                    <label>待退款金额</label>
+                    <div class="form-control" style="background: #f5f5f5;">¥2,000.00</div>
+                </div>
+                <div class="form-group">
+                    <label>实收总金额 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请输入实际收到的退款金额">
+                </div>
+                <div class="form-group">
+                    <label>确认日期 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请选择日期">
+                </div>
+                <div class="form-group">
+                    <label>上传附件</label>
+                    <div class="upload-area" style="padding: 20px;">
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">点击选择附件</div>
+                        <div class="upload-hint">支持多个文件</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('refundConfirm')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('refundConfirm')">确认收款</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：批量退款申请 -->
+    <div id="batchRefund" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">批量申请退款</span>
+                <span class="modal-close" onclick="closeModal('batchRefund')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    已选择 <strong>2</strong> 条采购单，请填写统一的退款原因和备注
+                </div>
+                <div class="form-group">
+                    <label>退款原因 <span class="required">*</span></label>
+                    <select class="form-control">
+                        <option>请选择退款原因</option>
+                        <option>采购数量错误</option>
+                        <option>商品质量问题</option>
+                        <option>客户需求变更</option>
+                        <option>其他原因</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>备注说明</label>
+                    <textarea class="form-control" placeholder="请输入备注信息"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('batchRefund')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('batchRefund')">确认申请</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：批量退款确认 -->
+    <div id="batchRefundConfirm" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">批量确认退款</span>
+                <span class="modal-close" onclick="closeModal('batchRefundConfirm')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    已选择 <strong>1</strong> 条退款申请，请确认实收金额
+                </div>
+                <div class="form-group">
+                    <label>确认日期 <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请选择日期">
+                </div>
+                <div class="form-group">
+                    <label>上传附件</label>
+                    <div class="upload-area" style="padding: 20px;">
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">点击选择附件</div>
+                        <div class="upload-hint">支持多个文件</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('batchRefundConfirm')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('batchRefundConfirm')">批量确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：确认订单 -->
+    <div id="confirmOrder" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <span class="modal-title">确认订单</span>
+                <span class="modal-close" onclick="closeModal('confirmOrder')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>确认编码：</strong>XHHK8ea62f8811d8605
+                </div>
+                <div class="form-group">
+                    <label>确认日期</label>
+                    <input type="text" class="form-control" value="2026-04-01" disabled>
+                </div>
+                <div class="form-group">
+                    <label>服务费率（日）‱ <span class="required">*</span></label>
+                    <input type="text" class="form-control" placeholder="请输入服务费率，如：2.50">
+                </div>
+                <div class="form-group">
+                    <label>开始日期</label>
+                    <input type="text" class="form-control" value="2026-05-16" disabled>
+                </div>
+                <div class="form-group">
+                    <label>结束日期 <span class="required">*</span></label>
+                    <input type="text" class="form-control" value="2026-07-16">
+                    <div style="font-size: 12px; color: #8c8c8c; margin-top: 4px;">默认付款时间+2个月，可修改</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('confirmOrder')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('confirmOrder')">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：商品批量分销发布 -->
+    <div id="batchDistribution" class="modal">
+        <div class="modal-content large" style="max-width: 1200px;">
+            <div class="modal-header">
+                <span class="modal-title">商品批量分销发布</span>
+                <span class="modal-close" onclick="closeModal('batchDistribution')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="table-container">
+                    <table style="font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th>采购单号</th>
+                                <th>活动编号</th>
+                                <th>活动渠道</th>
+                                <th>活动类型</th>
+                                <th>品牌</th>
+                                <th>商品</th>
+                                <th>SKU</th>
+                                <th>无仓SKU编码</th>
+                                <th>付款方式</th>
+                                <th>发货时效</th>
+                                <th>履约策略</th>
+                                <th>发货仓库</th>
+                                <th>分销数量</th>
+                                <th>集采含税价</th>
+                                <th>分销总价</th>
+                                <th>收款抬头</th>
+                                <th>发布时间</th>
+                                <th>下架时间</th>
+                                <th>指定分销商</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1234</td>
+                                <td>8ea62f8811d8605</td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>分销平台</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 60px; padding: 2px; font-size: 12px;">
+                                        <option>新机</option>
+                                    </select>
+                                </td>
+                                <td>苹果</td>
+                                <td>苹果12</td>
+                                <td>123</td>
+                                <td>7689</td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>先款后货</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 70px; padding: 2px; font-size: 12px;">
+                                        <option>24小时</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>线下发货</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 100px; padding: 2px; font-size: 12px;">
+                                        <option>无仓大仓</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control" placeholder="请输入" style="width: 60px; padding: 2px; font-size: 12px;"></td>
+                                <td><input type="text" class="form-control" value="1213.00" style="width: 70px; padding: 2px; font-size: 12px;"></td>
+                                <td>1212.00</td>
+                                <td>能良</td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>立即发布</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 100px; padding: 2px; font-size: 12px;">
+                                        <option>当日24点下架</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control" placeholder="请输入" style="width: 80px; padding: 2px; font-size: 12px;"></td>
+                            </tr>
+                            <tr>
+                                <td>12324</td>
+                                <td>8ea62f8811d8605</td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>分销平台</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 60px; padding: 2px; font-size: 12px;">
+                                        <option>新机</option>
+                                    </select>
+                                </td>
+                                <td>苹果</td>
+                                <td>苹果17</td>
+                                <td>12312</td>
+                                <td>7689</td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>先款后货</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 70px; padding: 2px; font-size: 12px;">
+                                        <option>24小时</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>线下发货</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 100px; padding: 2px; font-size: 12px;">
+                                        <option>无仓大仓</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control" placeholder="请输入" style="width: 60px; padding: 2px; font-size: 12px;"></td>
+                                <td><input type="text" class="form-control" value="1213.00" style="width: 70px; padding: 2px; font-size: 12px;"></td>
+                                <td>1212.00</td>
+                                <td>能良</td>
+                                <td>
+                                    <select class="form-control" style="width: 80px; padding: 2px; font-size: 12px;">
+                                        <option>立即发布</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="form-control" style="width: 100px; padding: 2px; font-size: 12px;">
+                                        <option>当日24点下架</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="form-control" placeholder="请输入" style="width: 80px; padding: 2px; font-size: 12px;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-warning" style="margin-top: 16px;">
+                    <strong>提示：</strong>分销数量为空或0时，不生成分销活动数据。发布后不可重新上架。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('batchDistribution')">取消</button>
+                <button class="btn btn-primary" onclick="closeModal('batchDistribution')">确定发布</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示/隐藏模块
+        function showSection(sectionId) {
+            // 隐藏所有模块
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            // 显示选中模块
+            document.getElementById(sectionId).style.display = 'block';
+            // 更新菜单状态
+            document.querySelectorAll('.submenu-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+        }
+
+        // 菜单展开/收起
+        function toggleMenu(element) {
+            const menuItem = element.parentElement;
+            menuItem.classList.toggle('expanded');
+        }
+
+        // 显示创建协议页面
+        function showCreateProtocol() {
+            document.getElementById('protocol-list').style.display = 'none';
+            document.getElementById('protocol-create').style.display = 'block';
+        }
+
+        // 返回列表
+        function backToList() {
+            document.getElementById('protocol-create').style.display = 'none';
+            document.getElementById('protocol-list').style.display = 'block';
+        }
+
+        // Tab切换（创建页面）
+        function switchTab(tabName) {
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            // 显示选中的tab
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            // 更新tab状态
+            document.querySelectorAll('.tab-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 显示弹窗
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        // 关闭弹窗
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // 切换销售管理标签
+        function switchSalesTab(tabId) {
+            if (tabId === 'distribution') {
+                document.getElementById('distribution-tab').style.display = 'block';
+                document.getElementById('salesOrder-tab').style.display = 'none';
+            } else {
+                document.getElementById('distribution-tab').style.display = 'none';
+                document.getElementById('salesOrder-tab').style.display = 'block';
+            }
+            // 更新标签状态
+            document.querySelectorAll('#sales .tab-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 切换监管管理标签
+        function switchSupervisionTab(tabId) {
+            // 隐藏所有tab内容
+            document.getElementById('inbound-tab').style.display = 'none';
+            document.getElementById('outbound-tab').style.display = 'none';
+            document.getElementById('inventory-tab').style.display = 'none';
+            
+            // 显示选中的tab
+            document.getElementById(tabId + '-tab').style.display = 'block';
+            
+            // 更新标签状态
+            document.querySelectorAll('#supervision .tab-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Tab切换（先货后款）
+        function switchXianhuoTab(tabId) {
+            // 隐藏所有tab内容
+            document.getElementById('purchaseOrder-tab').style.display = 'none';
+            document.getElementById('confirmList-tab').style.display = 'none';
+            
+            // 显示选中的tab
+            document.getElementById(tabId + '-tab').style.display = 'block';
+            
+            // 更新标签状态
+            document.querySelectorAll('#xianhuo .tab-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 点击遮罩关闭弹窗
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<view class="page-container fade-in">
+  <view class="safety-header">
+    <view class="safety-icon">🛡️</view>
+    <view class="safety-title">冒险安全宣誓</view>
+    <view class="safety-desc">在开始冒险之前，我们一起记住这些安全规则：</view>
+  </view>
+
+  <!-- 安全规则列表 -->
+  <view class="card rules-card">
+    <view class="rule-item">
+      <text class="rule-num">❶</text>
+      <text class="rule-text">一定要在爸爸妈妈看得见的地方冒险</text>
+    </view>
+    <view class="rule-item">
+      <text class="rule-num">❷</text>
+      <text class="rule-text">不可以碰插座和电线</text>
+    </view>
+    <view class="rule-item">
+      <text class="rule-num">❸</text>
+      <text class="rule-text">不可以碰热水壶和灶台</text>
+    </view>
+    <view class="rule-item">
+      <text class="rule-num">❹</text>
+      <text class="rule-text">不可以碰剪刀、刀具等锋利物品</text>
+    </view>
+    <view class="rule-item">
+      <text class="rule-num">❺</text>
+      <text class="rule-text">不可以碰药品和清洁剂</text>
+    </view>
+  </view>
+
+  <!-- 同意复选框 -->
+  <view class="agree-section">
+    <checkbox-group bindchange="onAgreeChange">
+      <label class="agree-label">
+        <checkbox color="#FF9A76" value="agree" />
+        <text>我和爸爸妈妈都读懂了安全规则</text>
+      </label>
+    </checkbox-group>
+  </view>
+
+  <!-- 确认按钮 -->
+  <view class="action-section">
+    <button class="btn-primary" bindtap="confirmSafety" disabled="{{!agreed}}">
+      我准备好了！
+    </button>
+  </view>
+</view>

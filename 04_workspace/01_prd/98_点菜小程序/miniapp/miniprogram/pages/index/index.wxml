@@ -1,0 +1,120 @@
+<!-- 首页-餐馆点菜风格 -->
+<view class="page-order">
+
+  <!-- ====== 顶部搜索栏 ====== -->
+  <view class="search-bar">
+    <view class="search-input-wrap">
+      <text class="search-icon">🔍</text>
+      <input class="search-input" placeholder="搜索菜谱..."
+        value="{{keyword}}" bindinput="onSearchInput"
+        bindconfirm="onSearch" confirm-type="search" />
+      <text class="search-clear" wx:if="{{keyword}}" bindtap="onSearchClear">✕</text>
+    </view>
+  </view>
+
+  <!-- ====== 分类标签 ====== -->
+  <scroll-view class="category-bar" scroll-x enable-flex show-scrollbar="{{false}}">
+    <view class="category-list">
+      <view class="category-item {{activeCategory === 'all' ? 'active' : ''}}"
+        bindtap="switchCategory" data-cat="all">
+        <text>全部</text>
+        <text class="cat-count">{{categories.all || 0}}</text>
+      </view>
+      <view class="category-item {{activeCategory === cat.key ? 'active' : ''}}"
+        wx:for="{{categoryList}}" wx:key="key"
+        bindtap="switchCategory" data-cat="{{cat.key}}">
+        <text>{{cat.name}}</text>
+        <text class="cat-count">{{cat.count}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- ====== 菜品列表 ====== -->
+  <scroll-view class="dish-scroll" scroll-y enhanced
+    bindscrolltolower="loadMore" lower-threshold="100">
+    <view class="dish-grid">
+      <view class="dish-card"
+        wx:for="{{displayList}}" wx:for-index="idx" wx:key="name"
+        data-dish="{{item.name}}">
+        <!-- 图片 -->
+        <view class="card-banner {{item.isMeat ? 'banner-meat' : 'banner-veg'}}" bindtap="goDetail" data-id="{{item._id || item.name}}">
+          <image class="card-img" src="../../images/food/{{item._imgFile}}" mode="aspectFill" wx:if="{{item._imgFile}}" binderror="onImgError" data-name="{{item.name}}" />
+          <view class="banner-fallback" wx:else>
+            <text class="banner-icon">{{item.isMeat ? '🥩' : '🥬'}}</text>
+            <text class="banner-title">{{item.name}}</text>
+          </view>
+        </view>
+        <!-- 信息 -->
+        <view class="card-body" bindtap="goDetail" data-id="{{item._id || item.name}}">
+          <view class="card-tags">
+            <text class="tag tag-green" wx:if="{{item.isMeat}}">荤</text>
+            <text class="tag tag-orange" wx:if="{{!item.isMeat}}">素</text>
+            <text class="tag tag-gray" wx:if="{{item.calories}}">{{item.calories}}大卡</text>
+          </view>
+        </view>
+        <!-- 添加按钮 -->
+        <view class="card-add {{isInCart(item.name) ? 'in-cart' : ''}}" bindtap="addToCart" data-dish="{{item.name}}">
+          <text>{{isInCart(item.name) ? '✓' : '+'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{displayList.length === 0 && !loading}}">
+      <text>🍽️ 暂无菜品</text>
+    </view>
+  </scroll-view>
+
+  <!-- ====== 底部购物车栏 ====== -->
+  <view class="cart-bar" wx:if="{{cart.length > 0}}" bindtap="showCart">
+    <view class="cart-info">
+      <view class="cart-icon-wrap">
+        <text class="cart-icon">🛒</text>
+        <text class="cart-badge">{{cart.length}}</text>
+      </view>
+      <text class="cart-text">已选 {{cart.length}} 道菜</text>
+    </view>
+    <view class="cart-view-btn">查看已选 ›</view>
+  </view>
+
+  <!-- ====== 购物车弹窗 ====== -->
+  <view class="cart-overlay" wx:if="{{showCartPanel}}">
+    <view class="cart-panel">
+      <view class="cart-header">
+        <text class="cart-title">🛒 已选菜品（{{cart.length}}道）</text>
+        <text class="cart-close" bindtap="closeCart">✕</text>
+      </view>
+      <scroll-view class="cart-list" scroll-y>
+        <view class="cart-item" wx:for="{{cart}}" wx:key="name">
+          <view class="cart-item-left" bindtap="goDetail" data-id="{{item._id || item.name}}">
+            <text class="cart-item-name">{{item.name}}</text>
+            <text class="cart-item-meta">{{item.isMeat ? '荤' : '素'}} · {{item.calories || '?'}}大卡</text>
+          </view>
+          <text class="cart-remove" bindtap="removeFromCart" data-name="{{item.name}}">移除</text>
+        </view>
+      </scroll-view>
+      <view class="cart-actions">
+        <button class="cart-clear" bindtap="clearCart">清空</button>
+        <button class="cart-save" bindtap="openSaveDialog">💾 存为套餐</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 保存套餐对话框 -->
+  <view class="dialog-overlay" wx:if="{{showSaveDialog}}">
+    <view class="dialog-box">
+      <text class="dialog-title">保存套餐</text>
+      <input class="dialog-input" placeholder="输入套餐名称（如：周一晚餐）"
+        value="{{comboName}}" bindinput="onComboNameInput" />
+      <view class="dialog-actions">
+        <text class="dialog-btn cancel" bindtap="closeSaveDialog">取消</text>
+        <text class="dialog-btn confirm" bindtap="saveCombo">保存</text>
+      </view>
+    </view>
+  </view>
+</view>

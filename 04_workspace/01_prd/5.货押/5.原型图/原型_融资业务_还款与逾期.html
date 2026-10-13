@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>还款与逾期管理 - 融资业务</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.info-card.warn { background: #fefce8; border-color: #fde68a; color: #92400e; }
+.info-card.danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.repay-schedule { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 4px; font-size: 11px; }
+.repay-schedule .period { padding: 6px 4px; text-align: center; border-radius: 4px; }
+.period-paid { background: #d1fae5; color: #065f46; }
+.period-current { background: #dbeafe; color: #1e40af; font-weight: 600; }
+.period-pending { background: #f3f4f6; color: #9ca3af; }
+.period-overdue { background: #fee2e2; color: #991b1b; }
+.period-partial { background: #fef3c7; color: #92400e; }
+.progress-bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 999px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 520px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.badge-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item active">💰 融资业务</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">融资申请与放款</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">审批流程引擎</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">还款与逾期</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item">🧾 结算管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">融资业务 / <strong>还款与逾期管理</strong></span></div>
+    <div class="topbar-right"><span>👤 财务专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">还款与逾期管理</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="plan" onclick="switchTab('plan')">还款计划总览</div>
+      <div class="tab" data-tab="detail" onclick="switchTab('detail')">计划详情</div>
+      <div class="tab" data-tab="recon" onclick="switchTab('recon')">数据对账</div>
+      <div class="tab" data-tab="overdue" onclick="switchTab('overdue')">逾期跟踪</div>
+      <div class="tab" data-tab="interest" onclick="switchTab('interest')">计息试算</div>
+      <div class="tab" data-tab="reminder" onclick="switchTab('reminder')">自动提醒记录</div>
+    </div>
+
+    <!-- Tab1: 还款计划总览 -->
+    <div class="tab-content active" id="tab-plan">
+      <div class="stats">
+        <div class="stat-card"><div class="num">156</div><div class="label">还款计划总数</div></div>
+        <div class="stat-card"><div class="num" style="color:#10b981;">128</div><div class="label">正常还款中</div></div>
+        <div class="stat-card"><div class="num" style="color:#3b82f6;">18</div><div class="label">已结清</div></div>
+        <div class="stat-card"><div class="num" style="color:#f59e0b;">7</div><div class="label">已逾期</div></div>
+        <div class="stat-card"><div class="num" style="color:#ef4444;">3</div><div class="label">严重逾期(>30天)</div></div>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部状态</option><option>正常</option><option>已结清</option><option>已逾期</option><option>严重逾期</option></select>
+          <select><option>全部还款方式</option><option>等额本息</option><option>等额本金</option><option>先息后本</option><option>一次性还本付息</option></select>
+          <input placeholder="业务编号/客户名称" style="width:180px;">
+          <input type="date" value="2026-04-01" style="width:130px;"><input type="date" value="2026-04-26" style="width:130px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+        </div>
+        <table>
+          <thead><tr><th>业务编号</th><th>客户名称</th><th>融资金额</th><th>还款方式</th><th>总期数</th><th>已还期数</th><th>下期还款日</th><th>下期应还</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>FIN-20260426-001</td><td>XX商贸有限公司</td><td>100万</td><td>等额本息</td><td>12</td><td>0/12</td><td>2026-05-26</td><td>¥ 88,500.00</td><td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20260315-002</td><td>YY电子科技</td><td>80万</td><td>等额本金</td><td>6</td><td>2/6</td><td>2026-05-15</td><td>¥ 145,000.00</td><td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20260201-003</td><td>ZZ食品经销</td><td>50万</td><td>先息后本</td><td>6</td><td>3/6</td><td>2026-05-01</td><td>¥ 4,500.00</td><td><span class="tag tag-yellow">已逾期</span></td><td><button class="btn btn-warning btn-sm">处理</button></td></tr>
+            <tr><td>FIN-20260115-004</td><td>WW家电贸易</td><td>35万</td><td>一次性还本付息</td><td>1</td><td>0/1</td><td>2026-07-15</td><td>¥ 358,500.00</td><td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20251201-005</td><td>AA建材经销</td><td>60万</td><td>等额本息</td><td>12</td><td>12/12</td><td>—</td><td>¥ 0.00</td><td><span class="tag tag-gray">已结清</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20251120-006</td><td>BB家电贸易</td><td>45万</td><td>等额本金</td><td>6</td><td>4/6</td><td>2026-03-20</td><td>¥ 82,000.00</td><td><span class="tag tag-red">严重逾期</span></td><td><button class="btn btn-danger btn-sm">催收</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-card">💡 还款计划在放款成功后自动生成，还款日默认每月放款日对应日期，遇节假日顺延。</div>
+    </div>
+
+    <!-- Tab2: 计划详情 -->
+    <div class="tab-content" id="tab-detail">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-title">📋 业务信息</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+            <div><strong>业务编号：</strong>FIN-20260315-002</div>
+            <div><strong>客户名称：</strong>YY电子科技</div>
+            <div><strong>融资金额：</strong>80万</div>
+            <div><strong>年化利率：</strong>8.50%</div>
+            <div><strong>还款方式：</strong>等额本金</div>
+            <div><strong>总期数：</strong>6期（月）</div>
+            <div><strong>放款日期：</strong>2026-03-15</div>
+            <div><strong>首期还款日：</strong>2026-04-15</div>
+            <div><strong>状态：</strong><span class="tag tag-green">正常</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">💰 还款进度</div>
+          <div style="text-align:center;margin-bottom:12px;">
+            <div style="font-size:28px;font-weight:700;color:#1e40af;">33.3%</div>
+            <div style="font-size:12px;color:#6b7280;">已还 2/6 期</div>
+          </div>
+          <div class="progress-bar"><div class="fill" style="width:33.3%;background:#3b82f6;"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;font-size:13px;text-align:center;">
+            <div><div style="font-weight:600;color:#10b981;">¥ 266,667</div><div style="font-size:11px;color:#6b7280;">已还本金</div></div>
+            <div><div style="font-weight:600;color:#f59e0b;">¥ 16,800</div><div style="font-size:11px;color:#6b7280;">已还利息</div></div>
+            <div><div style="font-weight:600;color:#1e40af;">¥ 516,667</div><div style="font-size:11px;color:#6b7280;">剩余本金</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📅 还款计划明细（6期）</div>
+        <div class="repay-schedule" style="margin-bottom:12px;">
+          <div class="period period-paid">第1期<br>¥145,033<br>04-15<br>✓已还</div>
+          <div class="period period-paid">第2期<br>¥143,900<br>05-15<br>✓已还</div>
+          <div class="period period-current">第3期<br>¥142,767<br>06-15<br>●当前</div>
+          <div class="period period-pending">第4期<br>¥141,633<br>07-15<br>待还</div>
+          <div class="period period-pending">第5期<br>¥140,500<br>08-15<br>待还</div>
+          <div class="period period-pending">第6期<br>¥139,367<br>09-15<br>待还</div>
+        </div>
+        <table>
+          <thead><tr><th>期数</th><th>还款日</th><th>应还本金</th><th>应还利息</th><th>应还总额</th><th>实还金额</th><th>还款时间</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>第1期</td><td>2026-04-15</td><td>133,333.33</td><td>11,700.00</td><td>145,033.33</td><td>145,033.33</td><td>2026-04-15 09:30</td><td><span class="tag tag-green">已还</span></td></tr>
+            <tr><td>第2期</td><td>2026-05-15</td><td>133,333.33</td><td>10,566.67</td><td>143,900.00</td><td>143,900.00</td><td>2026-05-14 16:20</td><td><span class="tag tag-green">已还</span></td></tr>
+            <tr style="background:#eff6ff;"><td>第3期</td><td>2026-06-15</td><td>133,333.33</td><td>9,433.33</td><td>142,766.67</td><td>—</td><td>—</td><td><span class="tag tag-blue">待还</span></td></tr>
+            <tr><td>第4期</td><td>2026-07-15</td><td>133,333.33</td><td>8,300.00</td><td>141,633.33</td><td>—</td><td>—</td><td><span class="tag tag-gray">待还</span></td></tr>
+            <tr><td>第5期</td><td>2026-08-15</td><td>133,333.33</td><td>7,166.67</td><td>140,500.00</td><td>—</td><td>—</td><td><span class="tag tag-gray">待还</span></td></tr>
+            <tr><td>第6期</td><td>2026-09-15</td><td>133,333.35</td><td>6,033.33</td><td>139,366.68</td><td>—</td><td>—</td><td><span class="tag tag-gray">待还</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab3: 数据对账 -->
+    <div class="tab-content" id="tab-recon">
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部状态</option><option>已对账</option><option>未对账</option><option>差异待处理</option></select>
+          <input type="date" value="2026-04-01" style="width:130px;"><input type="date" value="2026-04-26" style="width:130px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm">批量对账</button>
+        </div>
+        <table>
+          <thead><tr><th>对账日期</th><th>业务编号</th><th>客户</th><th>银行流水金额</th><th>系统应还金额</th><th>差异</th><th>对账结果</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>2026-04-15</td><td>FIN-20260315-002</td><td>YY电子</td><td>145,033.33</td><td>145,033.33</td><td style="color:#10b981;">0.00</td><td><span class="tag tag-green">匹配</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>2026-04-10</td><td>FIN-20260201-003</td><td>ZZ食品</td><td>4,200.00</td><td>4,500.00</td><td style="color:#ef4444;">-300.00</td><td><span class="tag tag-red">差异</span></td><td><button class="btn btn-warning btn-sm">处理</button></td></tr>
+            <tr><td>2026-04-05</td><td>FIN-20260115-004</td><td>WW家电</td><td>—</td><td>—</td><td>—</td><td><span class="tag tag-yellow">未对账</span></td><td><button class="btn btn-primary btn-sm">对账</button></td></tr>
+            <tr><td>2026-03-20</td><td>FIN-20251120-006</td><td>BB家电</td><td>82,000.00</td><td>82,000.00</td><td style="color:#10b981;">0.00</td><td><span class="tag tag-green">匹配</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>2026-03-15</td><td>FIN-20260315-002</td><td>YY电子</td><td>143,900.00</td><td>143,900.00</td><td style="color:#10b981;">0.00</td><td><span class="tag tag-green">匹配</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-card">💡 对账规则：T+1自动拉取银行流水与系统还款计划比对，差异>0.01元标记为"差异"，需人工处理。</div>
+    </div>
+
+    <!-- Tab4: 逾期跟踪 -->
+    <div class="tab-content" id="tab-overdue">
+      <div class="info-card danger">⚠️ 当前逾期业务 7 笔，涉及金额 ¥ 856,000.00，其中严重逾期（>30天）3 笔</div>
+      <div class="card">
+        <div class="card-title">逾期明细</div>
+        <table>
+          <thead><tr><th>业务编号</th><th>客户</th><th>应还日期</th><th>逾期天数</th><th>逾期金额</th><th>罚息率</th><th>累计罚息</th><th>催收次数</th><th>逾期等级</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>FIN-20251120-006</td><td>BB家电贸易</td><td>2026-03-20</td><td style="color:#ef4444;font-weight:700;">37天</td><td>82,000.00</td><td>0.05%/天</td><td>1,517.00</td><td>5次</td><td><span class="tag tag-red">M1+</span></td><td><button class="btn btn-danger btn-sm">催收</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20260201-003</td><td>ZZ食品经销</td><td>2026-05-01</td><td style="color:#f59e0b;font-weight:600;">—</td><td>4,500.00</td><td>0.05%/天</td><td>—</td><td>0次</td><td><span class="tag tag-yellow">即将到期</span></td><td><button class="btn btn-outline btn-sm">提醒</button></td></tr>
+            <tr><td>FIN-20260110-007</td><td>CC商贸</td><td>2026-03-10</td><td style="color:#ef4444;font-weight:700;">47天</td><td>156,000.00</td><td>0.05%/天</td><td>3,666.00</td><td>8次</td><td><span class="tag tag-red">M1+</span></td><td><button class="btn btn-danger btn-sm">催收</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20251215-008</td><td>DD电子</td><td>2026-02-15</td><td style="color:#ef4444;font-weight:700;">70天</td><td>218,000.00</td><td>0.05%/天</td><td>7,630.00</td><td>12次</td><td><span class="tag tag-red">M2</span></td><td><button class="btn btn-danger btn-sm">升级催收</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20251101-009</td><td>EE建材</td><td>2026-01-01</td><td style="color:#ef4444;font-weight:700;">115天</td><td>400,000.00</td><td>0.05%/天</td><td>23,000.00</td><td>15次</td><td><span class="tag tag-red">M3</span></td><td><button class="btn btn-danger btn-sm">法务介入</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">逾期等级与处置策略</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:13px;">
+          <div style="background:#fefce8;padding:12px;border-radius:8px;"><strong style="color:#92400e;">即将到期</strong><br>还款日前3天<br>短信提醒</div>
+          <div style="background:#fee2e2;padding:12px;border-radius:8px;"><strong style="color:#991b1b;">M1（1-30天）</strong><br>电话催收<br>罚息0.05%/天</div>
+          <div style="background:#fee2e2;padding:12px;border-radius:8px;"><strong style="color:#991b1b;">M2（31-60天）</strong><br>上门催收<br>冻结额度</div>
+          <div style="background:#fecaca;padding:12px;border-radius:8px;"><strong style="color:#7f1d1d;">M3（>60天）</strong><br>法务介入<br>启动处置</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab5: 计息试算 -->
+    <div class="tab-content" id="tab-interest">
+      <div class="card">
+        <div class="card-title">计息试算器</div>
+        <div class="form-row">
+          <div class="form-group"><label>融资金额（元）</label><input type="number" value="1000000" id="calcPrincipal" oninput="calcInterest()"></div>
+          <div class="form-group"><label>年化利率（%）</label><input type="number" value="8.5" id="calcRate" oninput="calcInterest()" step="0.01"></div>
+          <div class="form-group"><label>还款方式</label><select id="calcMethod" onchange="calcInterest()"><option value="1">等额本息</option><option value="2">等额本金</option><option value="3">先息后本</option><option value="4">一次性还本付息</option></select></div>
+          <div class="form-group"><label>期数（月）</label><select id="calcPeriods" onchange="calcInterest()"><option value="3">3</option><option value="6">6</option><option value="12" selected>12</option><option value="24">24</option></select></div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+            <div><div style="font-size:12px;color:#6b7280;">每期还款</div><div style="font-size:20px;font-weight:700;color:#065f46;" id="calcMonthly">¥ 87,189.00</div></div>
+            <div><div style="font-size:12px;color:#6b7280;">总还款额</div><div style="font-size:20px;font-weight:700;color:#1e40af;" id="calcTotal">¥ 1,046,268.00</div></div>
+            <div><div style="font-size:12px;color:#6b7280;">总利息</div><div style="font-size:20px;font-weight:700;color:#f59e0b;" id="calcInterestTotal">¥ 46,268.00</div></div>
+          </div>
+        </div>
+        <div id="calcTable"></div>
+      </div>
+    </div>
+
+    <!-- Tab6: 自动提醒记录 -->
+    <div class="tab-content" id="tab-reminder">
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部类型</option><option>还款提醒</option><option>逾期提醒</option><option>到期提醒</option></select>
+          <select><option>全部渠道</option><option>短信</option><option>App推送</option><option>邮件</option></select>
+          <select><option>全部状态</option><option>成功</option><option>失败</option></select>
+          <input type="date" value="2026-04-01" style="width:130px;"><input type="date" value="2026-04-26" style="width:130px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+        </div>
+        <table>
+          <thead><tr><th>提醒ID</th><th>业务编号</th><th>客户</th><th>提醒类型</th><th>渠道</th><th>发送时间</th><th>内容摘要</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>RM20260425001</td><td>FIN-20260315-002</td><td>YY电子</td><td><span class="tag tag-blue">还款提醒</span></td><td>短信</td><td>2026-04-25 09:00</td><td>【货押平台】您的第3期还款将于5月15日到期，应还142,766.67元...</td><td><span class="tag tag-green">成功</span></td></tr>
+            <tr><td>RM20260425002</td><td>FIN-20251120-006</td><td>BB家电</td><td><span class="tag tag-red">逾期提醒</span></td><td>短信+App</td><td>2026-04-25 09:05</td><td>【货押平台】您的还款已逾期36天，请尽快还款以避免罚息...</td><td><span class="tag tag-green">成功</span></td></tr>
+            <tr><td>RM20260424001</td><td>FIN-20260201-003</td><td>ZZ食品</td><td><span class="tag tag-yellow">到期提醒</span></td><td>App推送</td><td>2026-04-24 09:00</td><td>还款日临近提醒：5月1日应还4,500.00元</td><td><span class="tag tag-green">成功</span></td></tr>
+            <tr><td>RM20260423001</td><td>FIN-20260110-007</td><td>CC商贸</td><td><span class="tag tag-red">逾期催收</span></td><td>短信</td><td>2026-04-23 09:00</td><td>逾期催收通知：已逾期45天，累计罚息3,500元...</td><td><span class="tag tag-green">成功</span></td></tr>
+            <tr><td>RM20260420001</td><td>FIN-20251215-008</td><td>DD电子</td><td><span class="tag tag-red">逾期催收</span></td><td>邮件</td><td>2026-04-20 09:00</td><td>严重逾期通知：已逾期65天，即将启动法律程序...</td><td><span class="tag tag-red">发送失败</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-card">💡 自动提醒规则：还款日前3天发送提醒 → 逾期当天发送逾期通知 → 逾期后每7天发送催收提醒 → M3+每周发送法律风险提示</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function calcInterest() {
+  var P = parseFloat(document.getElementById('calcPrincipal').value) || 0;
+  var r = (parseFloat(document.getElementById('calcRate').value) || 0) / 100 / 12;
+  var n = parseInt(document.getElementById('calcPeriods').value) || 12;
+  var method = document.getElementById('calcMethod').value;
+  var monthly = 0, total = 0, interest = 0;
+  var table = '<table><thead><tr><th>期数</th><th>月供</th><th>本金</th><th>利息</th><th>剩余本金</th></tr></thead><tbody>';
+  var balance = P;
+
+  if (method === '1') {
+    monthly = P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+    total = monthly * n;
+    for (var i = 1; i <= n; i++) {
+      var intPart = balance * r;
+      var prinPart = monthly - intPart;
+      balance -= prinPart;
+      table += '<tr><td>第'+i+'期</td><td>'+fmt(monthly)+'</td><td>'+fmt(prinPart)+'</td><td>'+fmt(intPart)+'</td><td>'+fmt(Math.max(0,balance))+'</td></tr>';
+    }
+  } else if (method === '2') {
+    var prinPer = P / n;
+    total = 0;
+    for (var i = 1; i <= n; i++) {
+      var intPart = balance * r;
+      var mon = prinPer + intPart;
+      total += mon;
+      table += '<tr><td>第'+i+'期</td><td>'+fmt(mon)+'</td><td>'+fmt(prinPer)+'</td><td>'+fmt(intPart)+'</td><td>'+fmt(Math.max(0,balance-prinPer))+'</td></tr>';
+      balance -= prinPer;
+    }
+    monthly = prinPer + P * r;
+  } else if (method === '3') {
+    monthly = P * r;
+    total = monthly * n + P;
+    for (var i = 1; i < n; i++) {
+      table += '<tr><td>第'+i+'期</td><td>'+fmt(monthly)+'</td><td>0.00</td><td>'+fmt(monthly)+'</td><td>'+fmt(P)+'</td></tr>';
+    }
+    table += '<tr><td>第'+n+'期</td><td>'+fmt(monthly+P)+'</td><td>'+fmt(P)+'</td><td>'+fmt(monthly)+'</td><td>0.00</td></tr>';
+  } else {
+    interest = P * r * n;
+    total = P + interest;
+    monthly = total;
+    table += '<tr><td>第1期</td><td>'+fmt(total)+'</td><td>'+fmt(P)+'</td><td>'+fmt(interest)+'</td><td>0.00</td></tr>';
+  }
+  table += '</tbody></table>';
+  interest = total - P;
+
+  document.getElementById('calcMonthly').textContent = '¥ ' + (method==='4'?fmt(total):method==='2'?fmt(P/n+P*r):fmt(monthly));
+  document.getElementById('calcTotal').textContent = '¥ ' + fmt(total);
+  document.getElementById('calcInterestTotal').textContent = '¥ ' + fmt(interest);
+  document.getElementById('calcTable').innerHTML = table;
+}
+function fmt(v) { return v.toLocaleString('zh-CN', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+calcInterest();
+</script>
+</body>
+</html>

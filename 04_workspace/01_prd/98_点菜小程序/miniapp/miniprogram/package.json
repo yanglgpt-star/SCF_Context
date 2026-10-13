@@ -1,0 +1,8 @@
+{
+  "name": "家庭点菜",
+  "version": "1.0.0",
+  "description": "家庭点菜小程序",
+  "dependencies": {
+    "@vant/weapp": "^1.11.0"
+  }
+}

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>企业档案与推荐 - 客户管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-gold { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.progress-bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 999px; }
+.client-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; }
+.client-info div { padding: 4px 0; }
+.sub-tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; margin: 12px 0; }
+.sub-tab { padding: 8px 16px; font-size: 13px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.sub-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item active">👥 客户管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">准入申请与审批</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">企业档案与推荐</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item">🧾 结算管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">客户管理 / <strong>企业档案与推荐</strong></span></div>
+    <div class="topbar-right"><span>👤 运营专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">企业档案与推荐管理</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="list" onclick="switchTab('list')">客户档案列表</div>
+      <div class="tab" data-tab="detail" onclick="switchTab('detail')">客户详情</div>
+      <div class="tab" data-tab="cert" onclick="switchTab('cert')">证照预警</div>
+      <div class="tab" data-tab="quality" onclick="switchTab('quality')">推荐质量评估</div>
+      <div class="tab" data-tab="incentive" onclick="switchTab('incentive')">激励统计</div>
+    </div>
+
+    <!-- Tab1: 客户档案列表 -->
+    <div class="tab-content active" id="tab-list">
+      <div class="stats">
+        <div class="stat-card"><div class="num">150</div><div class="label">全部客户</div></div>
+        <div class="stat-card"><div class="num" style="color:#10b981;">45</div><div class="label">A级</div></div>
+        <div class="stat-card"><div class="num" style="color:#3b82f6;">70</div><div class="label">B级</div></div>
+        <div class="stat-card"><div class="num" style="color:#6b7280;">35</div><div class="label">C级</div></div>
+        <div class="stat-card"><div class="num" style="color:#f59e0b;">3</div><div class="label">预警</div></div>
+        <div class="stat-card"><div class="num" style="color:#ef4444;">1</div><div class="label">冻结</div></div>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部类型</option><option>经销商</option><option>核心企业</option><option>银行</option><option>仓储方</option></select>
+          <select><option>全部等级</option><option>A级</option><option>B级</option><option>C级</option></select>
+          <select><option>全部状态</option><option>正常</option><option>预警</option><option>冻结</option><option>已注销</option></select>
+          <input placeholder="搜索企业名称/信用代码" style="width:200px;">
+          <button class="btn btn-primary btn-sm">搜索</button>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm">+ 新建客户</button>
+          <button class="btn btn-outline btn-sm">导出</button>
+        </div>
+        <table>
+          <thead><tr><th>客户ID</th><th>企业名称</th><th>类型</th><th>等级</th><th>总额度</th><th>可用额度</th><th>状态</th><th>证照</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>CUST_001</td><td>XX商贸有限公司</td><td>经销商</td><td><span class="tag tag-green">A级</span></td><td>100万</td><td>50万</td><td><span class="tag tag-green">正常</span></td><td><span class="tag tag-green">✓</span></td><td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>CUST_002</td><td>YY电子科技</td><td>经销商</td><td><span class="tag tag-blue">B级</span></td><td>80万</td><td>30万</td><td><span class="tag tag-green">正常</span></td><td><span class="tag tag-yellow">⚠️ 19天</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>CUST_003</td><td>ZZ食品经销</td><td>经销商</td><td><span class="tag tag-gray">C级</span></td><td>50万</td><td>10万</td><td><span class="tag tag-yellow">预警</span></td><td><span class="tag tag-green">✓</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>CUST_004</td><td>XX科技有限公司</td><td>核心企业</td><td><span class="tag tag-purple">S级</span></td><td>—</td><td>—</td><td><span class="tag tag-green">正常</span></td><td>—</td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>CUST_005</td><td>YY集团</td><td>核心企业</td><td><span class="tag tag-blue">A级</span></td><td>—</td><td>—</td><td><span class="tag tag-green">正常</span></td><td>—</td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>CUST_006</td><td>WW贸易集团</td><td>经销商</td><td><span class="tag tag-gray">C级</span></td><td>50万</td><td>0</td><td><span class="tag tag-red">冻结</span></td><td><span class="tag tag-red">✗</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab2: 客户详情 -->
+    <div class="tab-content" id="tab-detail">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-title">📋 基本信息</div>
+          <div class="client-info">
+            <div><strong>企业名称：</strong>XX商贸有限公司</div>
+            <div><strong>统一信用代码：</strong>91*******001</div>
+            <div><strong>法定代表人：</strong>张三</div>
+            <div><strong>联系电话：</strong>138****8888</div>
+            <div><strong>注册地址：</strong>福建省厦门市思明区...</div>
+            <div><strong>客户等级：</strong><span class="tag tag-green">A级</span></div>
+            <div><strong>客户状态：</strong><span class="tag tag-green">正常</span></div>
+            <div><strong>风险标签：</strong><span class="tag tag-green">白名单</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">💰 授信额度</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div style="background:#f0fdf4;padding:12px;border-radius:8px;text-align:center;">
+              <div style="font-size:12px;color:#6b7280;">总额度</div>
+              <div style="font-size:22px;font-weight:700;color:#065f46;">100万</div>
+            </div>
+            <div style="background:#fefce8;padding:12px;border-radius:8px;text-align:center;">
+              <div style="font-size:12px;color:#6b7280;">已占用</div>
+              <div style="font-size:22px;font-weight:700;color:#92400e;">30万</div>
+            </div>
+            <div style="background:#eff6ff;padding:12px;border-radius:8px;text-align:center;">
+              <div style="font-size:12px;color:#6b7280;">可用额度</div>
+              <div style="font-size:22px;font-weight:700;color:#1e40af;">70万</div>
+            </div>
+            <div style="background:#fef2f2;padding:12px;border-radius:8px;text-align:center;">
+              <div style="font-size:12px;color:#6b7280;">冻结额度</div>
+              <div style="font-size:22px;font-weight:700;color:#991b1b;">0</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm">额度调整</button>
+          <button class="btn btn-outline btn-sm">编辑档案</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">详细资料</div>
+        <div class="sub-tabs">
+          <div class="sub-tab active">资质证照</div>
+          <div class="sub-tab">银行账户</div>
+          <div class="sub-tab">授信记录</div>
+          <div class="sub-tab">变更日志</div>
+        </div>
+        <table>
+          <thead><tr><th>证照类型</th><th>证照编号</th><th>有效期至</th><th>剩余天数</th><th>预警状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>营业执照</td><td>91*******001</td><td>2027-06-15</td><td>415天</td><td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>法人身份证</td><td>350***********001</td><td>2026-05-15</td><td style="color:#f59e0b;font-weight:600;">19天</td><td><span class="tag tag-yellow">即将过期</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>开户许可证</td><td>JY*******001</td><td>长期</td><td>—</td><td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab3: 证照预警 -->
+    <div class="tab-content" id="tab-cert">
+      <div class="info-card">💡 系统每日凌晨 2:00 自动扫描证照有效期，提前 30 天预警</div>
+      <div class="card">
+        <div class="filter-bar">
+          <span style="font-weight:600;font-size:13px;">即将过期证照（30天内）</span>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm">批量提醒</button>
+          <button class="btn btn-outline btn-sm">导出预警列表</button>
+        </div>
+        <table>
+          <thead><tr><th>客户名称</th><th>证照类型</th><th>证照编号</th><th>有效期至</th><th>剩余天数</th><th>客户经理</th><th>通知状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>YY电子科技</td><td>法人身份证</td><td>350****001</td><td>2026-05-15</td><td style="color:#f59e0b;font-weight:600;">19天</td><td>王经理</td><td><span class="tag tag-green">已通知</span></td><td><button class="btn btn-outline btn-sm">提醒</button></td></tr>
+            <tr><td>AA建材经销</td><td>营业执照</td><td>91****010</td><td>2026-05-20</td><td style="color:#f59e0b;font-weight:600;">24天</td><td>李经理</td><td><span class="tag tag-yellow">未通知</span></td><td><button class="btn btn-outline btn-sm">提醒</button></td></tr>
+            <tr><td>BB家电贸易</td><td>开户许可证</td><td>JY****020</td><td>2026-05-25</td><td style="color:#ef4444;font-weight:600;">29天</td><td>张经理</td><td><span class="tag tag-yellow">未通知</span></td><td><button class="btn btn-outline btn-sm">提醒</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab4: 推荐质量评估 -->
+    <div class="tab-content" id="tab-quality">
+      <div class="card">
+        <div class="card-title">核心企业推荐质量评分</div>
+        <div class="info-card">📐 评分公式：准入通过率×30% + 首贷率×30% + (1-逾期率)×25% + (1-M3+逾期率)×15%</div>
+        <table>
+          <thead><tr><th>企业名称</th><th>等级</th><th>推荐质量得分</th><th>准入通过率</th><th>首贷率</th><th>逾期率</th><th>M3+逾期率</th><th>评估周期</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>XX科技有限公司</td><td><span class="tag tag-gold">S级</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#065f46;">95</span><div class="progress-bar" style="flex:1;"><div class="fill" style="width:95%;background:#10b981;"></div></div></div></td>
+              <td>98%</td><td>85%</td><td>5%</td><td>1%</td><td>2026 Q1</td><td><button class="btn btn-outline btn-sm">查看报告</button></td></tr>
+            <tr><td>YY集团</td><td><span class="tag tag-blue">A级</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#1e40af;">88</span><div class="progress-bar" style="flex:1;"><div class="fill" style="width:88%;background:#3b82f6;"></div></div></div></td>
+              <td>92%</td><td>78%</td><td>8%</td><td>3%</td><td>2026 Q1</td><td><button class="btn btn-outline btn-sm">查看报告</button></td></tr>
+            <tr><td>ZZ控股集团</td><td><span class="tag tag-gray">B级</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;">72</span><div class="progress-bar" style="flex:1;"><div class="fill" style="width:72%;background:#f59e0b;"></div></div></div></td>
+              <td>80%</td><td>65%</td><td>15%</td><td>8%</td><td>2026 Q1</td><td><button class="btn btn-outline btn-sm">查看报告</button></td></tr>
+            <tr><td>WW供应链</td><td><span class="tag tag-yellow">C级</span></td>
+              <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#92400e;">48</span><div class="progress-bar" style="flex:1;"><div class="fill" style="width:48%;background:#ef4444;"></div></div></div></td>
+              <td>60%</td><td>45%</td><td>25%</td><td>12%</td><td>2026 Q1</td><td><button class="btn btn-outline btn-sm">查看报告</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">等级自动评估规则</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:12px;">
+          <div style="background:#f0fdf4;padding:12px;border-radius:8px;"><strong style="color:#065f46;">S级</strong><br>≥90分<br>年融资≥5000万<br>合作≥3年</div>
+          <div style="background:#eff6ff;padding:12px;border-radius:8px;"><strong style="color:#1e40af;">A级</strong><br>70-89分</div>
+          <div style="background:#fefce8;padding:12px;border-radius:8px;"><strong style="color:#92400e;">B级</strong><br>50-69分</div>
+          <div style="background:#fef2f2;padding:12px;border-radius:8px;"><strong style="color:#991b1b;">C级</strong><br>&lt;50分<br>或连续2季度&lt;50</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab5: 激励统计 -->
+    <div class="tab-content" id="tab-incentive">
+      <div class="stats">
+        <div class="stat-card"><div class="num">¥ 128,500</div><div class="label">推荐佣金</div></div>
+        <div class="stat-card"><div class="num">¥ 50,000</div><div class="label">质量奖金</div></div>
+        <div class="stat-card"><div class="num">¥ 12,000</div><div class="label">催收奖励</div></div>
+        <div class="stat-card"><div class="num" style="color:#10b981;">¥ 190,500</div><div class="label">合计</div></div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>核心企业</th><th>季度</th><th>推荐融资总额</th><th>质量得分</th><th>推荐佣金</th><th>质量奖金</th><th>催收奖励</th><th>合计</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>XX科技有限公司</td><td>2026 Q1</td><td>500万</td><td>95</td><td>50,000</td><td>25,000</td><td>8,000</td><td>83,000</td><td><span class="tag tag-green">已发放</span></td></tr>
+            <tr><td>YY集团</td><td>2026 Q1</td><td>350万</td><td>88</td><td>35,000</td><td>17,500</td><td>3,000</td><td>55,500</td><td><span class="tag tag-green">已发放</span></td></tr>
+            <tr><td>ZZ控股集团</td><td>2026 Q1</td><td>200万</td><td>72</td><td>20,000</td><td>7,500</td><td>1,000</td><td>28,500</td><td><span class="tag tag-yellow">待确认</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+</script>
+</body>
+</html>

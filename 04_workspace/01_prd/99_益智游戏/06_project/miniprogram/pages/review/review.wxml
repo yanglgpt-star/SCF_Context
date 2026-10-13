@@ -1,0 +1,42 @@
+<view class="page-container fade-in">
+  <view class="page-title">审核中心</view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-state">加载中...</view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{pendingList.length === 0}}" class="empty-state">
+    <view class="empty-icon">✅</view>
+    <text class="empty-text">所有任务都已审核</text>
+    <text class="empty-desc">孩子完成新任务后会出现在这里</text>
+  </view>
+
+  <!-- 待审核列表 -->
+  <view wx:else class="review-list">
+    <view class="card review-item" wx:for="{{pendingList}}" wx:key="_id">
+      <view class="review-header">
+        <text class="child-name">小勇士</text>
+        <text class="task-time">{{item.completedAt || '刚刚完成'}}</text>
+      </view>
+      <view class="review-task">{{item.taskTitle || '未知任务'}}</view>
+
+      <!-- 查看媒体 -->
+      <view wx:if="{{item.photoUrl}}" class="media-row" bindtap="viewMedia" data-url="{{item.photoUrl}}" data-type="photo">
+        📷 点击查看照片
+      </view>
+      <view wx:elif="{{item.audioUrl}}" class="media-row" bindtap="viewMedia" data-url="{{item.audioUrl}}" data-type="audio">
+        🔊 点击播放录音
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="action-row">
+        <button class="btn-approve" bindtap="approve" data-id="{{item._id}}">✅ 通过</button>
+        <button class="btn-reject" bindtap="reject" data-id="{{item._id}}">❌ 驳回</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="back-section">
+    <button class="btn-secondary" bindtap="goBack">返回管理首页</button>
+  </view>
+</view>

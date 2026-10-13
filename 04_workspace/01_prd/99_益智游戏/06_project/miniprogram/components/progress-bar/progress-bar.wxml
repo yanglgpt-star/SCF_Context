@@ -1,0 +1,6 @@
+<view class="progress-container" style="height: {{height}};">
+  <view class="progress-bg">
+    <view class="progress-fill" style="width: {{displayPercent}}%;"></view>
+  </view>
+  <text class="progress-text">{{displayPercent}}%</text>
+</view>

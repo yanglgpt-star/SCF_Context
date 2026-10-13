@@ -1,0 +1,80 @@
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+  background: linear-gradient(180deg, #FFF8F0, #FFE0B2);
+}
+
+.celebration-section {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.big-icon {
+  font-size: 120rpx;
+  animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-24rpx); }
+}
+
+.congrats-text {
+  font-size: 56rpx;
+  font-weight: 800;
+  color: #FF6B6B;
+  margin-top: 24rpx;
+}
+
+.congrats-sub {
+  font-size: 32rpx;
+  color: #666;
+  margin-top: 12rpx;
+}
+
+.reward-card {
+  width: 100%;
+  text-align: center;
+  background: #FFF8E1;
+}
+
+.reward-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+}
+
+.stars-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12rpx;
+}
+
+.star-icon {
+  font-size: 48rpx;
+}
+
+.star-count {
+  font-size: 64rpx;
+  font-weight: 800;
+  color: #F39C12;
+  margin-left: 12rpx;
+}
+
+.total-stars {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.action-section {
+  width: 100%;
+  margin-top: 60rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}

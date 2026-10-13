@@ -1,0 +1,62 @@
+<view class="page-container fade-in">
+  <!-- 角色引导区（大个头） -->
+  <view class="character-section">
+    <character anim="{{characterAnim}}"></character>
+    <view class="greeting-text">
+      <text wx:if="{{activeChildName}}">{{activeChildName}}！</text>
+      <text wx:elif="{{userInfo}}">{{userInfo.nickName}}！</text>
+      <text wx:else>小宝！</text>
+    </view>
+  </view>
+
+  <!-- 加载中/错误/空状态 -->
+  <block wx:if="{{!showStartBtn && !loadingError}}">
+    <view class="loading-tip">
+      <text class="loading-text">🧙 正在准备今天的冒险...</text>
+    </view>
+  </block>
+  <block wx:elif="{{loadingError}}">
+    <view class="empty-card" bindtap="retryLoad">
+      <text class="empty-icon">😴</text>
+      <text class="empty-text">点我重试</text>
+    </view>
+  </block>
+  <block wx:elif="{{showStartBtn && !todayTask && !loadingError}}">
+    <view class="empty-card">
+      <text class="empty-icon">🎉</text>
+      <text class="empty-text">今天全部完成啦！</text>
+    </view>
+  </block>
+
+  <!-- 今日任务预览 -->
+  <view class="task-preview" wx:if="{{todayTask}}" bindtap="startAdventure">
+    <view class="preview-emoji">{{categoryEmoji}}</view>
+    <view class="preview-content">
+      <text class="preview-title">{{todayTask.title}}</text>
+      <view class="preview-stars">
+        <text wx:for="{{previewStars}}" wx:key="*this">⭐</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 开始按钮 -->
+  <view class="action-section" wx:if="{{showStartBtn && !loadingError && todayTask}}">
+    <button class="start-btn" bindtap="startAdventure">
+      <text class="start-btn-icon">🚀</text>
+      <text class="start-btn-text">出发！</text>
+    </button>
+  </view>
+
+  <!-- 底部导航（纯图标） -->
+  <view class="bottom-nav">
+    <view class="nav-item" bindtap="goAchievement">
+      <text class="nav-icon">🏅</text>
+    </view>
+    <view class="nav-item home-indicator" bindtap="retryLoad">
+      <text class="nav-icon">🏠</text>
+    </view>
+    <view class="nav-item" bindtap="goAdmin">
+      <text class="nav-icon">👤</text>
+    </view>
+  </view>
+</view>

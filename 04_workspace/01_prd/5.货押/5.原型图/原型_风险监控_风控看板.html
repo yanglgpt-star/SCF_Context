@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>风控看板 - 风险监控</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; display: flex; justify-content: space-between; align-items: center; }
+.card-title .more { font-size: 12px; font-weight: 400; color: #2563eb; cursor: pointer; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: center; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.stat-card .change { font-size: 11px; margin-top: 2px; }
+.stat-card .change.up { color: #10b981; }
+.stat-card .change.down { color: #ef4444; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; padding: 12px 16px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.chart-box { background: #f9fafb; border-radius: 8px; padding: 16px; min-height: 180px; }
+.chart-box .ch-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+.score-bar { height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin: 4px 0; }
+.score-bar .fill { height: 100%; border-radius: 999px; }
+.rank-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+.rank-item:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item active">⚠️ 风险监控</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">风控看板</div>
+    <div class="menu-item">📋 贷后管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">风险监控 / <strong>风控看板</strong></span></div>
+    <div class="topbar-right"><span>👤 风控总监</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">风控看板</div>
+
+    <!-- Global filters -->
+    <div class="filter-bar">
+      <select><option>时间范围：近30天</option><option>近7天</option><option>近90天</option></select>
+      <select><option>全部品类</option><option>3C电子</option><option>家电</option><option>食品</option></select>
+      <select><option>全部核心企业</option><option>XX科技</option><option>YY集团</option></select>
+      <select><option>全部区域</option><option>华东</option><option>华南</option><option>华北</option></select>
+      <button class="btn btn-primary btn-sm">应用筛选</button>
+    </div>
+
+    <!-- 6 stat cards (MD spec) -->
+    <div class="stats">
+      <div class="stat-card"><div class="num" style="color:#10b981;">96.8%</div><div class="label">风险识别覆盖率</div><div class="change up">↑ 2.1%</div></div>
+      <div class="stat-card"><div class="num" style="color:#2563eb;">87.5%</div><div class="label">预警准确率</div><div class="change up">↑ 5.3%</div></div>
+      <div class="stat-card"><div class="num" style="color:#f59e0b;">2.3h</div><div class="label">平均响应时效</div><div class="change down">↓ 0.5h</div></div>
+      <div class="stat-card"><div class="num" style="color:#ef4444;">12</div><div class="label">待处理预警数</div><div class="change up">↑ 3</div></div>
+      <div class="stat-card"><div class="num" style="color:#f59e0b;">5</div><div class="label">今日新增预警数</div><div class="change up">↑ 2</div></div>
+      <div class="stat-card"><div class="num" style="color:#8b5cf6;">8</div><div class="label">核心企业推送待响应</div><div class="change down">↓ 1</div></div>
+    </div>
+
+    <!-- 3 risk distribution charts (MD spec) -->
+    <div class="chart-grid">
+      <!-- 按品类风险分布 -->
+      <div class="chart-box">
+        <div class="ch-title">按品类风险分布</div>
+        <table style="font-size:12px;">
+          <thead><tr><th>品类</th><th>在库货值</th><th>预警数</th><th>风险占比</th><th>趋势</th></tr></thead>
+          <tbody>
+            <tr><td>3C电子</td><td>¥3,800万</td><td><span class="tag tag-red">5</span></td><td>45%</td><td><span class="change up">↑</span></td></tr>
+            <tr><td>家电</td><td>¥2,100万</td><td><span class="tag tag-yellow">3</span></td><td>25%</td><td><span class="change down">↓</span></td></tr>
+            <tr><td>食品</td><td>¥1,200万</td><td><span class="tag tag-yellow">2</span></td><td>15%</td><td><span class="change up">↑</span></td></tr>
+            <tr><td>其他</td><td>¥1,550万</td><td><span class="tag tag-green">1</span></td><td>15%</td><td><span class="change up">↑</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;height:40px;display:flex;align-items:flex-end;gap:6px;">
+          <div style="flex:45;height:40px;background:#ef4444;border-radius:3px;text-align:center;font-size:10px;color:#fff;line-height:40px;">45%</div>
+          <div style="flex:25;height:24px;background:#f59e0b;border-radius:3px;text-align:center;font-size:10px;color:#fff;line-height:24px;">25%</div>
+          <div style="flex:15;height:16px;background:#f59e0b;border-radius:3px;text-align:center;font-size:10px;color:#fff;line-height:16px;">15%</div>
+          <div style="flex:15;height:12px;background:#10b981;border-radius:3px;text-align:center;font-size:10px;color:#fff;line-height:12px;">15%</div>
+        </div>
+      </div>
+      <!-- 按核心企业风险分布 -->
+      <div class="chart-box">
+        <div class="ch-title">按核心企业风险分布</div>
+        <table style="font-size:12px;">
+          <thead><tr><th>核心企业</th><th>等级</th><th>预警数</th><th>风险占比</th></tr></thead>
+          <tbody>
+            <tr><td>XX科技有限公司</td><td><span class="tag tag-purple">S级</span></td><td>2</td><td>18%</td></tr>
+            <tr><td>YY集团</td><td><span class="tag tag-blue">A级</span></td><td>3</td><td>27%</td></tr>
+            <tr><td>ZZ控股集团</td><td><span class="tag tag-gray">B级</span></td><td>4</td><td>36%</td></tr>
+            <tr><td>WW供应链</td><td><span class="tag tag-yellow">C级</span></td><td>2</td><td>19%</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;"><span style="width:80px;">XX科技</span><div class="score-bar" style="flex:1;"><div class="fill" style="width:18%;background:#8b5cf6;"></div></div></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;"><span style="width:80px;">YY集团</span><div class="score-bar" style="flex:1;"><div class="fill" style="width:27%;background:#2563eb;"></div></div></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;"><span style="width:80px;">ZZ控股</span><div class="score-bar" style="flex:1;"><div class="fill" style="width:36%;background:#f59e0b;"></div></div></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;"><span style="width:80px;">WW供应链</span><div class="score-bar" style="flex:1;"><div class="fill" style="width:19%;background:#ef4444;"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 按预警级别分布 (donut) + 近30天预警趋势 -->
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="ch-title">按预警级别分布</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
+          <div style="width:100px;height:100px;border-radius:50%;background:conic-gradient(#8b5cf6 0% 25%, #ef4444 25% 50%, #f59e0b 50% 80%, #10b981 80% 100%);"></div>
+          <div style="font-size:11px;">
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8b5cf6;margin-right:4px;"></span>紧急 25%</div>
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#ef4444;margin-right:4px;"></span>超标 25%</div>
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#f59e0b;margin-right:4px;"></span>警戒 30%</div>
+            <div><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#10b981;margin-right:4px;"></span>正常 20%</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="ch-title">近30天预警趋势</div>
+        <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;height:80px;padding-top:10px;">
+          <div style="flex:1;height:28px;background:#93c5fd;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:30px;">1日</div>
+          <div style="flex:1;height:35px;background:#93c5fd;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:37px;">3日</div>
+          <div style="flex:1;height:22px;background:#93c5fd;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:24px;">6日</div>
+          <div style="flex:1;height:40px;background:#60a5fa;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:42px;">9日</div>
+          <div style="flex:1;height:30px;background:#93c5fd;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:32px;">12日</div>
+          <div style="flex:1;height:45px;background:#3b82f6;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:47px;">15日</div>
+          <div style="flex:1;height:38px;background:#60a5fa;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:40px;">18日</div>
+          <div style="flex:1;height:50px;background:#2563eb;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:52px;">21日</div>
+          <div style="flex:1;height:32px;background:#93c5fd;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:34px;">24日</div>
+          <div style="flex:1;height:42px;background:#3b82f6;border-radius:3px;text-align:center;font-size:9px;color:#6b7280;padding-top:44px;">27日</div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:#6b7280;margin-top:8px;">新增预警数（峰值 5 次）</div>
+      </div>
+    </div>
+
+    <!-- 核心企业协同看板 (MD spec) -->
+    <div class="card">
+      <div class="card-title">🏢 核心企业协同看板 <span class="more">查看全部</span></div>
+      <table>
+        <thead><tr><th>核心企业</th><th>推送预警</th><th>已响应</th><th>响应率</th><th>协同成功率</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td>XX科技有限公司</td><td>8</td><td>8</td><td>100%</td><td>95%</td><td><span class="tag tag-green">优秀</span></td></tr>
+          <tr><td>YY集团</td><td>12</td><td>10</td><td>83%</td><td>80%</td><td><span class="tag tag-blue">良好</span></td></tr>
+          <tr><td>ZZ控股集团</td><td>6</td><td>4</td><td>67%</td><td>50%</td><td><span class="tag tag-yellow">待提升</span></td></tr>
+          <tr><td>WW供应链</td><td>5</td><td>2</td><td>40%</td><td>30%</td><td><span class="tag tag-red">较差</span></td></tr>
+        </tbody>
+      </table>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+        <div style="background:#f9fafb;border-radius:8px;padding:12px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px;">协同响应率统计</div>
+          <div style="font-size:11px;margin:4px 0;">整体响应率 <span style="float:right;">78.5%</span></div>
+          <div class="score-bar"><div class="fill" style="width:78.5%;background:#2563eb;"></div></div>
+          <div style="font-size:11px;margin:4px 0;">24h内响应率 <span style="float:right;">65.2%</span></div>
+          <div class="score-bar"><div class="fill" style="width:65.2%;background:#f59e0b;"></div></div>
+        </div>
+        <div style="background:#f9fafb;border-radius:8px;padding:12px;">
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px;">协同处置成功率</div>
+          <div style="text-align:center;margin:8px 0;"><span style="font-size:28px;font-weight:700;color:#10b981;">82.3%</span></div>
+          <div style="font-size:11px;color:#6b7280;text-align:center;">较上月 ↑ 5.8%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP排行 (MD spec) -->
+    <div class="card">
+      <div class="card-title">📊 TOP排行 <span class="more">查看全部</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">高风险客户 TOP5（相对质押率）</div>
+          <div class="rank-list">
+            <div class="rank-item"><span>1. YY电子科技</span><span style="color:#ef4444;">98%</span></div>
+            <div class="rank-item"><span>2. ZZ食品经销</span><span style="color:#ef4444;">95%</span></div>
+            <div class="rank-item"><span>3. WW家电贸易</span><span style="color:#f59e0b;">88%</span></div>
+            <div class="rank-item"><span>4. AA建材经销</span><span style="color:#f59e0b;">82%</span></div>
+            <div class="rank-item"><span>5. BB电子</span><span style="color:#f59e0b;">75%</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">高质押率业务 TOP5</div>
+          <div class="rank-list">
+            <div class="rank-item"><span>1. FIN-20260301-001 YY电子</span><span style="color:#ef4444;">98%</span></div>
+            <div class="rank-item"><span>2. FIN-20260201-005 ZZ食品</span><span style="color:#ef4444;">95%</span></div>
+            <div class="rank-item"><span>3. FIN-20260401-003 WW家电</span><span style="color:#f59e0b;">88%</span></div>
+            <div class="rank-item"><span>4. FIN-20260315-002 AA建材</span><span style="color:#f59e0b;">82%</span></div>
+            <div class="rank-item"><span>5. FIN-20260410-001 BB贸易</span><span style="color:#f59e0b;">75%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

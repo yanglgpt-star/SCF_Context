@@ -1,0 +1,3495 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>财务库存中心（一期）原型 · 前后端测试版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+/* ============================================================
+   设计令牌 —— 浅色为基准，深色两态（系统 / 显式）各自重定义
+   ============================================================ */
+:root{
+  --paper:#F4F6F7;
+  --surface:#FFFFFF;
+  --surface-2:#EDF1F2;
+  --surface-3:#E3E9EB;
+  --ink:#121A1F;
+  --ink-2:#4B5A63;
+  --ink-3:#7B8993;
+  --rule:#DCE3E6;
+  --rule-2:#C3CFD4;
+
+  --brand:#0F5F6B;          /* 主色：青灰蓝 —— 库存/仓储 */
+  --brand-ink:#0A4650;
+  --brand-wash:#E2EFF1;
+  --brand-line:#A8CDD2;
+
+  --ledger:#96601A;          /* 第二色：赭 —— 会计/凭证 */
+  --ledger-ink:#6E4510;
+  --ledger-wash:#F8EEDC;
+  --ledger-line:#DFC08A;
+
+  --l2:#4F5088;              /* 二级货主 / 管理口径 */
+  --l2-wash:#EAEAF4;
+  --l2-line:#B9BAD8;
+
+  --ok:#166B41;
+  --ok-wash:#E2F1E8;
+  --danger:#A93120;
+  --danger-wash:#FAE7E3;
+
+  --shadow:0 1px 2px rgba(18,26,31,.05), 0 1px 8px rgba(18,26,31,.04);
+  --font-ui:"Inter",-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-display:"Noto Serif SC","Songti SC","Source Han Serif SC",Georgia,serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1215;
+    --surface:#151D21;
+    --surface-2:#1C262B;
+    --surface-3:#26333A;
+    --ink:#E5EBEE;
+    --ink-2:#A7B5BD;
+    --ink-3:#77868F;
+    --rule:#263238;
+    --rule-2:#35454D;
+    --brand:#4FB0BC;
+    --brand-ink:#96D6DE;
+    --brand-wash:#11333A;
+    --brand-line:#2E5F69;
+    --ledger:#D69A45;
+    --ledger-ink:#EBBE7E;
+    --ledger-wash:#33260F;
+    --ledger-line:#5C4520;
+    --l2:#A0A0D6;
+    --l2-wash:#22223A;
+    --l2-line:#3C3C63;
+    --ok:#4FB77E;
+    --ok-wash:#12301F;
+    --danger:#E8705A;
+    --danger-wash:#3A1A14;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 1px 10px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1215;
+  --surface:#151D21;
+  --surface-2:#1C262B;
+  --surface-3:#26333A;
+  --ink:#E5EBEE;
+  --ink-2:#A7B5BD;
+  --ink-3:#77868F;
+  --rule:#263238;
+  --rule-2:#35454D;
+  --brand:#4FB0BC;
+  --brand-ink:#96D6DE;
+  --brand-wash:#11333A;
+  --brand-line:#2E5F69;
+  --ledger:#D69A45;
+  --ledger-ink:#EBBE7E;
+  --ledger-wash:#33260F;
+  --ledger-line:#5C4520;
+  --l2:#A0A0D6;
+  --l2-wash:#22223A;
+  --l2-line:#3C3C63;
+  --ok:#4FB77E;
+  --ok-wash:#12301F;
+  --danger:#E8705A;
+  --danger-wash:#3A1A14;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 1px 10px rgba(0,0,0,.25);
+}
+
+/* ============================================================
+   基础
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--font-ui);font-size:13.5px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-family:var(--font-display);font-weight:600;letter-spacing:.01em;text-wrap:balance}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.mono{font-family:var(--font-mono)}
+.muted{color:var(--ink-3)}
+.sec{color:var(--ink-2)}
+
+/* ============================================================
+   外壳
+   ============================================================ */
+.app{
+  display:grid;min-height:100vh;
+  grid-template-columns:236px minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"top top" "side main" "status status";
+}
+
+/* --- 顶栏 --- */
+.topbar{
+  grid-area:top;position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;gap:20px;padding:0 20px;height:56px;
+  background:var(--surface);border-bottom:1px solid var(--rule);
+}
+.brand{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.brand-mark{
+  width:26px;height:26px;border-radius:6px;background:var(--brand);color:#fff;
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:-.02em;
+}
+.brand-name{font-family:var(--font-display);font-size:15px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+.tag{
+  font-size:10.5px;line-height:1;padding:3px 6px;border-radius:4px;
+  background:var(--brand-wash);color:var(--brand-ink);border:1px solid var(--brand-line);
+  letter-spacing:.04em;white-space:nowrap;
+}
+.filters{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.field{
+  display:flex;align-items:center;gap:7px;flex:0 0 auto;
+  padding:5px 10px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);
+}
+.field-label{font-size:10.5px;color:var(--ink-3);letter-spacing:.03em}
+.field b{font-weight:500;font-size:12.5px;white-space:nowrap}
+.field b.num{font-size:12px}
+.caret{width:6px;height:6px;border-right:1.4px solid var(--ink-3);border-bottom:1.4px solid var(--ink-3);transform:rotate(45deg) translate(-1px,-1px)}
+.topbar-right{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.avatar{
+  width:26px;height:26px;border-radius:50%;background:var(--surface-2);border:1px solid var(--rule);
+  display:grid;place-items:center;font-size:11px;color:var(--ink-2);
+}
+
+/* --- 侧栏 --- */
+.side{
+  grid-area:side;position:sticky;top:56px;align-self:start;
+  height:calc(100vh - 56px);overflow-y:auto;
+  padding:16px 12px 28px;background:var(--surface);border-right:1px solid var(--rule);
+}
+.nav-group{margin-bottom:18px}
+.nav-group-title{
+  font-size:10px;letter-spacing:.12em;color:var(--ink-3);
+  text-transform:uppercase;padding:0 10px 7px;font-weight:600;
+}
+.nav-item{
+  display:flex;align-items:center;gap:8px;width:100%;
+  padding:7px 10px;border-radius:6px;font-size:13px;color:var(--ink-2);
+  text-align:left;transition:background .12s,color .12s;
+}
+.nav-item:hover{background:var(--surface-2);color:var(--ink)}
+.nav-item[aria-current="page"]{background:var(--brand-wash);color:var(--brand-ink);font-weight:500;box-shadow:inset 2px 0 0 var(--brand)}
+.nav-item .ref{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink-3)}
+.nav-item[aria-current="page"] .ref{color:var(--brand-ink);opacity:.75}
+
+/* --- 主区 --- */
+.main{grid-area:main;padding:22px 26px 56px;min-width:0}
+.screen{display:none}
+.screen.is-active{display:block}
+
+.page-head{margin-bottom:18px}
+.page-title-row{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.page-title-row h1{font-size:21px;margin-right:3px}
+.ref-chip{
+  font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);
+  border:1px dashed var(--rule-2);border-radius:4px;padding:2px 7px;white-space:nowrap;
+}
+.fr{
+  font-family:var(--font-mono);font-size:10px;line-height:1;
+  color:var(--brand-ink);background:var(--brand-wash);border:1px solid var(--brand-line);
+  border-radius:3px;padding:2.5px 5px;white-space:nowrap;
+}
+.fr--nfr{color:var(--ledger-ink);background:var(--ledger-wash);border-color:var(--ledger-line)}
+.page-desc{color:var(--ink-2);margin-top:7px;max-width:82ch}
+
+/* ============================================================
+   组件
+   ============================================================ */
+.card{
+  background:var(--surface);border:1px solid var(--rule);border-radius:9px;
+  box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--surface);
+}
+.card-head h2{font-size:14px}
+.card-head h3{font-size:13px}
+.card-head .spacer{margin-left:auto}
+.card-body{padding:14px 16px}
+.card-body.tight{padding:0}
+.card-note{
+  padding:11px 16px;border-top:1px solid var(--rule);background:var(--surface-2);
+  color:var(--ink-2);font-size:12.5px;
+}
+.card-note b{color:var(--ink)}
+
+/* chips */
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10.5px;line-height:1;padding:3.5px 7px;border-radius:4px;
+  letter-spacing:.03em;white-space:nowrap;border:1px solid transparent;
+}
+.chip--brand{background:var(--brand-wash);color:var(--brand-ink);border-color:var(--brand-line)}
+.chip--ledger{background:var(--ledger-wash);color:var(--ledger-ink);border-color:var(--ledger-line)}
+.chip--l2{background:var(--l2-wash);color:var(--l2);border-color:var(--l2-line)}
+.chip--ok{background:var(--ok-wash);color:var(--ok);border-color:var(--ok)}
+.chip--danger{background:var(--danger-wash);color:var(--danger);border-color:var(--danger)}
+.chip--ghost{background:transparent;color:var(--ink-3);border-color:var(--rule-2)}
+.chip--brand-o{background:transparent;color:var(--brand);border-color:var(--brand-line)}
+.chip--ledger-o{background:transparent;color:var(--ledger);border-color:var(--ledger-line)}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+
+/* 优先级 */
+.prio{
+  font-family:var(--font-mono);font-size:10px;line-height:1;border-radius:3px;
+  padding:2.5px 5px;border:1px solid;white-space:nowrap;
+}
+.prio--p0{color:var(--danger);border-color:var(--danger);background:var(--danger-wash)}
+.prio--p1{color:var(--ledger-ink);border-color:var(--ledger-line);background:var(--ledger-wash)}
+.prio--p2{color:var(--ink-3);border-color:var(--rule-2);background:var(--surface-2)}
+
+/* 按钮 */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:6px;border:1px solid var(--rule-2);
+  background:var(--surface);font-size:12.5px;font-weight:500;color:var(--ink-2);
+}
+.btn:hover{border-color:var(--ink-3);color:var(--ink)}
+.btn--primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn--primary:hover{background:var(--brand-ink);border-color:var(--brand-ink);color:#fff}
+
+/* 表格 */
+.tbl-wrap{overflow-x:auto}
+table.data{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap}
+table.data th,table.data td{padding:8px 12px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:middle}
+table.data thead th{
+  background:var(--surface-2);color:var(--ink-2);font-weight:600;font-size:10.5px;
+  letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--rule-2);
+}
+table.data td.r,table.data th.r{text-align:right}
+table.data tbody tr:hover{background:var(--surface-2)}
+table.data tbody tr:last-child td{border-bottom:0}
+table.data td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+table.data tr.is-key{background:var(--brand-wash)}
+table.data tr.is-key:hover{background:var(--brand-wash)}
+table.data tr.is-key td{font-weight:600;color:var(--brand-ink)}
+table.data tr.is-dim td{color:var(--ink-3)}
+table.data tr.is-sub td{background:color-mix(in srgb,var(--surface-2) 55%,transparent);color:var(--ink-2)}
+table.data tr.is-total td{background:var(--surface-2);font-weight:600;border-top:1px solid var(--rule-2)}
+table.data tr.is-bad td{background:var(--danger-wash)}
+table.data tr.is-bad:hover td{background:var(--danger-wash)}
+table.data td .rail{
+  display:inline-block;width:3px;height:13px;border-radius:2px;
+  background:var(--rule-2);margin-right:8px;vertical-align:-2px;
+}
+table.data tr.is-key td .rail{height:15px;background:var(--brand)}
+table.data tr.is-sub td .rail{background:var(--brand-line)}
+table.data .lb{display:block;font-size:10.5px;color:var(--ink-3);letter-spacing:.02em}
+.tbl-wrap.wrap table.data{white-space:normal;min-width:640px}
+.tbl-wrap.wrap table.data td{vertical-align:top;line-height:1.55}
+
+/* 键值 */
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:7px;overflow:hidden}
+.kv-cell{background:var(--surface);padding:9px 12px}
+.kv-cell dt{font-size:10.5px;color:var(--ink-3);letter-spacing:.04em;margin-bottom:3px}
+.kv-cell dd{margin:0;font-size:13px;font-weight:500;word-break:break-all}
+.kv-cell dd.num{font-size:12.5px}
+
+/* 提示块 */
+.callout{
+  display:flex;gap:10px;padding:11px 14px;border-radius:7px;
+  border:1px solid var(--rule);border-left:3px solid var(--rule-2);
+  background:var(--surface-2);font-size:12.5px;color:var(--ink-2);margin-bottom:12px;
+}
+.callout:last-child{margin-bottom:0}
+.callout b{color:var(--ink)}
+.callout--brand{border-left-color:var(--brand);background:var(--brand-wash);color:var(--brand-ink)}
+.callout--brand b{color:var(--brand-ink)}
+.callout--ledger{border-left-color:var(--ledger);background:var(--ledger-wash);color:var(--ledger-ink)}
+.callout--ledger b{color:var(--ledger-ink)}
+.callout--l2{border-left-color:var(--l2);background:var(--l2-wash);color:var(--l2)}
+.callout--l2 b{color:var(--l2)}
+.callout--ok{border-left-color:var(--ok);background:var(--ok-wash);color:var(--ok)}
+.callout--ok b{color:var(--ok)}
+.callout--danger{border-left-color:var(--danger);background:var(--danger-wash);color:var(--danger)}
+.callout--danger b{color:var(--danger)}
+.callout .mark{font-family:var(--font-mono);font-weight:600;flex:0 0 auto;font-size:12px}
+.callout p+p{margin-top:5px}
+
+/* 指标块 */
+.metrics{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:9px;overflow:hidden;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px}
+.metric{background:var(--surface);padding:13px 15px}
+.metric-label{font-size:10.5px;letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase;margin-bottom:5px}
+.metric-value{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:20px;font-weight:500;letter-spacing:-.01em}
+.metric-value small{font-size:11.5px;color:var(--ink-3);font-weight:400;margin-left:3px;letter-spacing:0}
+.metric-sub{font-size:11.5px;color:var(--ink-3);margin-top:4px}
+
+/* 双栏 / 三栏 */
+.cols{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-bottom:16px}
+.pair{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:9px;overflow:hidden;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-bottom:16px}
+.pair>div{background:var(--surface);padding:13px 15px}
+.pair h4{font-size:12.5px;margin-bottom:7px}
+.pair p{font-size:12.5px;color:var(--ink-2)}
+
+/* 验收要点 */
+.ac{display:flex;flex-direction:column;gap:7px}
+.ac li{display:flex;gap:9px;font-size:12.5px;color:var(--ink-2);line-height:1.6}
+.ac li::before{content:"□";font-family:var(--font-mono);color:var(--brand);flex:0 0 auto}
+.ac li b{color:var(--ink)}
+
+/* 凭证 */
+.voucher{border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.voucher-head{
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  padding:9px 13px;background:var(--surface-2);border-bottom:1px solid var(--rule);
+  border-left:3px solid var(--brand);
+}
+.voucher-head.is-consol{border-left-color:var(--ledger)}
+.voucher-no{font-family:var(--font-mono);font-size:12px;font-weight:600}
+.voucher-sub{font-size:11.5px;color:var(--ink-3)}
+.voucher table{width:100%;border-collapse:collapse;font-size:12.5px}
+.voucher th{
+  padding:6px 13px;text-align:left;font-size:10px;letter-spacing:.06em;
+  color:var(--ink-3);text-transform:uppercase;font-weight:600;border-bottom:1px solid var(--rule);
+}
+.voucher td{padding:7px 13px;border-bottom:1px solid var(--rule)}
+.voucher td.r,.voucher th.r{text-align:right}
+.voucher td.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.voucher tr:last-child td{border-bottom:0}
+.voucher-foot{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+  padding:8px 13px;background:var(--surface-2);border-top:1px solid var(--rule);
+  font-size:11.5px;color:var(--ink-2);
+}
+.ind{display:inline-block;width:14px;border-left:1px solid var(--rule-2);height:11px;vertical-align:-1px;margin-right:5px}
+
+/* 步骤条 */
+.stepper{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:9px;overflow:hidden;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px}
+.step{background:var(--surface);padding:11px 13px;position:relative}
+.step-n{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--ink-3);margin-bottom:4px}
+.step-t{font-size:12.5px;font-weight:500;line-height:1.4}
+.step-s{font-size:11px;color:var(--ink-3);margin-top:4px}
+.step.is-done{background:var(--ok-wash)}
+.step.is-done .step-n,.step.is-done .step-s,.step.is-done .step-t{color:var(--ok)}
+.step.is-now{background:var(--brand-wash);box-shadow:inset 0 -2px 0 var(--brand)}
+.step.is-now .step-n,.step.is-now .step-s,.step.is-now .step-t{color:var(--brand-ink)}
+
+/* 状态机 */
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:12px}
+.flow:last-child{margin-bottom:0}
+.node{
+  font-family:var(--font-mono);font-size:11px;padding:5px 9px;border-radius:5px;
+  border:1px solid var(--rule-2);background:var(--surface-2);color:var(--ink-2);white-space:nowrap;
+}
+.node--on{background:var(--brand);border-color:var(--brand);color:#fff}
+.node--ok{background:var(--ok-wash);border-color:var(--ok);color:var(--ok)}
+.node--bad{background:var(--danger-wash);border-color:var(--danger);color:var(--danger)}
+.node--l2{background:var(--l2-wash);border-color:var(--l2);color:var(--l2)}
+.arrow{color:var(--ink-3);font-size:11px;font-family:var(--font-mono)}
+.flow-label{font-size:11px;color:var(--ink-3);letter-spacing:.04em;flex:0 0 auto;min-width:74px}
+
+/* 代码 */
+.code{
+  font-family:var(--font-mono);font-size:11.5px;line-height:1.8;
+  background:var(--surface-2);border:1px solid var(--rule);border-radius:7px;
+  padding:11px 13px;overflow-x:auto;white-space:pre;color:var(--ink-2);
+}
+.code b{color:var(--brand-ink);font-weight:600}
+.code i{color:var(--ink-3);font-style:normal}
+
+/* 页签 */
+.tabs{display:flex;gap:4px;padding:0 16px;border-bottom:1px solid var(--rule);background:var(--surface);flex-wrap:wrap}
+.tab{padding:9px 12px;font-size:12.5px;color:var(--ink-3);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--brand-ink);border-bottom-color:var(--brand);font-weight:500}
+.tabpanel{display:none}
+.tabpanel.is-active{display:block}
+
+/* 图例 */
+.legend{display:flex;flex-wrap:wrap;gap:14px;padding:11px 16px;background:var(--surface-2);border-top:1px solid var(--rule);font-size:11.5px;color:var(--ink-3)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:9px;height:9px;border-radius:2px;display:inline-block}
+.sw-brand{background:var(--brand)}
+.sw-ledger{background:var(--ledger)}
+.sw-l2{background:var(--l2)}
+.sw-ok{background:var(--ok)}
+.sw-danger{background:var(--danger)}
+.sw-dim{background:var(--rule-2)}
+
+/* 状态栏 */
+.statusbar{
+  grid-area:status;position:sticky;bottom:0;z-index:20;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:0 20px;height:30px;background:var(--surface);border-top:1px solid var(--rule);
+  font-size:11.5px;color:var(--ink-3);
+}
+.statusbar b{font-weight:600;color:var(--ink-2)}
+.statusbar .num{font-size:11px}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:1px}
+.dot--ok{background:var(--ok)}
+.dot--warn{background:var(--ledger)}
+.dot--off{background:var(--rule-2)}
+
+/* 窄屏 */
+@media (max-width:960px){
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"top" "side" "main" "status"}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding:12px;display:flex;gap:6px;overflow-x:auto}
+  .nav-group{display:flex;gap:6px;margin:0}
+  .nav-group-title{display:none}
+  .nav-item{width:auto;white-space:nowrap}
+  .nav-item .ref{display:none}
+  .main{padding:16px 14px 40px}
+  .topbar{height:auto;padding:9px 14px;flex-wrap:wrap;gap:10px}
+  .statusbar{height:auto;padding:7px 14px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">FI</div>
+      <div class="brand-name">财务库存中心</div>
+      <span class="tag">一期 · 原型</span>
+    </div>
+    <div class="filters">
+      <div class="field"><span class="field-label">期间</span><b class="num">2026-01</b><span class="caret"></span></div>
+      <div class="field"><span class="field-label">账套</span><b>全部（LE_A / LE_B / CG）</b><span class="caret"></span></div>
+      <div class="field"><span class="field-label">口径</span><b>存货口径（is_internal=1）</b><span class="caret"></span></div>
+      <div class="field"><span class="field-label">数据</span><b>演示数据</b></div>
+    </div>
+    <div class="topbar-right">
+      <span class="chip chip--ghost">财务操作员</span>
+      <div class="avatar">财</div>
+    </div>
+  </header>
+
+  <!-- ================= 侧栏 ================= -->
+  <nav class="side" aria-label="功能导航">
+    <div class="nav-group">
+      <div class="nav-group-title">概览</div>
+      <button class="nav-item" data-screen="home" aria-current="page">工作台<span class="ref">—</span></button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">接入与单据</div>
+      <button class="nav-item" data-screen="import">数据接入<span class="ref">12–16</span></button>
+      <button class="nav-item" data-screen="doc">单据处理<span class="ref">17–24</span></button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">核算</div>
+      <button class="nav-item" data-screen="balance">库存余额<span class="ref">41</span></button>
+      <button class="nav-item" data-screen="ledger">收发存明细<span class="ref">42</span></button>
+      <button class="nav-item" data-screen="trace">单价追溯<span class="ref">43</span></button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">货权</div>
+      <button class="nav-item" data-screen="owner">货权变更单<span class="ref">35–40</span></button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">期末</div>
+      <button class="nav-item" data-screen="depr">跌价计提<span class="ref">44,46–50</span></button>
+      <button class="nav-item" data-screen="voucher">凭证清单<span class="ref">51–55</span></button>
+      <button class="nav-item" data-screen="close">月结与对账<span class="ref">56–66</span></button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">输出与参考</div>
+      <button class="nav-item" data-screen="report">库存价值月报<span class="ref">67–69</span></button>
+      <button class="nav-item" data-screen="spec">主数据与字段<span class="ref">01–11</span></button>
+    </div>
+  </nav>
+
+  <!-- ================= 主区 ================= -->
+  <main class="main">
+
+  <!-- ============================================================
+       屏 1 · 工作台
+       ============================================================ -->
+  <section class="screen is-active" id="s-home">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>工作台</h1>
+        <span class="ref-chip">设计 §2.1 展现层</span>
+        <span class="ref-chip">PRD §0.2 / §8</span>
+      </div>
+      <p class="page-desc">
+        本原型按《财务库存中心（一期）产品需求文档 v1.0》的 12 个页面清单搭建，供**前端、后端、测试**三方对照查看。
+        每一屏都标注了它覆盖的 <span class="fr">FR-xx</span> 编号，并在页尾列出该屏的**验收要点**（可直接抄成测试用例）。
+      </p>
+    </div>
+
+    <div class="callout callout--brand">
+      <span class="mark">!</span>
+      <div>
+        <p><b>本页所有数字均为演示数据</b>，取自《详细设计文档 v0.4》§3.7 的七组算例，并已逐项校验过自洽性（数量守恒、金额守恒、借贷平衡、批次行合计 = 均价行）。</p>
+        <p>用它们可以直接跑 UAT，<b>不是真实业务数据</b>。</p>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">当前期间</div>
+        <div class="metric-value" style="font-size:17px">2026-01</div>
+        <div class="metric-sub">未锁账 · 可改单</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">本期单据</div>
+        <div class="metric-value">8<small>张</small></div>
+        <div class="metric-sub">7 张 EFFECTIVE · 1 张 VOID</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">存货总额</div>
+        <div class="metric-value">28,600.29<small>元</small></div>
+        <div class="metric-sub">存货口径 · is_internal = 1 · 813 件</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">待处理告警</div>
+        <div class="metric-value" style="color:var(--danger)">3<small>条</small></div>
+        <div class="metric-sub">2 条数量差异 · 1 条负库存</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">凭证</div>
+        <div class="metric-value">6<small>张</small></div>
+        <div class="metric-sub">草稿 DRAFT · 未导出金蝶</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>月结六关</h2>
+        <span class="ref-chip">FR-62</span>
+        <span class="ref-chip">设计 §3.5.6</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">任一关失败阻塞定稿</span>
+      </div>
+      <div class="stepper" style="margin:0;border:0;border-radius:0">
+        <div class="step is-done">
+          <div class="step-n">关 1</div>
+          <div class="step-t">日常对账</div>
+          <div class="step-s">数量日清 · 2026-01-31 通过</div>
+        </div>
+        <div class="step is-done">
+          <div class="step-n">关 2</div>
+          <div class="step-t">守恒校验</div>
+          <div class="step-s">含二级硬校验 Σ alloc = 一级层</div>
+        </div>
+        <div class="step is-now">
+          <div class="step-n">关 3</div>
+          <div class="step-t">跌价计提</div>
+          <div class="step-s">进行中 · 双轨取孰高</div>
+        </div>
+        <div class="step">
+          <div class="step-n">关 4</div>
+          <div class="step-t">舍入结转</div>
+          <div class="step-s">待办 · rounding_diff_acc</div>
+        </div>
+        <div class="step">
+          <div class="step-n">关 5</div>
+          <div class="step-t">凭证生成导出</div>
+          <div class="step-s">待办 · 按账套分开导出</div>
+        </div>
+        <div class="step">
+          <div class="step-n">关 6</div>
+          <div class="step-t">月结对账</div>
+          <div class="step-s">待办 · 对金蝶总账</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>本期口径总览</h2>
+          <span class="ref-chip">PRD §4.5</span>
+        </div>
+        <div class="card-body">
+          <div class="callout callout--brand" style="margin-bottom:10px">
+            <span class="mark">存</span>
+            <div><b>存货口径</b> —— 一级货主层 · <span class="mono">is_internal = 1</span>。对外唯一权威值。</div>
+          </div>
+          <div class="kv" style="margin-bottom:10px">
+            <div class="kv-cell"><dt>存货金额</dt><dd class="num">28,600.29</dd></div>
+            <div class="kv-cell"><dt>存货数量</dt><dd class="num">813</dd></div>
+            <div class="kv-cell"><dt>在库数量（含代销）</dt><dd class="num">863</dd></div>
+          </div>
+          <div class="callout callout--l2" style="margin-bottom:10px">
+            <span class="mark">L2</span>
+            <div>
+              <p><b>管理口径 · 非会计</b> —— 二级内部结算价累计。</p>
+              <p><span class="mono">Σ alloc_amount = 480.00</span>（可加总，硬校验 = 一级层金额）</p>
+              <p><span class="mono">Σ internal_amount = 528.00</span>（<b>不可加总</b>，不做等式校验）</p>
+              <p>差额 <span class="mono">+48.00</span> = 内部未实现毛利</p>
+            </div>
+          </div>
+          <div class="callout callout--danger">
+            <span class="mark">!</span>
+            <div>
+              <p><b>二级层金额绝不可加进存货总额</b>。业务侧展示「库存金额」只能用存货口径那一行。</p>
+              <p>两个金额必须<b>成对出现</b>，禁止单独使用 <span class="mono">internal_amount</span>。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>异常预警</h2>
+          <span class="ref-chip">FR-59</span>
+          <div class="spacer"></div>
+          <span class="chip chip--danger">3 条待处理</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead>
+                <tr><th>规则</th><th>对象</th><th class="r">实测</th><th>状态</th></tr>
+              </thead>
+              <tbody>
+                <tr class="is-bad"><td>数量差异</td><td class="mono">M0003 / WH03</td><td class="r num">2 件</td><td><span class="chip chip--danger">DIFF</span></td></tr>
+                <tr class="is-bad"><td>数量差异</td><td class="mono">M9001 / WH02</td><td class="r num">32 件</td><td><span class="chip chip--danger">MISS</span></td></tr>
+                <tr class="is-bad"><td>负库存</td><td class="mono">M0006 / WH01</td><td class="r num">−5 件</td><td><span class="chip chip--danger">超容差</span></td></tr>
+                <tr class="is-dim"><td>单价波动 &gt; 30%</td><td class="mono">M0001 / WH01</td><td class="r num">−21.7%</td><td><span class="chip chip--ghost">未触发</span></td></tr>
+                <tr class="is-dim"><td>库龄 &gt; 720 天</td><td class="mono">M9005 / WH01</td><td class="r num">620 天</td><td><span class="chip chip--ghost">未触发</span></td></tr>
+                <tr class="is-dim"><td>二级分摊不平</td><td class="mono">OA-202601-0001</td><td class="r num">0.00</td><td><span class="chip chip--ok">通过</span></td></tr>
+                <tr class="is-dim"><td>凭证不平</td><td class="mono">6 张</td><td class="r num">0.00</td><td><span class="chip chip--ok">通过</span></td></tr>
+                <tr class="is-dim"><td>接入失败率 &gt; 5%</td><td class="mono">BATCH-20260122-03</td><td class="r num">2.0%</td><td><span class="chip chip--ghost">未触发</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">M0003/WH03 的 2 件差异与 M9001/WH02 的 32 件缺失，是<b>故意造出来给测试跑的</b>——用于验证差异定位能下钻到单据与计算过程。</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>模块地图 —— 12 页 / 11 模块 / FR-01 – FR-69</h2>
+        <span class="ref-chip">PRD §5 / §8</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th style="width:34px">#</th><th>模块</th><th>本原型对应屏</th><th>FR 编号</th><th class="r">条数</th><th>优先级</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="num">M1</td><td>主数据管理</td><td>主数据与字段</td><td class="mono">FR-01 – FR-11</td><td class="r num">11</td><td><span class="prio prio--p0">P0×10</span> <span class="prio prio--p1">P1×1</span></td></tr>
+              <tr><td class="num">M2</td><td>数据接入</td><td>数据接入</td><td class="mono">FR-12 – FR-16</td><td class="r num">5</td><td><span class="prio prio--p0">P0×5</span></td></tr>
+              <tr><td class="num">M3</td><td>单据处理</td><td>单据处理</td><td class="mono">FR-17 – FR-24</td><td class="r num">8</td><td><span class="prio prio--p0">P0×8</span></td></tr>
+              <tr><td class="num">M4</td><td>核算引擎</td><td>收发存明细 / 单价追溯</td><td class="mono">FR-25 – FR-34</td><td class="r num">10</td><td><span class="prio prio--p0">P0×9</span> <span class="prio prio--p1">P1×1</span></td></tr>
+              <tr><td class="num">M5</td><td>货权变更</td><td>货权变更单</td><td class="mono">FR-35 – FR-40</td><td class="r num">6</td><td><span class="prio prio--p0">P0×5</span> <span class="prio prio--p1">P1×1</span></td></tr>
+              <tr><td class="num">M6</td><td>库存查询与报表</td><td>库存余额 / 收发存明细 / 单价追溯</td><td class="mono">FR-41 – FR-45</td><td class="r num">5</td><td><span class="prio prio--p0">P0×4</span> <span class="prio prio--p1">P1×1</span></td></tr>
+              <tr><td class="num">M7</td><td>跌价计提</td><td>跌价计提</td><td class="mono">FR-46 – FR-50</td><td class="r num">5</td><td><span class="prio prio--p0">P0×5</span></td></tr>
+              <tr><td class="num">M8</td><td>凭证</td><td>凭证清单</td><td class="mono">FR-51 – FR-55</td><td class="r num">5</td><td><span class="prio prio--p0">P0×4</span> <span class="prio prio--p1">P1×1</span></td></tr>
+              <tr><td class="num">M9</td><td>对账</td><td>月结与对账</td><td class="mono">FR-56 – FR-60</td><td class="r num">5</td><td><span class="prio prio--p0">P0×3</span> <span class="prio prio--p1">P1×2</span></td></tr>
+              <tr><td class="num">M10</td><td>期间与月结</td><td>月结与对账</td><td class="mono">FR-61 – FR-66</td><td class="r num">6</td><td><span class="prio prio--p0">P0×6</span></td></tr>
+              <tr><td class="num">M11</td><td>价值回传</td><td>库存价值月报</td><td class="mono">FR-67 – FR-69</td><td class="r num">3</td><td><span class="prio prio--p0">P0×3</span></td></tr>
+              <tr class="is-total"><td></td><td>合计</td><td>12 屏</td><td class="mono">FR-01 – FR-69</td><td class="r num">69</td><td><span class="prio prio--p0">P0×62</span> <span class="prio prio--p1">P1×7</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        非功能需求 <span class="fr fr--nfr">NFR-01</span> 至 <span class="fr fr--nfr">NFR-10</span> 不单独占屏，见「主数据与字段」屏末尾的索引表。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD §0.3</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li>评审时能指着本屏回答：<b>这个系统的范围是什么、有几屏、每一屏归哪个 FR 编号管</b>。</li>
+          <li>能当场验证口径第 1 条：<b>二级层金额没有出现在「存货总额」里</b>——本屏把两个口径并排放，就是为了让这件事看得见。</li>
+          <li>能当场验证口径第 6 条：<b>任取一个数字，都能回答它是什么口径</b>。</li>
+          <li>月结六关的<b>顺序与阻塞关系</b>可讲清：任一关失败阻塞定稿。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 2 · 数据接入
+       ============================================================ -->
+  <section class="screen" id="s-import">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>数据接入</h1>
+        <span class="ref-chip">设计 §7.1 / §7.2 / §7.3 / §7.5 / §7.6</span>
+        <span class="ref-chip">通用数据接口字段定义 §2 / §4 / §8 / §9</span>
+        <span class="fr">FR-12</span><span class="fr">FR-13</span><span class="fr">FR-14</span><span class="fr">FR-15</span><span class="fr">FR-16</span>
+      </div>
+      <p class="page-desc">
+        业务侧把单据流水与主数据推过来，这里是它进入系统的唯一入口。<b>一期以 API 对接为主通道</b>（协议与鉴权待定，见 <span class="mono">§10</span> 待定清单），
+        <b>Excel / CSV 导入入口保留</b>，作为过渡与手工补录通道。<b>两条通道不是两套逻辑</b>——它们共用同一套字段、同一套校验、同一套幂等、同一套错误回执，
+        差别只在<b>绑定层</b>（<span class="mono">§9.1</span> vs <span class="mono">§9.3</span>）。<b>这个屏是后端与测试工作的主战场</b>。
+      </p>
+    </div>
+
+    <div class="stepper">
+      <div class="step is-done"><div class="step-n">STEP 1</div><div class="step-t">报文到达</div><div class="step-s">API 推送 / 拉取 · 文件上传</div></div>
+      <div class="step is-done"><div class="step-n">STEP 2</div><div class="step-t">信封 / 表头校验</div><div class="step-s">字段名与顺序 · 不合法整批拒绝</div></div>
+      <div class="step is-done"><div class="step-n">STEP 3</div><div class="step-t">行级校验</div><div class="step-s">必填 / 枚举 / 换算率 / 货主</div></div>
+      <div class="step is-now"><div class="step-n">STEP 4</div><div class="step-t">幂等去重</div><div class="step-s">batch_id + doc_no + line_no</div></div>
+      <div class="step"><div class="step-n">STEP 5</div><div class="step-t">落库</div><div class="step-s">写 t_document_header / line</div></div>
+      <div class="step"><div class="step-n">STEP 6</div><div class="step-t">回执</div><div class="step-s">成功 / 失败行数 + 错误清单</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>两条通道，一套管道</h2>
+        <span class="ref-chip">通用数据接口字段定义 §0 / §8</span>
+        <span class="fr">FR-12</span><span class="fr">FR-15</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">边界划在接口上，不划在功能上</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>通道</th><th>一期定位</th><th>绑定方式</th><th>字段来源</th><th>共用部分</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="chip chip--brand">通道 A · API 对接</span></td>
+                <td><b>主通道</b>。协议 / 鉴权 / 推拉模式待定</td>
+                <td class="mono">§9.1 REST / JSON（或 §9.2 MQ）——<b>换壳不改字段</b></td>
+                <td>通用字段集的<b>报文字段名</b>（<span class="mono">§2</span>–<span class="mono">§7</span>）</td>
+                <td rowspan="2" style="vertical-align:middle">
+                  <b>校验 · 幂等 · 错误回执 · 落库</b>——<br>
+                  两条通道调的是<b>同一套实现</b>（<span class="mono">§8</span>）<br><br>
+                  <span class="chip chip--ok">不会产生两套逻辑</span>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="chip chip--ledger">通道 B · 文件导入</span> <span class="chip chip--ghost">保留</span></td>
+                <td><b>过渡与补录</b>。API 未就绪期间的正式通道；就绪后保留用于手工补录与异常修复</td>
+                <td class="mono">§9.3 Excel / CSV，中文列名由 FileAdapter 映射</td>
+                <td>同一字段集的<b>文件绑定</b>（设计 <span class="mono">§7.2</span>/<span class="mono">§7.3</span> 中文列名）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>「接口未定」不是阻塞项</b>——字段层先冻结，协议定型后<b>只补映射、不改字段</b>。所以后端现在就能建表、前端现在就能做页面、测试现在就能写用例；
+        也正因为两条通道共用一个管道，<b>「先保留导入入口」不增加任何额外工作量</b>。同一套路数见 O-19 的 <span class="mono">ApprovalGateway</span>。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>报文信封（所有 object 共用）</h2>
+        <span class="ref-chip">通用数据接口字段定义 §2.1</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">前端：接入页顶部状态条即取这 7 个字段</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>字段</th><th>类型</th><th>必填</th><th>说明</th><th>测试关注点</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">batch_id</td><td class="mono">string(32)</td><td><span class="chip chip--ok">Y</span></td><td>传输批号，由<b>推送方</b>生成；同一批重推<b>必须复用同一个值</b>，否则传输幂等失效</td><td>重推复用同一 <span class="mono">batch_id</span> → 全部去重</td></tr>
+              <tr><td class="mono">source_system</td><td class="mono">string(32)</td><td><span class="chip chip--ok">Y</span></td><td>来源系统标识（如 <span class="mono">BIZ_INV</span>），用于多来源隔离</td><td>多来源并行时批次列表按来源过滤</td></tr>
+              <tr class="is-bad"><td class="mono">schema_version</td><td class="mono">string(16)</td><td><span class="chip chip--ok">Y</span></td><td>字段定义版本，本期固定 <span class="mono">v1.0</span>；<b>不匹配即整批拒绝</b></td><td>断言回执 <span class="mono">E-SCHEMA-VERSION</span>、整批拒绝</td></tr>
+              <tr><td class="mono">object</td><td class="mono">enum</td><td><span class="chip chip--ok">Y</span></td><td><span class="mono">master_data</span> / <span class="mono">document</span> / <span class="mono">doc_action</span> / <span class="mono">snapshot</span></td><td>四种 object 决定 <span class="mono">records</span> 元素结构</td></tr>
+              <tr><td class="mono">push_time</td><td class="mono">datetime</td><td><span class="chip chip--ok">Y</span></td><td>推送时刻，<span class="mono">YYYY-MM-DDTHH:mm:ss±HH:mm</span>（带时区）</td><td><b>不是业务日期</b>——排序与取价一律用 <span class="mono">biz_date</span></td></tr>
+              <tr class="is-bad"><td class="mono">record_count</td><td class="mono">int</td><td><span class="chip chip--ok">Y</span></td><td>声明条数；与实际 <span class="mono">records</span> 长度<b>不符即整批拒绝</b>（防截断）</td><td>断言 <span class="mono">E-HEADER-INVALID</span></td></tr>
+              <tr><td class="mono">records</td><td class="mono">array</td><td><span class="chip chip--ok">Y</span></td><td>记录数组，元素结构见字段定义 <span class="mono">§3</span>–<span class="mono">§6</span></td><td>行级错误用 <span class="mono">row_no</span> 定位回原文</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>法人不进信封</b>：<span class="mono">legal_entity</span> 是<b>行级</b>属性（同一批里可混法人），放信封会把「一批一法人」这个错误约束写死。
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>类型与精度规范</h2>
+          <span class="ref-chip">通用数据接口字段定义 §2.2</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>逻辑类型</th><th>精度</th><th>适用字段</th></tr></thead>
+              <tbody>
+                <tr><td>数量</td><td class="mono">decimal(18,4)</td><td class="mono">qty · base_qty · book_qty · actual_qty</td></tr>
+                <tr><td>金额</td><td class="mono">decimal(18,2)</td><td class="mono">amount_ex_tax · tax_amount · allocated_cost · alloc_amount · internal_amount</td></tr>
+                <tr><td>单价</td><td class="mono">decimal(18,6)</td><td class="mono">transfer_price · internal_price · price_base · price_value · unit_price</td></tr>
+                <tr><td>加成率</td><td class="mono">decimal(10,7)</td><td class="mono">markup_rate</td></tr>
+                <tr><td>税率</td><td class="mono">decimal(10,6)</td><td class="mono">tax_rate</td></tr>
+                <tr><td>日期</td><td class="mono">YYYY-MM-DD</td><td class="mono">biz_date · effective_from</td></tr>
+                <tr><td>布尔</td><td class="mono">0 / 1</td><td class="mono">is_in · is_internal · is_related_party · batch_managed</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-note" style="border-top:1px solid var(--rule)">
+            布尔<b>不用 <span class="mono">true/false</span>、不用「是 / 否」</b>——文件绑定侧负责把「是 / 否」翻译成 <span class="mono">0/1</span>。
+            数量<b>一律传 <span class="mono">base_qty</span></b>，业务单位 <span class="mono">qty</span> 只作展示，用 <span class="mono">convert_rate</span> 验算，<b>对不上就拒绝</b>。
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>空值与缺省</h2>
+          <span class="ref-chip">通用数据接口字段定义 §2.4</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>情况</th><th>约定</th></tr></thead>
+              <tbody>
+                <tr><td>无值</td><td>传 <span class="mono">null</span>，<b>不传空字符串</b>（<span class="mono">""</span> 与「未维护」无法区分）</td></tr>
+                <tr class="is-bad"><td>未维护的换算率</td><td><b>必须报错拒绝</b>，不得缺省为 <span class="mono">1</span></td></tr>
+                <tr><td><span class="mono">tax_rate</span> 缺失</td><td>缺省 <span class="mono">0.13</span>，<b>这是唯一的缺省值</b></td></tr>
+                <tr class="is-bad"><td>未管理的维度</td><td><span class="mono">batch_no</span> / <span class="mono">owner_l2</span> 传 <span class="mono">null</span>，<span class="mono">"N/A"</span> / <span class="mono">"-"</span> <b>一律视为非法值</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout callout--brand" style="margin:12px 16px">
+            <span class="mark">i</span>
+            <div><b>「拒绝」而不是「兜底」是这套接口的一贯立场</b>：换算率兜底会让数量对账永远差一笔，且差在哪一笔永远查不出来。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>报文示例 · <span class="mono">object = document</span></h2>
+        <span class="ref-chip">通用数据接口字段定义 §9.1</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">后端：按此结构反序列化；测试：以此为请求体基线</span>
+      </div>
+      <div class="card-body">
+        <div class="code">POST /api/inventory/v1/documents HTTP/1.1
+Content-Type: application/json
+X-Schema-Version: v1.0
+X-Signature: &lt;<i>待定算法</i>&gt;
+
+{
+  <b>"batch_id"</b>:       "BATCH-20260125-01",
+  <b>"source_system"</b>:  "BIZ_INV",
+  <b>"schema_version"</b>: "v1.0",
+  <b>"object"</b>:         "document",
+  <b>"push_time"</b>:      "2026-01-25T18:30:00+08:00",
+  <b>"record_count"</b>:   1,
+  <b>"records"</b>: [{
+    "doc_no":     "OT-202601-0001",
+    "doc_type":   "OWNER_TRANSFER",
+    "biz_date":   "2026-01-25",
+    "legal_entity": "ENT_A",
+    "biz_status": "EFFECTIVE",
+    "lines": [{
+      "line_no":        1,
+      "material_code":  "M9002",
+      "warehouse_code": "WH02",
+      "is_in":          <b>0</b>,                <i>← 0 出 / 1 入</i>
+      "owner_l1":       "ENT_A",          <i>← 四轴之一，缺失拒绝入账</i>
+      "owner_l2":       null,             <i>← 不进余额表主键</i>
+      "batch_no":       null,
+      "qty":            40.0000,
+      "unit":           "台",
+      "base_qty":       40.0000,          <i>← 核算唯一口径</i>
+      "amount_ex_tax":  480.00,           <i>← 入账基数，不含税</i>
+      "transfer_price": 12.000000,        <i>← 交易数据，业务侧必传</i>
+      "price_source":   "SALES_CONTRACT"
+    }]
+  }]
+}</div>
+        <div class="callout callout--l2" style="margin-top:12px">
+          <span class="mark">→</span>
+          <div>
+            <b>同一张单在文件通道里长什么样</b>：<span class="mono">owner_transfer_20260125.xlsx</span>，中文列名（<span class="mono">单号 / 业务日期 / 物料编码 / 调出货主 / 调入货主 / 数量 / 转移价格 …</span>），
+            由 <span class="mono">FileAdapter</span> 映射成本报文里的字段名。<b>两者进入的是同一个校验入口</b>——所以同一份坏数据，无论走 API 还是走文件，<b>报出的错误码完全一样</b>。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>错误回执结构</h2>
+        <span class="ref-chip">通用数据接口字段定义 §2.7</span>
+        <span class="fr">FR-13</span>
+        <div class="spacer"></div>
+        <span class="chip chip--danger">整批拒绝用信封级 · 行级错误用记录级</span>
+      </div>
+      <div class="card-body">
+        <div class="code">{
+  "batch_id":       "BATCH-20260122-03",
+  "schema_version": "v1.0",
+  "result":         <b>"PARTIAL"</b>,        <i>← SUCCESS / PARTIAL / REJECTED / DEDUPLICATED</i>
+  "accepted":       49,
+  "rejected":       1,
+  "deduplicated":   0,
+  "errors": [{
+    "row_no":     37,              <i>← 报文内序号；文件绑定时即 Excel 行号</i>
+    "field":      "owner_l1",      <i>← 用规范字段名，不用中文列名</i>
+    "error_code": "E-CROSS-LEGAL-ENTITY",
+    "raw_value":  "调出仓 WH01(ENT_A) → 调入仓 WH02(ENT_B)",
+    "suggestion": "跨法人转移须改推 OWNER_TRANSFER，系统不做自动升级"
+  }]
+}</div>
+        <div class="callout callout--brand" style="margin-top:12px">
+          <span class="mark">i</span>
+          <div>
+            <b><span class="mono">result = DEDUPLICATED</span> 是成功态，不是错误态。</b>全部命中幂等时应回 <span class="mono">DEDUPLICATED</span> 且 <b>HTTP / 业务码均为成功</b>——
+            测试若断言「重复推送报错」，那是断言反了。
+          </div>
+        </div>
+      </div>
+      <div class="card-note">
+        <b><span class="mono">suggestion</span> 必须写清楚「怎么改」</b>，不是「数据有误」这种废话。回执是业务侧唯一能看到「为什么被拒」的地方，这一栏直接决定 W1 之后两边的沟通成本。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>错误码全集（13 个）</h2>
+        <span class="ref-chip">通用数据接口字段定义 §2.7</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">与引擎决策项 E-01 – E-10 形式不同、不冲突</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>错误码</th><th>触发条件</th><th>处理</th></tr>
+            </thead>
+            <tbody>
+              <tr class="is-bad"><td class="mono">E-HEADER-INVALID</td><td>报文字段名 / 顺序 / <span class="mono">record_count</span> 不符</td><td><b>整批拒绝</b>，返回模板说明</td></tr>
+              <tr class="is-bad"><td class="mono">E-SCHEMA-VERSION</td><td><span class="mono">schema_version</span> 不匹配</td><td><b>整批拒绝</b></td></tr>
+              <tr><td class="mono">E-MASTER-MISSING</td><td>物料 / 仓库 / 货主主数据不存在</td><td>行级拒绝</td></tr>
+              <tr class="is-bad"><td class="mono">E-OWNER-L1-MISSING</td><td><span class="mono">owner_l1</span> 缺失或非 A 级编码</td><td>行级拒绝（<b>四轴缺一轴不可入账</b>）</td></tr>
+              <tr><td class="mono">E-OWNER-L2-ORPHAN</td><td>二级货主无有效上级</td><td>行级拒绝</td></tr>
+              <tr><td class="mono">E-ENUM-INVALID</td><td>枚举值不在字典内</td><td>行级拒绝</td></tr>
+              <tr class="is-bad"><td class="mono">E-UNIT-CONV-MISSING</td><td>换算率未维护</td><td>行级拒绝，<b>不做 1:1 兜底</b></td></tr>
+              <tr><td class="mono">E-QTY-MISMATCH</td><td><span class="mono">qty × convert_rate ≠ base_qty</span></td><td>行级拒绝</td></tr>
+              <tr class="is-bad"><td class="mono">E-CROSS-LEGAL-ENTITY</td><td>跨法人推 <span class="mono">TRANSFER</span></td><td>行级拒绝 + 回执原因，要求改推 <span class="mono">OWNER_TRANSFER</span></td></tr>
+              <tr><td class="mono">E-PRICE-MISSING</td><td>一级转移缺 <span class="mono">transfer_price</span>，或二级缺 <span class="mono">internal_price</span></td><td>行级拒绝</td></tr>
+              <tr class="is-bad"><td class="mono">E-PERIOD-CLOSED</td><td><span class="mono">biz_date</span> 落在<b>已锁账期间</b></td><td>行级拒绝；漏记只能开当期补录单</td></tr>
+              <tr><td class="mono">E-NEGATIVE-QTY</td><td>出库导致负库存且超出容差</td><td>行级拒绝或预警（按容差配置）</td></tr>
+              <tr><td class="mono">E-SRC-DOC-MISSING</td><td>退货单的 <span class="mono">orig_doc</span> 无法定位</td><td>行级拒绝</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>错误码的双方对齐（字段定义 <span class="mono">§10</span> 第 4 项）是 W1 会上要收的</b>——先按本表实现，回执文本保证可读，业务侧能否按码自动处理待确认。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>文件绑定：导入模板清单（10 个）</h2>
+        <span class="ref-chip">设计 §7.3 · 字段定义 §9.3</span>
+        <span class="fr">FR-12</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ledger">通道 B 的列名与顺序即表头校验的判据</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>模板名</th><th>对应单据 / 对象</th><th>关键列</th><th>幂等键</th><th>校验重点</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">material_import_template</td><td><span class="chip chip--brand">主数据</span> 物料</td><td class="mono">material_code, category, unit, batch_managed, launch_date</td><td>material_code</td><td><span class="mono">launch_date</span> 必填（3C 跌价依赖）；编码唯一</td></tr>
+              <tr><td class="mono">warehouse_import_template</td><td><span class="chip chip--brand">主数据</span> 仓库</td><td class="mono">warehouse_code, wh_type, legal_entity</td><td>warehouse_code</td><td>类型枚举无「原料库 / 在制品库」；<span class="mono">legal_entity</span> 必填</td></tr>
+              <tr><td class="mono">cargo_owner_import_template</td><td><span class="chip chip--brand">主数据</span> 货主</td><td class="mono">owner_code, owner_level, parent_code, is_legal_entity, is_internal, ledger_set</td><td>owner_code</td><td><b>一级货主为 A 级主数据</b>（须双方一致）；二级必填上级</td></tr>
+              <tr><td class="mono">po_inbound_import_template</td><td><span class="chip chip--ledger">PO_IN</span> 采购入库</td><td class="mono">doc_no, line_no, biz_date, material_code, warehouse_code, owner_l1, owner_l2, qty, unit, base_qty, amount_ex_tax, tax_amount, allocated_cost, settle_status</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td><b>税额外置</b>；换算率缺失拒绝；<span class="mono">settle_status</span> 支撑暂估冲回</td></tr>
+              <tr><td class="mono">po_return_import_template</td><td><span class="chip chip--ledger">PO_RET</span> 采购退货</td><td class="mono">…同 PO_IN + return_reason, est_ref_doc</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td>退货金额与暂估引用一致性</td></tr>
+              <tr><td class="mono">so_outbound_import_template</td><td><span class="chip chip--ledger">SO_OUT</span> 销售出库</td><td class="mono">… + sale_price, customer_code, is_related_party</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td>出库成本由系统算，<b>不采信传入成本</b></td></tr>
+              <tr><td class="mono">so_return_import_template</td><td><span class="chip chip--ledger">SO_RET</span> 销售退货</td><td class="mono">… + return_reason, orig_so_doc</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td>原销售单可定位；按原出库成本回冲</td></tr>
+              <tr><td class="mono">transfer_import_template</td><td><span class="chip chip--ledger">TRANSFER</span> 调拨</td><td class="mono">doc_no, out_warehouse, in_warehouse, owner_l1, qty, base_qty</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td><b>只推 1 张单</b>；适配层展开为 2 行；<b>跨一级货主直接拒绝</b></td></tr>
+              <tr><td class="mono">owner_transfer_import_template</td><td><span class="chip chip--l2">OWNER_TRANSFER</span> 一级货权转移</td><td class="mono">doc_no, from_owner_l1, to_owner_l1, material_code, qty, transfer_price, price_source</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td><b>作价是交易数据，必须传</b>；系统只取价 + 校验</td></tr>
+              <tr><td class="mono">stocktake_import_template</td><td><span class="chip chip--ledger">STOCKTAKE</span> 盘点</td><td class="mono">doc_no, warehouse_code, material_code, batch_no, book_qty, actual_qty</td><td><span class="mono">batch_id+doc_no+line_no</span></td><td>差异自动生盘盈 / 盘亏单</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        另有<b>改单</b> <span class="mono">doc_change_{date}.xlsx</span> 与<b>作废</b> <span class="mono">doc_void_{date}.xlsx</span> 两个推送文件（<span class="fr">FR-16</span>），不是模板而是每日动作文件。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>接入批次（两条通道同一张表）</h2>
+        <span class="ref-chip">设计 §3.5.1 / §4.7.1 · 字段定义 §2.1</span>
+        <span class="fr">FR-13</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">每批生成 batch_id，通道只是「来源」列的一个取值</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th class="r">序号</th><th>batch_id</th><th>通道</th><th>来源</th><th>对应单据 / 对象</th><th class="r">总行数</th><th class="r">成功</th><th class="r">失败</th><th class="r">去重</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="r num">1</td><td class="mono">BATCH-20260105-01</td><td><span class="chip chip--ledger">文件</span></td><td class="mono">po_inbound_20260105.xlsx</td><td>采购入库</td><td class="r num">200</td><td class="r num">200</td><td class="r num">0</td><td class="r num">0</td><td><span class="chip chip--ok">已完成</span></td><td><span class="btn" style="padding:3px 8px">查看</span></td></tr>
+              <tr><td class="r num">2</td><td class="mono">BATCH-20260112-01</td><td><span class="chip chip--brand">API</span></td><td class="mono">BIZ_INV · 拉取</td><td>采购入库</td><td class="r num">100</td><td class="r num">100</td><td class="r num">0</td><td class="r num">0</td><td><span class="chip chip--ok">已完成</span></td><td><span class="btn" style="padding:3px 8px">查看</span></td></tr>
+              <tr><td class="r num">3</td><td class="mono">BATCH-20260120-01</td><td><span class="chip chip--brand">API</span></td><td class="mono">BIZ_INV · 推送</td><td>销售出库</td><td class="r num">240</td><td class="r num">240</td><td class="r num">0</td><td class="r num">0</td><td><span class="chip chip--ok">已完成</span></td><td><span class="btn" style="padding:3px 8px">查看</span></td></tr>
+              <tr class="is-bad"><td class="r num">4</td><td class="mono">BATCH-20260122-03</td><td><span class="chip chip--brand">API</span></td><td class="mono">BIZ_INV · 推送</td><td>调拨</td><td class="r num">50</td><td class="r num">49</td><td class="r num">1</td><td class="r num">0</td><td><span class="chip chip--danger">部分失败</span></td><td><span class="btn" style="padding:3px 8px">错误清单</span></td></tr>
+              <tr><td class="r num">5</td><td class="mono">BATCH-20260125-01</td><td><span class="chip chip--brand">API</span></td><td class="mono">BIZ_INV · 推送</td><td>一级货权转移</td><td class="r num">40</td><td class="r num">40</td><td class="r num">0</td><td class="r num">0</td><td><span class="chip chip--ok">已完成</span></td><td><span class="btn" style="padding:3px 8px">查看</span></td></tr>
+              <tr class="is-dim"><td class="r num">6</td><td class="mono">BATCH-20260122-04</td><td><span class="chip chip--brand">API</span></td><td class="mono">BIZ_INV · 推送</td><td>调拨（<b>01 批重推</b>）</td><td class="r num">50</td><td class="r num">0</td><td class="r num">0</td><td class="r num">50</td><td><span class="chip chip--brand">全部去重</span></td><td><span class="btn" style="padding:3px 8px">查看</span></td></tr>
+              <tr class="is-bad"><td class="r num">7</td><td class="mono">BATCH-20260126-01</td><td><span class="chip chip--ledger">文件</span></td><td class="mono">po_inbound_20260126.xlsx</td><td>采购入库（手工补录）</td><td class="r num">30</td><td class="r num">0</td><td class="r num">30</td><td class="r num">0</td><td><span class="chip chip--danger">整批拒绝</span></td><td><span class="btn" style="padding:3px 8px">错误清单</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>第 6 行</b>是<b>同一批数据重推</b>的结果：50 行全部命中传输幂等键，<b>成功 0 / 失败 0 / 去重 50</b>——<b>这不是错误，是设计预期</b>（<span class="mono">result = DEDUPLICATED</span>）。<br>
+        <b>第 7 行</b>是<b>整批拒绝</b>的例子：30 行全拒、成功 0，说明问题出在<b>信封层或表头层</b>（<span class="mono">E-HEADER-INVALID</span> / <span class="mono">E-SCHEMA-VERSION</span>），不是某几行数据脏——<b>这两种失败在页面上必须能一眼分开</b>，否则会有人去逐行找那 30 条「坏数据」。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>错误清单 <span class="mono" style="font-size:11.5px;color:var(--ink-3)">BATCH-20260122-03</span></h2>
+        <span class="ref-chip">设计 §4.7.1</span>
+        <span class="fr">FR-13</span>
+        <div class="spacer"></div>
+        <span class="btn">导出错误行 Excel</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th class="r">行号</th><th>字段</th><th>错误码</th><th>原文</th><th>说明与建议</th></tr>
+            </thead>
+            <tbody>
+              <tr class="is-bad">
+                <td class="r num">37</td>
+                <td class="mono">owner_l1</td>
+                <td class="mono">E-CROSS-LEGAL-ENTITY</td>
+                <td class="mono">调出仓 WH01(ENT_A) → 调入仓 WH02(ENT_B)</td>
+                <td>调出仓与调入仓<b>不属于同一一级货主</b>。跨法人转移须改推 <span class="mono">OWNER_TRANSFER</span>，<b>系统不做自动升级</b>（自动升级等于财务替业务定价）。</td>
+              </tr>
+              <tr>
+                <td class="r num">12</td>
+                <td class="mono">base_qty</td>
+                <td class="mono">E-UNIT-CONV-MISSING</td>
+                <td class="mono">unit = "箱"，换算率未维护</td>
+                <td>单位换算表缺该物料 × 单位的换算率。<b>拒绝入账、不做 1:1 兜底</b>——兜底会让数量对账永远差一笔。</td>
+              </tr>
+              <tr>
+                <td class="r num">8</td>
+                <td class="mono">transfer_price</td>
+                <td class="mono">E-PRICE-MISSING</td>
+                <td class="mono">（空）</td>
+                <td><span class="mono">OWNER_TRANSFER</span> 的作价是<b>交易数据，必须由业务侧传入</b>；财务中心不配置、不推断。</td>
+              </tr>
+              <tr>
+                <td class="r num">3</td>
+                <td class="mono">biz_date</td>
+                <td class="mono">E-PERIOD-CLOSED</td>
+                <td class="mono">2025-12-28</td>
+                <td>该期间已锁账。补录须走当期补录单 <span class="mono">PERIOD_ADJUST</span>（必审，<b>按当期口径量价</b>）。</td>
+              </tr>
+              <tr>
+                <td class="r num">1</td>
+                <td class="mono">material_code</td>
+                <td class="mono">E-MASTER-MISSING</td>
+                <td class="mono">M9999</td>
+                <td>物料主数据不存在。先导物料主数据，再导单据。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        错误行<b>带着原文一起落库</b>（<span class="mono">raw_payload</span>），可以原样导出 Excel 交回业务侧修正——不是只给一个错误码让人去猜。
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>三层幂等</h2>
+          <span class="ref-chip">设计 §7.5</span>
+          <span class="fr">FR-14</span>
+        </div>
+        <div class="card-body">
+          <div class="code"><b>① 传输幂等</b>  batch_id + doc_no + line_no
+   ↳ 同一个文件重复上传 → 自动跳过，不报错
+
+<b>② 事件幂等</b>  (doc_type, doc_no, version_no)
+   ↳ 重复事件 → <b>返回零 delta 且不报错</b>
+     <i>（不是抛异常——重放是正常操作）</i>
+
+<b>③ 结果幂等</b>  纯函数
+   ↳ 同一 (event, ctx) 必得同一 Posting
+     → 重放可重建余额，结果一致</div>
+          <div class="callout callout--brand" style="margin-top:12px">
+            <span class="mark">i</span>
+            <div><b>三层是叠加的，不是三选一</b>：传输层挡住重复文件，事件层挡住重复过账，结果层保证重放可重现。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>适配层接口（<b>一期即落地</b>）</h2>
+          <span class="ref-chip">设计 §7.6 · 字段定义 §8</span>
+          <span class="fr">FR-15</span>
+        </div>
+        <div class="card-body">
+          <div class="code"><b>class</b> InventoryDataAdapter(ABC):
+    <i>"""协议无关边界：REST / MQ / 文件 三种绑定都实现它"""</i>
+
+    <b>def</b> pull_materials(since)        -&gt; list[Material]
+    <b>def</b> pull_documents(since, types) -&gt; list[Document]
+    <b>def</b> pull_inventory_snapshot(d)  -&gt; list[InventorySnapshot]
+    <b>def</b> receive(envelope) -&gt; Receipt   <i># 推模式入口，回 §2.7 的回执</i>
+
+<b># 一期实现 A（主）</b>
+<b>class</b> BusinessApiAdapter(InventoryDataAdapter):
+    <i>"""从业务库存中心 API 拉取 / 接收推送；协议待定，字段用 §2–§7"""</i>
+
+<b># 一期实现 B（保留的过渡与补录入口）</b>
+<b>class</b> FileAdapter(InventoryDataAdapter):
+    <i>"""Excel / CSV。校验 / 幂等 / 错误回执与 A 共用同一套实现"""</i></div>
+          <div class="callout callout--ok" style="margin-top:12px">
+            <span class="mark">✓</span>
+            <div><b>设计 §7.6 原写「二期实现」，本次提前到一期</b>——API 对接已是本期方式，不是未来方式。</div>
+          </div>
+          <div class="callout callout--brand">
+            <span class="mark">i</span>
+            <div><b>签名同时含 <span class="mono">pull_*</span> 与 <span class="mono">receive</span></b>，所以<b>推 / 拉模式未定也能开工</b>（字段定义 <span class="mono">§10</span> 第 2 项）——两个方向都实现，定了之后只是少调一个。</div>
+          </div>
+          <div class="callout">
+            <span class="mark">→</span>
+            <div>审批流的 <span class="mono">ApprovalGateway</span>（O-19）用的是同一套路数——<b>边界划在接口上，不划在功能上</b>。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M2 · FR-12 – FR-16</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li><b>两条通道的等价性</b>：同一份数据分别走 API 与文件导入，<b>落库结果、幂等行为、错误码必须完全一致</b>（这是本屏最重要的一条）。</li>
+          <li><span class="mono">schema_version</span> 不匹配时<b>整批拒绝</b>（<span class="mono">E-SCHEMA-VERSION</span>），不是「尽力解析」。</li>
+          <li><span class="mono">record_count</span> 与实际条数不符时<b>整批拒绝</b>（<span class="mono">E-HEADER-INVALID</span>）——截断的报文不能被部分接受。</li>
+          <li>信封 / 表头不合法时<b>整批拒绝</b>，并返回模板错误说明（不是逐行报错）；<b>整批拒绝与部分失败在页面上必须能一眼分开</b>。</li>
+          <li>错误行能<b>带着原文导出</b>（<span class="mono">raw_payload</span>），且 <span class="mono">row_no</span> 能定位回原文（文件绑定时即 Excel 行号）。</li>
+          <li>同一批数据重推：<b>成功 0 / 失败 0 / 全部去重</b>，回 <span class="mono">DEDUPLICATED</span> 且<b>业务码为成功</b>，不报错。</li>
+          <li>重复推送同一事件：<b>返回零 delta 且不抛异常</b>。</li>
+          <li><b>乱序与顺序推同一批单据，结果一致</b>——排序键是 <span class="mono">(biz_date, seq_in_day)</span>，<b><span class="mono">doc_no</span> 不可作排序键</b>。</li>
+          <li>跨法人调拨被拒绝，回执<b>明确要求改推 <span class="mono">OWNER_TRANSFER</span></b>，且<b>没有自动升级</b>。</li>
+          <li>单位换算率缺失时<b>拒绝入账并回执</b>，<b>不兜底 1:1</b>；<span class="mono">qty × convert_rate ≠ base_qty</span> 时拒绝（<span class="mono">E-QTY-MISMATCH</span>）。</li>
+          <li>已锁账期间的迟到单据被拒绝，回执指向<b>当期补录单</b>。</li>
+          <li>布尔字段只接受 <span class="mono">0/1</span>；<span class="mono">"N/A"</span> / <span class="mono">"-"</span> 等占位符<b>一律判非法</b>，不是当成空值。</li>
+          <li>接入失败率 &gt; 5% 触发预警（本屏 1/50 = 2.0%，未触发）。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 3 · 单据处理
+       ============================================================ -->
+  <section class="screen" id="s-doc">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>单据处理</h1>
+        <span class="ref-chip">设计 §4.2.1 / §4.2.2 / §3.4</span>
+        <span class="fr">FR-17</span><span class="fr">FR-18</span><span class="fr">FR-19</span><span class="fr">FR-20</span>
+        <span class="fr">FR-21</span><span class="fr">FR-22</span><span class="fr">FR-23</span><span class="fr">FR-24</span>
+      </div>
+      <p class="page-desc">
+        <b>11 类单据</b>是两个状态位在管：头级 <span class="mono">biz_status</span> 管业务生命周期，行级 <span class="mono">cost_status</span> 管核算生命周期。
+        <b>作废的闸门是 <span class="mono">cost_status</span>，不是「有没有下游引用」</b>——这是本屏最容易被测错的一条。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>11 类单据</h2>
+        <span class="ref-chip">设计 §4.2.1</span>
+        <span class="fr">FR-17</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">UAT 必须 11 类全覆盖</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>doc_type</th><th>中文名</th><th>方向</th><th>是否作价</th><th>是否出凭证</th><th>判据 / 备注</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">PO_IN</td><td>采购入库</td><td><span class="chip chip--ok">入</span></td><td>—</td><td>是 · §8.1.1</td><td>入库只舍入单价，不回改金额</td></tr>
+              <tr><td class="mono">PO_RET</td><td>采购退货</td><td><span class="chip chip--danger">出</span></td><td>—</td><td>是 · §8.1.8</td><td>暂估可冲回</td></tr>
+              <tr><td class="mono">SO_OUT</td><td>销售出库</td><td><span class="chip chip--danger">出</span></td><td>—</td><td>是 · §8.1.2</td><td>成本由系统算，不采信传入成本</td></tr>
+              <tr><td class="mono">SO_RET</td><td>销售退货</td><td><span class="chip chip--ok">入</span></td><td>—</td><td>是 · §8.1.9</td><td>按原出库成本回冲</td></tr>
+              <tr><td class="mono">TRANSFER</td><td>调拨</td><td><span class="chip chip--brand">双边</span></td><td>—</td><td>是 · §8.1.3</td><td><b>1 张单 → 2 行</b>；跨一级货主拒绝</td></tr>
+              <tr><td class="mono">STOCKTAKE</td><td>盘点</td><td><span class="chip chip--brand">双边</span></td><td>—</td><td>是 · §8.1.4/8.1.5</td><td>按「实盘 − 账面」自动生盘盈 / 盘亏单</td></tr>
+              <tr><td class="mono">OTHER_IN</td><td>其他入库</td><td><span class="chip chip--ok">入</span></td><td>—</td><td>是</td><td>—</td></tr>
+              <tr><td class="mono">OTHER_OUT</td><td>其他出库</td><td><span class="chip chip--danger">出</span></td><td>—</td><td>是</td><td>—</td></tr>
+              <tr class="is-key"><td class="mono">OWNER_TRANSFER</td><td>一级货权转移</td><td><span class="chip chip--brand">双边</span></td><td><b>是</b> · <span class="mono">transfer_price</span></td><td><b>是</b> · §8.1.10 + 抵消 §8.1.11</td><td>作价 = <b>交易数据</b>（不配置，只取价 + 校验）</td></tr>
+              <tr class="is-key"><td class="mono">OWNER_REASSIGN</td><td>二级重分配</td><td><span class="chip chip--brand">双边</span></td><td><b>是</b> · <span class="mono">internal_price</span></td><td><b style="color:var(--danger)">否</b></td><td>作价 = <b>政策数据</b>（价目表）；<b>不动一级余额</b></td></tr>
+              <tr><td class="mono">PERIOD_ADJUST</td><td>跨期补录单</td><td><span class="chip chip--brand">双边</span></td><td>—</td><td>是</td><td><b>必审</b>；一律<b>按当期口径量价</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>为什么调拨只有 1 个 <span class="mono">doc_type</span>？</b> —— <span class="mono">doc_type</span> 数的是一张单据<b>从哪来、干什么的</b>，不是数它动了几行。
+        <span class="mono">OWNER_TRANSFER</span> 同理：<span class="mono">from_owner_l1</span> / <span class="mono">to_owner_l1</span> 是<b>列</b>，不是两个 <span class="mono">doc_type</span>。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>状态机</h2>
+        <span class="ref-chip">设计 §4.2.1 / §4.2.2</span>
+        <span class="fr">FR-20</span>
+      </div>
+      <div class="card-body">
+        <div class="flow">
+          <span class="flow-label">头级</span>
+          <span class="node">DRAFT</span><span class="arrow">→</span>
+          <span class="node">SUBMITTED</span><span class="arrow">→</span>
+          <span class="node">APPROVED</span><span class="arrow">→</span>
+          <span class="node node--ok">EFFECTIVE</span><span class="arrow">→</span>
+          <span class="node node--bad">VOID</span>
+          <span class="muted" style="font-size:11.5px;margin-left:6px">biz_status</span>
+        </div>
+        <div class="flow">
+          <span class="flow-label">行级</span>
+          <span class="node">PENDING</span><span class="arrow">→</span>
+          <span class="node node--ok">CALCULATED</span><span class="arrow">→</span>
+          <span class="node node--l2">ROLLED_BACK</span>
+          <span class="muted" style="font-size:11.5px;margin-left:6px">cost_status</span>
+        </div>
+        <div class="flow">
+          <span class="flow-label">行级</span>
+          <span class="node">red_flag = 0</span><span class="arrow">→</span>
+          <span class="node node--bad">red_flag = 1</span>
+          <span class="muted" style="font-size:11.5px;margin-left:6px">红冲标记</span>
+        </div>
+        <div class="callout callout--brand" style="margin-top:12px;margin-bottom:0">
+          <span class="mark">i</span>
+          <div>
+            <p><b>报表口径统一为</b> <span class="mono">biz_status = EFFECTIVE AND red_flag = 0</span>。</p>
+            <p><b>作废闸门 = <span class="mono">cost_status</span></b>：<span class="mono">PENDING</span> 可以直接置 VOID；已 <span class="mono">CALCULATED</span> 的<b>不能撤</b>，只能反向单 + 红字凭证。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本期单据</h2>
+        <span class="ref-chip">设计 §3.7 算例</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">8 张 · 7 EFFECTIVE + 1 VOID</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>doc_no</th><th class="r">line</th><th>doc_type</th><th>biz_date</th><th>仓库</th><th class="mono">is_in</th><th class="r">数量</th><th class="r">金额</th><th>biz_status</th><th>cost_status</th><th class="r">red</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">PO-0001</td><td class="r num">1</td><td class="mono">PO_IN</td><td class="num">2026-01-05</td><td>WH01 自营仓</td><td class="mono">1</td><td class="r num">200</td><td class="r num">2,000.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr><td class="mono">PO-0002</td><td class="r num">1</td><td class="mono">PO_IN</td><td class="num">2026-01-12</td><td>WH01 自营仓</td><td class="mono">1</td><td class="r num">100</td><td class="r num">350.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr><td class="mono">SO-0001</td><td class="r num">1</td><td class="mono">SO_OUT</td><td class="num">2026-01-20</td><td>WH01 自营仓</td><td class="mono">0</td><td class="r num">240</td><td class="r num">1,880.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr class="is-sub is-key"><td class="mono">TRANSFER-0001</td><td class="r num">1</td><td class="mono">TRANSFER</td><td class="num">2026-01-22</td><td>WH01 自营仓 <span class="lb">调出仓</span></td><td class="mono">0</td><td class="r num">30</td><td class="r num">330.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr class="is-sub"><td class="mono">TRANSFER-0001</td><td class="r num">2</td><td class="mono">TRANSFER</td><td class="num">2026-01-22</td><td>WH03 平台仓 <span class="lb">调入仓</span></td><td class="mono">1</td><td class="r num">30</td><td class="r num">330.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr class="is-key"><td class="mono">OT-202601-0001</td><td class="r num">1</td><td class="mono">OWNER_TRANSFER</td><td class="num">2026-01-25</td><td>WH02 海外仓</td><td class="mono">0</td><td class="r num">40</td><td class="r num">480.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr class="is-key"><td class="mono">OA-202601-0001</td><td class="r num">1</td><td class="mono">OWNER_REASSIGN</td><td class="num">2026-01-26</td><td>WH02 海外仓</td><td class="mono">0</td><td class="r num">40</td><td class="r num">480.00</td><td><span class="chip chip--ok">EFFECTIVE</span></td><td><span class="chip chip--ok">CALCULATED</span></td><td class="r num">0</td></tr>
+              <tr class="is-bad"><td class="mono">SO-0002</td><td class="r num">1</td><td class="mono">SO_OUT</td><td class="num">2026-01-28</td><td>WH01 自营仓</td><td class="mono">0</td><td class="r num">15</td><td class="r num">117.50</td><td><span class="chip chip--danger">VOID</span></td><td><span class="chip chip--l2">ROLLED_BACK</span></td><td class="r num">1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        第 4、5 行是<b>同一张调拨单的两行</b>——<span class="mono">doc_no</span> 相同、<span class="mono">line_no</span> 递增、
+        <span class="mono">doc_type</span> 都是 <span class="mono">TRANSFER</span>，靠 <span class="mono">warehouse_code</span> + <span class="mono">is_in</span> 区分。
+        <b>不是两张单据</b>——拆成两张的话，改单 / 作废要同时处理两条，且传输幂等键会对不上，重推即重复入账。
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>改单 vs 作废红冲</h2>
+          <span class="ref-chip">设计 §3.4.1 / §3.4.2</span>
+          <span class="fr">FR-21</span><span class="fr">FR-22</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>当前状态</th><th>改单怎么做</th><th>作废怎么做</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="chip chip--ghost">PENDING</span><span class="lb">未核算</span></td>
+                  <td>直接替换原行</td>
+                  <td>直接置 VOID，<b>不产生事件</b></td>
+                </tr>
+                <tr class="is-key">
+                  <td><span class="chip chip--ok">CALCULATED</span><span class="lb">已核算</span></td>
+                  <td>追加<b>反向事件 + 新正向事件</b><span class="lb">version_no + 1</span></td>
+                  <td>追加反向事件 + <b>红字凭证</b><span class="lb">is_red=1, red_flag=1</span></td>
+                </tr>
+                <tr class="is-bad">
+                  <td><span class="chip chip--danger">期间已锁账</span></td>
+                  <td colspan="2"><b>一律拒绝</b>。结错了走反结账；漏一笔走当期补录单。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          <b>原事件与原凭证都不删、不改。</b>余额走 <span class="mono">balance += Σdelta</span>——不是「删行重推」。
+          <span class="mono">t_calc_log</span> 只增不删，余额只是它的投影，可随时重放重建。删除任一行都会导致重放结果与余额不一致。
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>作废示例 · SO-0002</h2>
+          <span class="ref-chip">设计 §3.7 算例 3</span>
+          <span class="fr">FR-22</span>
+        </div>
+        <div class="card-body">
+          <div class="kv" style="margin-bottom:12px">
+            <div class="kv-cell"><dt>原单据</dt><dd class="num">SO-0002</dd></div>
+            <div class="kv-cell"><dt>原金额</dt><dd class="num">117.50</dd></div>
+            <div class="kv-cell"><dt>撤销方式</dt><dd>反向事件</dd></div>
+            <div class="kv-cell"><dt>红字凭证</dt><dd class="num">−117.50</dd></div>
+            <div class="kv-cell"><dt>red_ref_doc</dt><dd class="num">SO-0002</dd></div>
+            <div class="kv-cell"><dt>原凭证</dt><dd>保留不改</dd></div>
+          </div>
+          <div class="callout callout--danger">
+            <span class="mark">!</span>
+            <div>
+              <p><b>已核算的单一律不可撤</b>，只能反向单 + 红字凭证。</p>
+              <p>报表过滤 <span class="mono">biz_status=EFFECTIVE AND red_flag=0</span> 后，SO-0002 <b>不出现在任何报表</b>。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>过账顺序与并发边界</h2>
+        <span class="ref-chip">设计 §3.5.2 / §10.1</span>
+        <span class="fr">FR-24</span><span class="fr">FR-30</span>
+      </div>
+      <div class="card-body">
+        <div class="cols" style="margin-bottom:0">
+          <div>
+            <div class="code"><b>排序键</b> = (biz_date, seq_in_day)
+  同日：<b>入库优先</b> → 同类型按单号
+  <i>doc_no 不可作排序键</i>
+  <i>（跨仓同单号，排序不稳定）</i>
+
+<b>锁单位</b> = 核算单元 (物料, 仓库, 一级货主)
+  单元内 → <b>串行</b>
+  跨单元 → <b>并行</b>
+  加锁顺序按维度键，<b>防死锁</b></div>
+          </div>
+          <div>
+            <div class="callout callout--brand">
+              <span class="mark">测</span>
+              <div>
+                <p><b>可测的不变量</b>：把同一批单据<b>乱序导入</b>，结果必须与顺序导入<b>完全一致</b>。</p>
+                <p>这条能直接把「排序键选错」暴露出来——选 <span class="mono">doc_no</span> 就会在跨仓调拨上翻车。</p>
+              </div>
+            </div>
+            <div class="callout callout--ok">
+              <span class="mark">✓</span>
+              <div>同核算单元并发写入被<b>串行化</b>；跨核算单元可<b>并行</b>。TPS ≥ 100 是<b>聚合值</b>，单单元内不提速。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M3</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li><b>11 类单据全部可导入并进入核算</b>，UAT 覆盖无遗漏。</li>
+          <li>调拨落库为<b>2 行</b>，共用同一个 <span class="mono">doc_no</span>，两行 <span class="mono">doc_type</span> 都是 <span class="mono">TRANSFER</span>，靠 <span class="mono">warehouse_code</span> + <span class="mono">is_in</span> 区分。</li>
+          <li>跨法人 <span class="mono">TRANSFER</span> <b>被拒绝且回执含原因</b>，<b>没有自动升级</b>。</li>
+          <li>报表口径过滤生效：VOID / red_flag=1 的单据<b>不出现在任何报表</b>。</li>
+          <li>改单后 <span class="mono">version_no</span> 递增，<b>原事件保留在库中</b>（可查、可重放）。</li>
+          <li>作废已核算单据后，<b>原凭证不变，新增红字凭证</b>，<span class="mono">red_ref_doc</span> 指向原单号。</li>
+          <li>已锁账期间的改单 / 作废<b>一律被拒</b>。</li>
+          <li>盘点差异<b>自动生成盘盈 / 盘亏单</b>并走通用链路。</li>
+          <li><b>乱序导入同一批单据，结果与顺序导入一致</b>（这条最关键）。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 4 · 库存余额
+       ============================================================ -->
+  <section class="screen" id="s-balance">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>库存余额</h1>
+        <span class="ref-chip">设计 §4.3.1 / §0.2</span>
+        <span class="fr">FR-41</span><span class="fr">FR-45</span>
+      </div>
+      <p class="page-desc">
+        四轴主键 <span class="mono">(物料, 仓库, 批次, 一级货主)</span>。表里同时住着两类行：
+        <b><span class="mono">batch_no IS NULL</span> 的是均价行</b>（核算单元 <span class="mono">(物料, 仓库, 一级货主)</span> 的主人），
+        <b>批次行是明细行</b>，<b>单价留空</b>。
+      </p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">存货总额</div>
+        <div class="metric-value">28,600.29<small>元</small></div>
+        <div class="metric-sub">存货口径 · is_internal = 1</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">存货数量（权属）</div>
+        <div class="metric-value">813<small>件</small></div>
+        <div class="metric-sub">9 个核算单元</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">在库数量（物理）</div>
+        <div class="metric-value">863<small>件</small></div>
+        <div class="metric-sub">含代销 50 件（is_internal=0）</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">批次行</div>
+        <div class="metric-value">2<small>行</small></div>
+        <div class="metric-sub">仅 M0001 有批次管理</div>
+      </div>
+    </div>
+
+    <div class="callout callout--brand">
+      <span class="mark">i</span>
+      <div>
+        <p><b>批次不建均价池。</b>均价属于<b>核算单元</b>，不属于批次行——若按批次建池，同一核算单元内会有多个互相独立的均价，出库时取哪个池的价<b>不可判定</b>。</p>
+        <p>批次只做两件事：<b>拆分</b>与<b>库龄 / 跌价基数</b>。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>余额表</h2>
+        <span class="ref-chip">设计 §4.3.1</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">期间 2026-01</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>物料</th><th>仓库</th><th>一级货主</th><th>批次</th>
+                <th class="r">数量</th><th class="r">单价</th><th class="r">金额</th><th>口径</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-key">
+                <td><span class="rail"></span><span class="mono">M0001</span> 3C 整机</td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span> 自营主体A</td>
+                <td class="muted">NULL <span class="lb">均价行</span></td>
+                <td class="r num">60</td><td class="r num">7.833333</td><td class="r num">470.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr class="is-sub">
+                <td><span class="rail"></span>└ <span class="mono">M0001</span></td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="mono">B2601-A</td>
+                <td class="r num">20</td><td class="r muted">—</td><td class="r num">156.67</td>
+                <td><span class="chip chip--ghost">明细口径</span></td>
+              </tr>
+              <tr class="is-sub">
+                <td><span class="rail"></span>└ <span class="mono">M0001</span></td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="mono">B2601-B</td>
+                <td class="r num">40</td><td class="r muted">—</td><td class="r num">313.33</td>
+                <td><span class="chip chip--ghost">明细口径</span></td>
+              </tr>
+
+              <tr>
+                <td><span class="mono">M0002</span> 出行商品</td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">100</td><td class="r num">5.000000</td><td class="r num">500.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M0003</span> 出行商品</td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">20</td><td class="r num">11.000000</td><td class="r num">220.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M0003</span> 出行商品</td><td>WH03 平台仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">50</td><td class="r num">10.200000</td><td class="r num">510.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M9001</span> 3C 整机</td><td>WH02 海外仓</td><td><span class="mono">ENT_B</span> 自营主体B</td>
+                <td class="muted">NULL</td>
+                <td class="r num">32</td><td class="r num">12.352933</td><td class="r num">395.29</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M9002</span> 3C 整机</td><td>WH02 海外仓</td><td><span class="mono">ENT_B</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">40</td><td class="r num">12.000000</td><td class="r num">480.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M9003</span> 3C 整机</td><td>WH02 海外仓</td><td><span class="mono">ENT_B</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">500</td><td class="r num">40.000000</td><td class="r num">20,000.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M9004</span> 3C 整机</td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">6</td><td class="r num">1000.000000</td><td class="r num">6,000.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">M9005</span> 3C 整机</td><td>WH01 自营仓</td><td><span class="mono">ENT_A</span></td>
+                <td class="muted">NULL</td>
+                <td class="r num">5</td><td class="r num">5.000000</td><td class="r num">25.00</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+              </tr>
+
+              <tr class="is-dim">
+                <td><span class="mono">M0004</span> 代销商品</td><td>WH01 自营仓</td><td><span class="mono">EXT_01</span> 外部货主</td>
+                <td class="muted">NULL</td>
+                <td class="r num">50</td><td class="r num">—</td><td class="r num">—</td>
+                <td><span class="chip chip--ghost">不计存货</span></td>
+              </tr>
+
+              <tr class="is-total">
+                <td colspan="4">存货总额（仅 is_internal = 1）</td>
+                <td class="r num">813</td><td class="r"></td><td class="r num">28,600.29</td>
+                <td></td>
+              </tr>
+              <tr class="is-total">
+                <td colspan="4">物理在库合计（含 is_internal = 0）</td>
+                <td class="r num">863</td><td class="r"></td><td class="r muted">—</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw-brand"></i>均价行（batch_no IS NULL）</span>
+        <span><i class="swatch sw-dim"></i>批次明细行（单价留空）</span>
+        <span><i class="swatch sw-ok"></i>合计行</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>读数规则</h2>
+          <span class="ref-chip">FR-41</span>
+        </div>
+        <div class="card-body">
+          <ul class="ac">
+            <li><b>均价只在均价行</b>（<span class="mono">batch_no IS NULL</span>）。</li>
+            <li><b>批次行 <span class="mono">unit_price</span> 必须留空</b>——填了就是两个价，出库取哪个不可判定。</li>
+            <li>批次行金额之和 <b>=</b> 均价行金额：<span class="mono">156.67 + 313.33 = 470.00</span> ✓</li>
+            <li>外部货主行（<span class="mono">is_internal = 0</span>）<b>不进存货总额</b>，但仍出现在物理在库。</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>双口径对照</h2>
+          <span class="ref-chip">PRD §4.5</span>
+        </div>
+        <div class="card-body">
+          <div class="kv" style="margin-bottom:12px">
+            <div class="kv-cell"><dt>存货口径（对外）</dt><dd class="num">28,600.29</dd></div>
+            <div class="kv-cell"><dt>管理口径（内部）</dt><dd class="num">528.00</dd></div>
+            <div class="kv-cell"><dt>差额</dt><dd class="num">+48.00</dd></div>
+          </div>
+          <div class="callout callout--danger">
+            <span class="mark">!</span>
+            <div>
+              <p><b>两者不可相加、不可互换。</b></p>
+              <p><span class="mono">528.00</span> 是二级内部结算价累计（<span class="mono">internal_amount</span>），<b>不能加总回一级层</b>，与存货总额无关。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M6</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li>批次行 <span class="mono">unit_price</span> <b>为空</b>，均价行有值。</li>
+          <li>批次行金额之和 <b>= 均价行金额</b>（逐核算单元校验）。</li>
+          <li>外部货主（<span class="mono">is_internal = 0</span>）的金额 <b>没有进入存货总额</b>。</li>
+          <li>二级层金额 <b>没有出现在本屏任何一处</b>（它是另一个口径，见货权变更单屏）。</li>
+          <li>作废单据（SO-0002）的余额 <b>已回滚</b>，不出现在余额里。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 5 · 收发存明细
+       ============================================================ -->
+  <section class="screen" id="s-ledger">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>收发存明细</h1>
+        <span class="ref-chip">设计 §4.3.4 / §3.6.5</span>
+        <span class="fr">FR-42</span><span class="fr">FR-25</span><span class="fr">FR-26</span>
+      </div>
+      <p class="page-desc">
+        按核算单元 <span class="mono">(物料, 仓库, 一级货主)</span> 展开的期间流水。来源是 <span class="mono">t_balance_snapshot</span>。
+        <b>单价只在入库行变化</b>——出库行不动单价，这是移动平均的精髓，也是测试最容易漏的断言点。
+      </p>
+    </div>
+
+    <div class="callout callout--brand">
+      <span class="mark">i</span>
+      <div>
+        <p>本屏取算例 1：<span class="mono">M0001 / WH01 / ENT_A</span>。期初 0，期末 <b>60 件 / 470.00 / 单价 7.833333</b>。</p>
+        <p>口径约定：单价 6 位、金额 2 位、数量 4 位（本例位数用不到）；采购金额<b>默认不含税</b>。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>收发存流水 <span class="mono" style="font-size:11.5px;color:var(--ink-3)">M0001 · WH01 自营仓 · ENT_A</span></h2>
+        <span class="ref-chip">设计 §3.7 算例 1</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">期间 2026-01</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>日期</th><th>单据</th><th>摘要</th>
+                <th class="r">入数量</th><th class="r">入金额</th>
+                <th class="r">出数量</th><th class="r">出金额</th>
+                <th class="r">结存数量</th><th class="r">结存金额</th><th class="r">结存单价</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-dim">
+                <td class="num">2026-01-01</td><td class="muted">—</td><td>期初</td>
+                <td class="r num">—</td><td class="r num">—</td><td class="r num">—</td><td class="r num">—</td>
+                <td class="r num">0</td><td class="r num">0.00</td><td class="r num">—</td>
+              </tr>
+              <tr>
+                <td class="num">2026-01-05</td><td class="mono">PO-0001</td><td>采购入库</td>
+                <td class="r num">200</td><td class="r num">2,000.00</td>
+                <td class="r num">—</td><td class="r num">—</td>
+                <td class="r num">200</td><td class="r num">2,000.00</td>
+                <td class="r num" style="color:var(--brand-ink);font-weight:600">10.000000</td>
+              </tr>
+              <tr>
+                <td class="num">2026-01-12</td><td class="mono">PO-0002</td><td>采购入库</td>
+                <td class="r num">100</td><td class="r num">350.00</td>
+                <td class="r num">—</td><td class="r num">—</td>
+                <td class="r num">300</td><td class="r num">2,350.00</td>
+                <td class="r num" style="color:var(--brand-ink);font-weight:600">7.833333</td>
+              </tr>
+              <tr>
+                <td class="num">2026-01-20</td><td class="mono">SO-0001</td><td>销售出库</td>
+                <td class="r num">—</td><td class="r num">—</td>
+                <td class="r num">240</td><td class="r num">1,880.00</td>
+                <td class="r num">60</td><td class="r num">470.00</td>
+                <td class="r num">7.833333 <span class="lb">未变</span></td>
+              </tr>
+              <tr class="is-total">
+                <td colspan="3">本期合计</td>
+                <td class="r num">300</td><td class="r num">2,350.00</td>
+                <td class="r num">240</td><td class="r num">1,880.00</td>
+                <td class="r num">60</td><td class="r num">470.00</td>
+                <td class="r num">7.833333</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw-brand"></i>入库行 —— 单价在此变化</span>
+        <span><i class="swatch sw-dim"></i>出库行 —— 单价不变</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>守恒勾稽</h2>
+        <span class="ref-chip">设计 §3.6.5 / FR-31</span>
+      </div>
+      <div class="card-body">
+        <div class="cols" style="margin-bottom:0">
+          <div>
+            <div class="code"><b>F12 数量守恒</b>
+  期初 + 入 − 出 = 期末
+  0 + 300 − 240 = <b>60</b> ✓
+
+<b>F13 金额守恒</b>
+  期初 + 入 − 出 = 期末
+  0.00 + 2,350.00 − 1,880.00 = <b>470.00</b> ✓
+
+<b>单价一致</b>
+  470.00 / 60 = <b>7.833333</b> ✓</div>
+          </div>
+          <div>
+            <div class="callout callout--brand">
+              <span class="mark">i</span>
+              <div>
+                <p><b>F1 入库</b>：<span class="mono">new_amount = old_amount + in_amount</span>；<span class="mono">new_price = round(new_amount / new_qty, 6)</span></p>
+                <p>200 件 2,000.00 → 100 件 350.00：均价 <span class="mono">2350/300 = 7.833333…</span> → 舍入 6 位 <b>7.833333</b></p>
+              </div>
+            </div>
+            <div class="callout callout--ledger">
+              <span class="mark">F2</span>
+              <div>
+                <p><b>F2 出库</b>：<span class="mono">out_amount = round(out_qty × current_price, 2)</span></p>
+                <p>240 × 7.833333 = 1,879.99992 → <b>1,880.00</b></p>
+                <p>舍入差异 <span class="mono">+0.00008</span> 累加进 <span class="mono">rounding_diff_acc</span>，月末一次性结转。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本期收发存汇总（全部核算单元）</h2>
+        <span class="ref-chip">FR-42</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>物料</th><th>仓库</th><th>一级货主</th><th class="r">期初</th><th class="r">入</th><th class="r">出</th><th class="r">期末数量</th><th class="r">期末金额</th><th class="r">期末单价</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">M0001</td><td>WH01</td><td class="mono">ENT_A</td><td class="r num">0.00</td><td class="r num">2,350.00</td><td class="r num">1,880.00</td><td class="r num">60</td><td class="r num">470.00</td><td class="r num">7.833333</td></tr>
+              <tr><td class="mono">M0002</td><td>WH01</td><td class="mono">ENT_A</td><td class="r num">0.00</td><td class="r num">500.00</td><td class="r num">0.00</td><td class="r num">100</td><td class="r num">500.00</td><td class="r num">5.000000</td></tr>
+              <tr><td class="mono">M0003</td><td>WH01</td><td class="mono">ENT_A</td><td class="r num">550.00</td><td class="r num">0.00</td><td class="r num">330.00</td><td class="r num">20</td><td class="r num">220.00</td><td class="r num">11.000000</td></tr>
+              <tr><td class="mono">M0003</td><td>WH03</td><td class="mono">ENT_A</td><td class="r num">180.00</td><td class="r num">330.00</td><td class="r num">0.00</td><td class="r num">50</td><td class="r num">510.00</td><td class="r num">10.200000</td></tr>
+              <tr><td class="mono">M9001</td><td>WH02</td><td class="mono">ENT_B</td><td class="r num">0.00</td><td class="r num">395.29</td><td class="r num">0.00</td><td class="r num">32</td><td class="r num">395.29</td><td class="r num">12.352933</td></tr>
+              <tr><td class="mono">M9002</td><td>WH02</td><td class="mono">ENT_B</td><td class="r num">0.00</td><td class="r num">480.00</td><td class="r num">0.00</td><td class="r num">40</td><td class="r num">480.00</td><td class="r num">12.000000</td></tr>
+              <tr><td class="mono">M9003</td><td>WH02</td><td class="mono">ENT_B</td><td class="r num">20,000.00</td><td class="r num">0.00</td><td class="r num">0.00</td><td class="r num">500</td><td class="r num">20,000.00</td><td class="r num">40.000000</td></tr>
+              <tr><td class="mono">M9004</td><td>WH01</td><td class="mono">ENT_A</td><td class="r num">6,000.00</td><td class="r num">0.00</td><td class="r num">0.00</td><td class="r num">6</td><td class="r num">6,000.00</td><td class="r num">1,000.000000</td></tr>
+              <tr><td class="mono">M9005</td><td>WH01</td><td class="mono">ENT_A</td><td class="r num">25.00</td><td class="r num">0.00</td><td class="r num">0.00</td><td class="r num">5</td><td class="r num">25.00</td><td class="r num">5.000000</td></tr>
+              <tr class="is-total"><td colspan="3">合计（存货口径）</td><td class="r num">26,755.00</td><td class="r num">4,055.29</td><td class="r num">2,210.00</td><td class="r num">813</td><td class="r num">28,600.29</td><td class="r"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>调拨的两行在这里分属两个核算单元</b>：<span class="mono">M0003/WH01</span> 出 330.00，<span class="mono">M0003/WH03</span> 入 330.00，同一法人的两个仓，合计对存货总额<b>净影响为 0</b>。
+        <b>跨法人就不一样了</b>——那时是 <span class="mono">OWNER_TRANSFER</span>，要作价、要出凭证、要抵消。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M4 / M6</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li><b>数量守恒</b>：期初 + 入 − 出 = 期末（数量与金额两套都查）。</li>
+          <li><b>单价只在入库行变化</b>——出库行的结存单价与出库前一致。</li>
+          <li>入库<b>只舍入单价、不回改金额</b>：<span class="mono">2,000.00 + 350.00 = 2,350.00</span>，不是按均价反算。</li>
+          <li>出库金额按<b>出库时点均价</b>结转，舍入差异进 <span class="mono">rounding_diff_acc</span>，<b>入库路径的 rounding_diff 恒为 0.00</b>。</li>
+          <li>调拨两行分属两个核算单元，对存货总额<b>净影响为 0</b>。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 6 · 单价追溯
+       ============================================================ -->
+  <section class="screen" id="s-trace">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>单价追溯</h1>
+        <span class="ref-chip">设计 §4.3.2 / §9.3</span>
+        <span class="fr">FR-43</span><span class="fr">FR-34</span>
+      </div>
+      <p class="page-desc">
+        <span class="mono">t_calc_log</span> 是<b>只增不删的事件流</b>，也是这个系统的真相源——余额只是它的投影，可以随时重放重建。
+        本屏回答的是评审上必被问到的那句话：<b>「这一分钱从哪来？」</b>
+      </p>
+    </div>
+
+    <div class="callout callout--brand">
+      <span class="mark">i</span>
+      <div>
+        <p><b>引擎返回 <span class="mono">delta</span>，不返回新余额。</b>落库走 <span class="mono">balance += delta</span> + 乐观锁 <span class="mono">version</span>——不做全量重算，并发下也不丢更新。</p>
+        <p>所以每一条 <span class="mono">t_calc_log</span> 天然带着 <span class="mono">before_*</span> / <span class="mono">delta_*</span> / <span class="mono">after_*</span> 三段，追溯不需要额外算。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>核算单元事件流 <span class="mono" style="font-size:11.5px;color:var(--ink-3)">M0001 · WH01 自营仓 · ENT_A</span></h2>
+        <span class="ref-chip">设计 §3.7 算例 1</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">t_calc_log · 只增不删</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>seq</th><th>事件</th><th>来源单据</th>
+                <th class="r">before 数量/金额/单价</th>
+                <th class="r">delta 数量/金额</th>
+                <th class="r">after 数量/金额/单价</th>
+                <th class="r">舍入差异</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num">1</td>
+                <td><span class="chip chip--ok">INBOUND</span></td>
+                <td class="mono">PO-0001</td>
+                <td class="r num"><span class="muted">0 / 0.00 / —</span></td>
+                <td class="r num" style="color:var(--ok)">+200 / +2,000.00</td>
+                <td class="r num">200 / 2,000.00 / <b>10.000000</b></td>
+                <td class="r num">0.00</td>
+              </tr>
+              <tr class="is-key">
+                <td class="num">2</td>
+                <td><span class="chip chip--ok">INBOUND</span></td>
+                <td class="mono">PO-0002</td>
+                <td class="r num">200 / 2,000.00 / 10.000000</td>
+                <td class="r num" style="color:var(--ok)">+100 / +350.00</td>
+                <td class="r num">300 / 2,350.00 / <b>7.833333</b></td>
+                <td class="r num">0.00</td>
+              </tr>
+              <tr>
+                <td class="num">3</td>
+                <td><span class="chip chip--danger">OUTBOUND</span></td>
+                <td class="mono">SO-0001</td>
+                <td class="r num">300 / 2,350.00 / 7.833333</td>
+                <td class="r num" style="color:var(--danger)">−240 / −1,880.00</td>
+                <td class="r num">60 / 470.00 / <b>7.833333</b> <span class="lb">未变</span></td>
+                <td class="r num">+0.00008</td>
+              </tr>
+              <tr>
+                <td class="num">4</td>
+                <td><span class="chip chip--l2">ROLLBACK</span></td>
+                <td class="mono">SO-0002</td>
+                <td class="r num">60 / 470.00 / 7.833333</td>
+                <td class="r num" style="color:var(--danger)">−15 / −117.50</td>
+                <td class="r num">45 / 352.50 / 7.833333</td>
+                <td class="r num">0.000000</td>
+              </tr>
+              <tr class="is-dim">
+                <td class="num">5</td>
+                <td><span class="chip chip--ghost">RED_REVERSE</span></td>
+                <td class="mono">SO-0002</td>
+                <td class="r num">45 / 352.50 / 7.833333</td>
+                <td class="r num" style="color:var(--ok)">+15 / +117.50</td>
+                <td class="r num">60 / 470.00 / 7.833333</td>
+                <td class="r num">0.000000</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        seq 4 + 5 是<b>作废的一对</b>：作废先产生反向事件（seq 4），红冲再追加反向事件（seq 5）把余额补回。
+        <b>两行都留在库里</b>——删除任何一行，重放结果就会与余额不一致。
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>取价快照 · seq 2</h2>
+          <span class="ref-chip">设计 §4.1.9 / §4.3.2</span>
+          <span class="fr">FR-40</span>
+        </div>
+        <div class="card-body">
+          <div class="kv">
+            <div class="kv-cell"><dt>price_source</dt><dd class="mono">PO_IN 单据行</dd></div>
+            <div class="kv-cell"><dt>取价方式</dt><dd>交易数据 · 不配置</dd></div>
+            <div class="kv-cell"><dt>price_base</dt><dd class="num">—</dd></div>
+            <div class="kv-cell"><dt>markup_rate</dt><dd class="num">—</dd></div>
+            <div class="kv-cell"><dt>price_value</dt><dd class="num">3.500000</dd></div>
+            <div class="kv-cell"><dt>rounding_diff</dt><dd class="num">0.00</dd></div>
+          </div>
+          <div class="callout callout--brand" style="margin-top:12px">
+            <span class="mark">i</span>
+            <div><b>取价三条铁律</b>：按<b>业务日期</b>取价 → 取到即<b>快照</b> → 调价<b>不追溯</b>。所以这条事件永远能回答「当时取的是哪个价」。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>一个价、三个数</h2>
+          <span class="ref-chip">设计 §4.1.9</span>
+          <span class="fr">FR-40</span>
+        </div>
+        <div class="card-body">
+          <div class="code"><i>二级重分配的 MARKUP 定价，三者都落库：</i>
+
+<b>price_base</b>   = 12.000000  <i>← 当时该一级货主层均价</i>
+<b>markup_rate</b>  = 0.1000000
+<b>price_value</b>  = 13.200000  <i>= 12 × (1 + r)</i>
+
+<i>FIXED 定价 —— 价目表直接给定，另两个留空：</i>
+
+<b>price_base</b>   = —
+<b>markup_rate</b>  = —
+<b>price_value</b>  = 13.200000</div>
+          <div class="callout callout--danger" style="margin-top:12px">
+            <span class="mark">!</span>
+            <div>
+              <p><b>只存 price_value 是不够的</b>——日后无法回答「这个价怎么来的」。</p>
+              <p><span class="mono">price_base</span> 取的是<b>当时该一级货主层的均价</b>，<b>层级别取错</b>（取到二级层就全错了）。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M4 / M6</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li>任一余额可<b>反推到产生它的事件</b>，事件可反推到原始单据。</li>
+          <li>每条事件带 <span class="mono">before_* / delta_* / after_*</span> 三段，且 <span class="mono">before + delta = after</span>。</li>
+          <li><span class="mono">t_calc_log</span> <b>只增不删</b>：作废后原事件仍在，可查、可重放。</li>
+          <li>重放事件流<b>能重建出当前余额</b>，结果一致（结果幂等）。</li>
+          <li>取价快照三个字段（<span class="mono">price_base</span> / <span class="mono">markup_rate</span> / <span class="mono">price_value</span>）在 MARKUP 场景下<b>都在</b>。</li>
+          <li><span class="mono">price_base</span> 取的是<b>一级货主层</b>均价，不是二级层。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 7 · 货权变更单
+       ============================================================ -->
+  <section class="screen" id="s-owner">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>货权变更单</h1>
+        <span class="ref-chip">设计 §3.5.7 / §4.2.3 / §4.2.4 / §8.1.10 / §8.1.11</span>
+        <span class="fr">FR-35</span><span class="fr">FR-36</span><span class="fr">FR-37</span><span class="fr">FR-38</span><span class="fr">FR-39</span><span class="fr">FR-40</span>
+      </div>
+      <p class="page-desc">
+        <b>本屏是整个一期最需要被看懂的一屏。</b>产权交易中心一期不落地，由库存中心出临时货权变更单承载——
+        一级 <span class="mono">OWNER_TRANSFER</span> 走会计，二级 <span class="mono">OWNER_REASSIGN</span> 只走管理账。
+        <b>两者共用一张表结构，但一条出凭证、一条绝不出</b>。
+      </p>
+    </div>
+
+    <div class="pair">
+      <div>
+        <h4><span class="chip chip--brand">一级 · OWNER_TRANSFER</span></h4>
+        <p>作价来源 = <b>交易数据</b>（<span class="mono">transfer_price</span>）。对外来自销售单 / 合同，集团内逐笔录入。<b>财务只取价 + 校验，不配置</b>。</p>
+        <p style="margin-top:6px">改一级余额 ✓ · 出凭证 ✓ · 确认会计损益 ✓ · 合并抵消 ✓</p>
+      </div>
+      <div>
+        <h4><span class="chip chip--l2">二级 · OWNER_REASSIGN</span></h4>
+        <p>作价来源 = <b>政策数据</b>（<span class="mono">internal_price</span>，带生效期的价目表 <span class="mono">t_internal_price</span>）。</p>
+        <p style="margin-top:6px">改一级余额 ✗ · 出凭证 ✗ · 管理口径损益 ✓ · 只写 <span class="mono">t_owner_allocation</span></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>一级货权转移 <span class="mono" style="font-size:11.5px;color:var(--ink-3)">OT-202601-0001</span></h2>
+        <span class="ref-chip">设计 §3.7 算例 7</span>
+        <span class="fr">FR-35</span><span class="fr">FR-36</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ok">EFFECTIVE · CALCULATED</span>
+      </div>
+      <div class="card-body">
+        <div class="kv" style="margin-bottom:14px">
+          <div class="kv-cell"><dt>物料</dt><dd class="mono">M9002 3C 整机</dd></div>
+          <div class="kv-cell"><dt>仓库</dt><dd>WH02 海外仓</dd></div>
+          <div class="kv-cell"><dt>from_owner_l1</dt><dd class="mono">ENT_A 自营主体A</dd></div>
+          <div class="kv-cell"><dt>to_owner_l1</dt><dd class="mono">ENT_B 自营主体B</dd></div>
+          <div class="kv-cell"><dt>数量</dt><dd class="num">40</dd></div>
+          <div class="kv-cell"><dt>transfer_price</dt><dd class="num">12.000000</dd></div>
+          <div class="kv-cell"><dt>price_source</dt><dd>交易数据</dd></div>
+          <div class="kv-cell"><dt>is_accounting_event</dt><dd><span class="chip chip--ok">1 · 会计</span></dd></div>
+        </div>
+
+        <div class="cols" style="margin-bottom:0">
+          <div>
+            <div class="callout callout--brand">
+              <span class="mark">A</span>
+              <div>
+                <p><b>转出方 ENT_A</b>：按当前核算单元均价结转成本</p>
+                <p>转出前 <span class="mono">40 件 / 400.00 / 10.000000</span></p>
+                <p>转出后 <b>0 件 / 0.00</b>；均价 <b style="font-size:14px">10.000000 保持不变</b> ← 出库不改单价</p>
+              </div>
+            </div>
+            <div class="callout callout--ok">
+              <span class="mark">✓</span>
+              <div><b>已实现毛利 = 40 × (12.000000 − 10.000000) = 80.00</b></div>
+            </div>
+          </div>
+          <div>
+            <div class="callout callout--ledger">
+              <span class="mark">B</span>
+              <div>
+                <p><b>转入方 ENT_B</b>：按<b>作价</b>重建均价，<b>不是</b>沿用转出方的价</p>
+                <p>转入前 <span class="mono">0 件 / 0.00</span></p>
+                <p>转入后 <b>40 件 / 480.00 / 12.000000</b> ← 取 <span class="mono">transfer_price</span></p>
+              </div>
+            </div>
+            <div class="callout callout--danger">
+              <span class="mark">!</span>
+              <div>
+                <p><b>「不参与对外审计、开票」≠「不参与会计」。</b>集团内跨法人转移是<b>关联交易</b>——不开票，但仍必须出凭证、确认损益、合并抵消。</p>
+                <p><b>交易中心决定「交易是否成立」，库存中心决定「会计怎么记」。</b></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>已核算的一律不可撤</b>，只能反向单 + 红字凭证。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>二级重分配 <span class="mono" style="font-size:11.5px;color:var(--ink-3)">OA-202601-0001</span></h2>
+        <span class="ref-chip">设计 §4.2.4</span>
+        <span class="fr">FR-38</span><span class="fr">FR-39</span>
+        <div class="spacer"></div>
+        <span class="chip chip--l2">不动一级余额 · 不出凭证</span>
+      </div>
+      <div class="card-body">
+        <div class="callout callout--l2">
+          <span class="mark">L2</span>
+          <div>
+            <p><b>二级层的核心是「一个数量、两个金额」。</b>两个金额算法不同、用途不同、能不能加总也不同——这是本屏最容易被测错的地方。</p>
+          </div>
+        </div>
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>二级货主</th><th class="r">数量</th>
+                <th class="r">alloc_amount<span class="lb">× 一级均价 12.000000</span></th>
+                <th class="r">internal_amount<span class="lb">× 内部结算价 13.200000</span></th>
+                <th class="r">差额 internal_pl</th>
+                <th>能加总回一级层？</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="mono">L2_EAST</span> 二级-华东</td>
+                <td class="r num">25</td>
+                <td class="r num">300.00</td>
+                <td class="r num">330.00</td>
+                <td class="r num" style="color:var(--l2)">+30.00</td>
+                <td><span class="chip chip--ok">能 · 硬校验</span></td>
+              </tr>
+              <tr>
+                <td><span class="mono">L2_SOUTH</span> 二级-华南</td>
+                <td class="r num">15</td>
+                <td class="r num">180.00</td>
+                <td class="r num">198.00</td>
+                <td class="r num" style="color:var(--l2)">+18.00</td>
+                <td><span class="chip chip--ok">能 · 硬校验</span></td>
+              </tr>
+              <tr class="is-total">
+                <td>合计</td>
+                <td class="r num">40</td>
+                <td class="r num">480.00</td>
+                <td class="r num">528.00</td>
+                <td class="r num" style="color:var(--l2)">+48.00</td>
+                <td><span class="chip chip--danger">不可加总</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout--danger" style="margin-top:12px;margin-bottom:0">
+          <span class="mark">!</span>
+          <div>
+            <p><b>硬校验</b>：<span class="mono">Σ alloc_amount = 一级层金额</span>（480.00 = 480.00）—— 不平则<b>整单回滚 + 告警</b>。</p>
+            <p><b>不校验</b>：<span class="mono">Σ internal_amount</span>（528.00）—— 它<b>本来就不该等于</b>一级层金额。差额 48.00 = <b>内部未实现毛利</b>，进二级内部损益（管理口径）。</p>
+            <p>对 528.00 做等式校验，是把管理口径当会计口径用——<b>这是红线复发的一种形态</b>。</p>
+          </div>
+        </div>
+      </div>
+      <div class="card-note">
+        <span class="mono">internal_price</span> 两种定价方式<b>逐行选</b>：<span class="mono">FIXED</span> 固定价 / <span class="mono">MARKUP</span> 成本加成率。
+        <span class="mono">price_type</span> 是<b>行属性、不进主键</b>——否则同一格子里两条行会互相竞争。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>两个金额的口径对照</h2>
+        <span class="ref-chip">PRD §4.3 / §4.5</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>字段</th><th>算法</th><th>能否加总</th><th>校验</th><th>用途</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">alloc_amount</td>
+                <td>数量 × <b>一级均价</b></td>
+                <td><span class="chip chip--ok">能</span></td>
+                <td><b>硬校验</b>：Σ = 一级层金额，不平整单回滚</td>
+                <td>二级数量与金额的<b>成本还原</b></td>
+              </tr>
+              <tr>
+                <td class="mono">internal_amount</td>
+                <td>按 <span class="mono">internal_price</span> 逐笔累计</td>
+                <td><span class="chip chip--danger">不能</span></td>
+                <td><b>不做等式校验</b></td>
+                <td>二级内部考核 / 内部结算损益</td>
+              </tr>
+              <tr class="is-key">
+                <td class="mono">internal_pl</td>
+                <td>Σ internal_amount − Σ alloc_amount</td>
+                <td>—</td>
+                <td>—</td>
+                <td>内部未实现毛利（本屏 +48.00）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>回传业务侧时两个金额必须成对出现</b>（<span class="fr">FR-69</span>）。业务侧展示「库存金额」<b>只能用存货口径那一行</b>；内部结算金额单独使用即口径错误。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>S 屏验收要点 · 算例 7 的 6 个校验点</h2>
+        <span class="ref-chip">PRD §9.3</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li>A 转出后均价 <b>保持 10.000000</b>（出库不改单价）。</li>
+          <li>B 转入后均价 <b>12.000000</b>——按 <span class="mono">transfer_price</span> 重建，<b>不是</b> A 的 10.00。</li>
+          <li><span class="mono">Σ alloc_amount</span> 与一级层金额 <b>必须相等</b>（480.00），否则整单回滚。</li>
+          <li><span class="mono">Σ internal_amount</span> <b>允许不等</b>（528.00），差额 48.00 进二级内部损益。</li>
+          <li>二级重分配<b>不生成凭证</b>——查 <span class="mono">t_voucher_header</span> 无 <span class="mono">OWNER_REASSIGN</span> 来源单据。</li>
+          <li>一级转移跨法人且集团内，<b>合并抵消 80.00</b>；抵消后合并层存货 = 转出方原成本 400.00。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 8 · 跌价计提
+       ============================================================ -->
+  <section class="screen" id="s-depr">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>跌价计提</h1>
+        <span class="ref-chip">设计 §6.1 – §6.5 / §4.6.1</span>
+        <span class="fr">FR-44</span><span class="fr">FR-46</span><span class="fr">FR-47</span><span class="fr">FR-48</span><span class="fr">FR-49</span><span class="fr">FR-50</span>
+      </div>
+      <p class="page-desc">
+        3C 的贬值规律是<b>由新品发布驱动</b>，不是由存放时长驱动——所以必须<b>库龄法 + 上市周期法双轨取孰高</b>。
+        本屏把两轨<b>分列展示</b>，不只是给一个取孰高的结果：否则无法解释「为什么提这么多」。
+      </p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">本期应有跌价准备</div>
+        <div class="metric-value">26,025.00<small>元</small></div>
+        <div class="metric-sub">双轨取孰高后汇总</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">上期已计提</div>
+        <div class="metric-value">10.00<small>元</small></div>
+        <div class="metric-sub">prev_provision_amount</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">本期应计提（变动）</div>
+        <div class="metric-value" style="color:var(--ledger)">26,015.00<small>元</small></div>
+        <div class="metric-sub">进损益的凭证只记变动额</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">计提范围</div>
+        <div class="metric-value" style="font-size:15px">is_internal = 1</div>
+        <div class="metric-sub">仅 3 个批次 · 按法人分别出账</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>双轨计提明细</h2>
+        <span class="ref-chip">设计 §3.7 算例 4 / 算例 5</span>
+        <span class="fr">FR-44</span><span class="fr">FR-48</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">两列都出，不只留结果</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>物料</th><th>仓库</th><th>批次</th><th class="r">数量</th><th class="r">成本金额</th>
+                <th class="r">库龄<span class="lb">天</span></th><th class="r">AGE 比例</th><th class="r">provision_by_age</th>
+                <th class="r">上市<span class="lb">天</span></th><th class="r">LAUNCH 比例</th><th class="r">provision_by_launch</th>
+                <th class="r">孰高 provision</th>
+                <th class="r">上期</th><th class="r">本期计提</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">M9003</td><td>WH02</td><td class="mono">B2506-07</td>
+                <td class="r num">500</td><td class="r num">20,000.00</td>
+                <td class="r num">210</td><td class="r num">0%</td><td class="r num muted">0.00</td>
+                <td class="r num">95</td><td class="r num" style="color:var(--ledger)">100%</td><td class="r num" style="color:var(--ledger)">20,000.00</td>
+                <td class="r num"><b>20,000.00</b></td>
+                <td class="r num muted">0.00</td><td class="r num" style="color:var(--ledger)">20,000.00</td>
+              </tr>
+              <tr>
+                <td class="mono">M9004</td><td>WH01</td><td class="mono">B2503-11</td>
+                <td class="r num">6</td><td class="r num">6,000.00</td>
+                <td class="r num" style="color:var(--danger)">400</td><td class="r num" style="color:var(--danger)">100%</td><td class="r num" style="color:var(--danger)">6,000.00</td>
+                <td class="r num">120</td><td class="r num">83.33%</td><td class="r num">5,000.00</td>
+                <td class="r num"><b>6,000.00</b></td>
+                <td class="r num muted">0.00</td><td class="r num" style="color:var(--ledger)">6,000.00</td>
+              </tr>
+              <tr class="is-key">
+                <td class="mono">M9005</td><td>WH01</td><td class="mono">B2502-03</td>
+                <td class="r num">5</td><td class="r num">25.00</td>
+                <td class="r num">620</td><td class="r num">100%</td><td class="r num">25.00</td>
+                <td class="r num">30</td><td class="r num">0%</td><td class="r num muted">0.00</td>
+                <td class="r num"><b>25.00</b></td>
+                <td class="r num">10.00</td><td class="r num" style="color:var(--ledger)">15.00</td>
+              </tr>
+              <tr class="is-total">
+                <td colspan="11">合计</td>
+                <td class="r num">26,025.00</td>
+                <td class="r num">10.00</td>
+                <td class="r num">26,015.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw-ledger"></i>该轨胜出（取孰高取到它）</span>
+        <span><i class="swatch sw-danger"></i>库龄法胜出</span>
+        <span><i class="swatch sw-brand"></i>算例 4：本期补提 15.00</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>为什么双轨取孰高</h2>
+          <span class="ref-chip">设计 §6.5</span>
+          <span class="fr">FR-48</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>场景</th><th>库龄法</th><th>上市周期法</th><th>取孰高</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><b>场景 A</b><span class="lb">新品发布，库龄短</span></td>
+                  <td class="r num">0.00</td><td class="r num">20,000.00</td>
+                  <td class="r num" style="color:var(--ledger)"><b>20,000.00</b></td>
+                  <td>库龄法<b>完全看不到</b>贬值——只看存放时长就漏提</td>
+                </tr>
+                <tr>
+                  <td><b>场景 B</b><span class="lb">库龄够长，上市尚新</span></td>
+                  <td class="r num">6,000.00</td><td class="r num">5,000.00</td>
+                  <td class="r num" style="color:var(--danger)"><b>6,000.00</b></td>
+                  <td>两轨都触发时取高的，<b>不叠加</b></td>
+                </tr>
+                <tr class="is-key">
+                  <td>M9005<span class="lb">算例 4</span></td>
+                  <td class="r num">25.00</td><td class="r num">0.00</td>
+                  <td class="r num"><b>25.00</b></td>
+                  <td>应有 25.00 − 上期 10.00 = <b>本期补提 15.00</b></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          逐 <span class="mono">(物料, 仓库, 批次)</span> <b>取孰高之后再汇总</b>——不是先汇总两轨再取孰高，那样会抹平单品的差异。
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>本期计提 = 应有 − 上期</h2>
+          <span class="ref-chip">设计 §6.3 / §8.1.6</span>
+          <span class="fr">FR-49</span>
+        </div>
+        <div class="card-body">
+          <div class="code"><i>F11</i>
+<b>本期计提</b> = 本期应有 − 上期已计提
+           = 26,025.00 − 10.00
+           = <b>26,015.00</b>
+
+正数 → 补提
+负数 → 转回（红字）</div>
+          <div class="callout callout--danger" style="margin-top:12px">
+            <span class="mark">!</span>
+            <div>
+              <p><b>只存「应有额」是算不出本期该提多少的。</b></p>
+              <p><span class="mono">prev_provision_amount</span> <b>必须落库</b>——凭证只记变动额，进损益的也是变动额。</p>
+            </div>
+          </div>
+          <div class="callout callout--ok" style="margin-top:10px">
+            <span class="mark">✓</span>
+            <div>计提范围<b>仅 <span class="mono">is_internal = 1</span></b>，外部货主不计提；凭证<b>按法人分别出</b>，不做集团合并出账。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>库龄计算口径</h2>
+        <span class="ref-chip">设计 §6.1</span>
+        <span class="fr">FR-46</span><span class="fr">FR-47</span>
+      </div>
+      <div class="card-body">
+        <div class="cols" style="margin-bottom:0">
+          <div>
+            <div class="callout callout--brand">
+              <span class="mark">i</span>
+              <div>
+                <p><b>库龄按 <span class="mono">(物料, 仓库, 批次, 一级货主)</span> 维度算</b>——<b>批次与一级货主都要下钻</b>。</p>
+                <p>批次数量减为 0 时，库龄<b>归零、不再参与跌价</b>。</p>
+                <p>二级货主<b>不给计提</b>——它不是会计主体，没有存货。</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="code"><i>无批次管理的物料 → 分层估算库龄 F7</i>
+按入库时间<b>先进先出</b>排队，把现存量
+拆成若干层，逐层按对应库龄档计提。
+
+<i>例：现存 100 件，来自三批入库</i>
+  30 件 · 库龄 400 天 · 比例 100%
+  50 件 · 库龄 200 天 · 比例  30%
+  20 件 · 库龄  50 天 · 比例   0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M7</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li><span class="mono">provision_by_age</span> 与 <span class="mono">provision_by_launch</span> <b>两列都在</b>，不只是给孰高结果。</li>
+          <li>取孰高<b>逐 (物料, 仓库, 批次) 取，再汇总</b>——不是先汇总两轨再取孰高。</li>
+          <li>场景 A：<span class="mono">max(0, 20,000) = 20,000.00</span>；场景 B：<span class="mono">max(6,000, 5,000) = 6,000.00</span>。</li>
+          <li>本期计提 = 应有 − 上期 = <span class="mono">26,025.00 − 10.00 = 26,015.00</span>，<b>凭证只记变动额</b>。</li>
+          <li><span class="mono">prev_provision_amount</span> <b>在库中</b>，可查。</li>
+          <li>计提范围<b>只含 <span class="mono">is_internal = 1</span></b>；外部货主批次不出现在本屏。</li>
+          <li>跌价凭证<b>按法人分别出</b>，没有一张集团合并的跌价凭证。</li>
+          <li>批次数量为 0 时库龄归零、不参与计提。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 9 · 凭证清单
+       ============================================================ -->
+  <section class="screen" id="s-voucher">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>凭证清单</h1>
+        <span class="ref-chip">设计 §8.1 / §8.2 / §8.3</span>
+        <span class="fr">FR-51</span><span class="fr">FR-52</span><span class="fr">FR-53</span><span class="fr">FR-54</span><span class="fr">FR-55</span>
+      </div>
+      <p class="page-desc">
+        <b>11 个凭证模板</b>（<span class="mono">8.1.1</span>–<span class="mono">8.1.11</span>）。两条不可协商的总则：
+        <b>每张凭证 Σ借 = Σ贷</b>（不平拒绝落库），<b>按法人分账</b>（合并层单独一张进合并账套）。凭证日期 = <b>记账期间首日</b>，不是系统当前日期。
+      </p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">本期凭证</div>
+        <div class="metric-value">6<small>张</small></div>
+        <div class="metric-sub">5 张法人层 + 1 张合并层</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">法人层 Σ借 = Σ贷</div>
+        <div class="metric-value">5,745.50<small>元</small></div>
+        <div class="metric-sub">LE_A / LE_B 各自平衡 ✓</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">合并层 Σ借 = Σ贷</div>
+        <div class="metric-value">480.00<small>元</small></div>
+        <div class="metric-sub">合并账套 CG · 平衡 ✓</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">状态</div>
+        <div class="metric-value" style="font-size:15px">草稿 DRAFT</div>
+        <div class="metric-sub">未导出金蝶</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>11 个凭证模板</h2>
+        <span class="ref-chip">设计 §8.1</span>
+        <span class="fr">FR-51</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">UAT 必须 11 个全覆盖</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead><tr><th>模板</th><th>名称</th><th>触发单据</th><th>借贷要点</th><th>账套</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">8.1.1</td><td>采购入库</td><td class="mono">PO_IN</td><td>借 库存商品（<b>不含税</b>+分摊费用）· 借 应交税费—进项 · 贷 应付账款</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.2</td><td>销售出库</td><td class="mono">SO_OUT</td><td>借 主营业务成本 · 贷 库存商品</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.3</td><td>调拨</td><td class="mono">TRANSFER</td><td>借 库存商品—调入仓 · 贷 库存商品—调出仓</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.4</td><td>盘亏</td><td class="mono">STOCKTAKE</td><td>借 待处理财产损溢 · 贷 库存商品</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.5</td><td>盘盈</td><td class="mono">STOCKTAKE</td><td>借 库存商品 · 贷 待处理财产损溢</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.6</td><td>跌价计提</td><td>月结关 3</td><td>借 资产减值损失 · 贷 存货跌价准备（<b>只记变动额</b>）</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.7</td><td>舍入结转</td><td>月结关 4</td><td>结转 <span class="mono">rounding_diff_acc</span></td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.8</td><td>采购退货</td><td class="mono">PO_RET</td><td>冲回暂估 / 据实调整</td><td>法人层</td></tr>
+              <tr><td class="mono">8.1.9</td><td>销售退货</td><td class="mono">SO_RET</td><td>按原出库成本回冲</td><td>法人层</td></tr>
+              <tr class="is-key"><td class="mono">8.1.10</td><td>一级货权转移</td><td class="mono">OWNER_TRANSFER</td><td>借 其他应收款 · 借 主营业务成本 · 贷 主营业务收入 · 贷 库存商品<br><span class="lb">视同销售 + 成本结转，本屏 480.00 + 400.00</span></td><td>法人层</td></tr>
+              <tr class="is-key"><td class="mono">8.1.11</td><td>集团内抵消</td><td>跨法人 <span class="mono">is_internal=1</span></td><td>借 营业收入 · 贷 营业成本 · 贷 存货<br><span class="lb">冲掉未实现毛利，本屏 480.00</span></td><td><b>合并层</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>二级重分配不在这个清单里。</b>它不是遗漏——<span class="mono">OWNER_REASSIGN</span> <b>本来就不出凭证</b>（R2）。
+        测的时候要专门断言「查不到」，而不是「忘了做」。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本期凭证</h2>
+        <span class="ref-chip">设计 §8.1</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">6 张 · 全部平衡 ✓</span>
+      </div>
+      <div class="card-body">
+        <div class="voucher">
+          <div class="voucher-head">
+            <span class="voucher-no">PIN-0001</span>
+            <span class="chip chip--brand">§8.1.1 采购入库</span>
+            <span class="voucher-sub">来源 PO-0001 · 账套 LE_A · 凭证日期 2026-01-01</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>摘要</th><th>科目</th><th class="r">借方</th><th class="r">贷方</th></tr></thead>
+              <tbody>
+                <tr><td>采购入库 M0001 ×200</td><td>1405 库存商品</td><td class="r num">2,000.00</td><td class="r num">—</td></tr>
+                <tr><td>进项税额</td><td>2221.01.01 应交增值税（进项）</td><td class="r num">260.00</td><td class="r num">—</td></tr>
+                <tr><td>应付供应商A</td><td>2202 应付账款</td><td class="r num">—</td><td class="r num">2,260.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="voucher-foot">
+            <span>Σ借 <b class="num">2,260.00</b></span>
+            <span>Σ贷 <b class="num">2,260.00</b></span>
+            <span class="chip chip--ok">平衡 ✓</span>
+            <span class="muted">税额不入存货成本</span>
+          </div>
+        </div>
+
+        <div class="voucher">
+          <div class="voucher-head">
+            <span class="voucher-no">PIN-0002</span>
+            <span class="chip chip--brand">§8.1.1 采购入库</span>
+            <span class="voucher-sub">来源 PO-0002 · 账套 LE_A · 凭证日期 2026-01-01</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>摘要</th><th>科目</th><th class="r">借方</th><th class="r">贷方</th></tr></thead>
+              <tbody>
+                <tr><td>采购入库 M0001 ×100</td><td>1405 库存商品</td><td class="r num">350.00</td><td class="r num">—</td></tr>
+                <tr><td>进项税额</td><td>2221.01.01 应交增值税（进项）</td><td class="r num">45.50</td><td class="r num">—</td></tr>
+                <tr><td>应付供应商A</td><td>2202 应付账款</td><td class="r num">—</td><td class="r num">395.50</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="voucher-foot">
+            <span>Σ借 <b class="num">395.50</b></span><span>Σ贷 <b class="num">395.50</b></span>
+            <span class="chip chip--ok">平衡 ✓</span>
+          </div>
+        </div>
+
+        <div class="voucher">
+          <div class="voucher-head">
+            <span class="voucher-no">POUT-0001</span>
+            <span class="chip chip--brand">§8.1.2 销售出库</span>
+            <span class="voucher-sub">来源 SO-0001 · 账套 LE_A · 凭证日期 2026-01-01</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>摘要</th><th>科目</th><th class="r">借方</th><th class="r">贷方</th></tr></thead>
+              <tbody>
+                <tr><td>销售出库成本结转 M0001 ×240</td><td>6401 主营业务成本</td><td class="r num">1,880.00</td><td class="r num">—</td></tr>
+                <tr><td>销售出库成本结转</td><td>1405 库存商品</td><td class="r num">—</td><td class="r num">1,880.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="voucher-foot">
+            <span>Σ借 <b class="num">1,880.00</b></span><span>Σ贷 <b class="num">1,880.00</b></span>
+            <span class="chip chip--ok">平衡 ✓</span>
+            <span class="muted">出库成本由系统按当时均价算</span>
+          </div>
+        </div>
+
+        <div class="voucher">
+          <div class="voucher-head">
+            <span class="voucher-no">PTR-0001</span>
+            <span class="chip chip--brand">§8.1.3 调拨</span>
+            <span class="voucher-sub">来源 TRANSFER-0001 · 账套 LE_A · 凭证日期 2026-01-01</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>摘要</th><th>科目</th><th class="r">借方</th><th class="r">贷方</th></tr></thead>
+              <tbody>
+                <tr><td>调拨 M0003 ×30 → WH03 平台仓</td><td>1405.02 库存商品—WH03</td><td class="r num">330.00</td><td class="r num">—</td></tr>
+                <tr><td>调拨 M0003 ×30 ← WH01 自营仓</td><td>1405.01 库存商品—WH01</td><td class="r num">—</td><td class="r num">330.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="voucher-foot">
+            <span>Σ借 <b class="num">330.00</b></span><span>Σ贷 <b class="num">330.00</b></span>
+            <span class="chip chip--ok">平衡 ✓</span>
+            <span class="muted">同一法人内部两个仓，对存货总额净影响 0</span>
+          </div>
+        </div>
+
+        <div class="voucher">
+          <div class="voucher-head">
+            <span class="voucher-no">POT-0001</span>
+            <span class="chip chip--brand">§8.1.10 一级货权转移</span>
+            <span class="voucher-sub">来源 OT-202601-0001 · 账套 LE_A · 凭证日期 2026-01-01</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>摘要</th><th>科目</th><th class="r">借方</th><th class="r">贷方</th></tr></thead>
+              <tbody>
+                <tr><td>一级货权转移 M9002 ×40 → ENT_B</td><td>1221 其他应收款—ENT_B</td><td class="r num">480.00</td><td class="r num">—</td></tr>
+                <tr><td>结转成本（按转出方均价 10.00）</td><td>6401 主营业务成本</td><td class="r num">400.00</td><td class="r num">—</td></tr>
+                <tr><td>视同销售收入（按作价 12.00）</td><td>6001 主营业务收入</td><td class="r num">—</td><td class="r num">480.00</td></tr>
+                <tr><td>结转成本</td><td>1405 库存商品</td><td class="r num">—</td><td class="r num">400.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="voucher-foot">
+            <span>Σ借 <b class="num">880.00</b></span><span>Σ贷 <b class="num">880.00</b></span>
+            <span class="chip chip--ok">平衡 ✓</span>
+            <span class="muted">已实现毛利 80.00 = 40 × (12.00 − 10.00)</span>
+          </div>
+        </div>
+
+        <div class="voucher">
+          <div class="voucher-head is-consol">
+            <span class="voucher-no">CON-0001</span>
+            <span class="chip chip--ledger">§8.1.11 集团内抵消</span>
+            <span class="voucher-sub">来源 OT-202601-0001 · <b>账套 CG 合并账套</b> · voucher_source = CONSOLIDATE · 凭证日期 2026-01-01</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>摘要</th><th>科目</th><th class="r">借方</th><th class="r">贷方</th></tr></thead>
+              <tbody>
+                <tr><td>抵消集团内未实现损益</td><td>6001 主营业务收入</td><td class="r num">480.00</td><td class="r num">—</td></tr>
+                <tr><td>抵消集团内未实现损益</td><td>6401 主营业务成本</td><td class="r num">—</td><td class="r num">400.00</td></tr>
+                <tr><td>抵消存货中的未实现毛利</td><td>1405 库存商品</td><td class="r num">—</td><td class="r num">80.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="voucher-foot">
+            <span>Σ借 <b class="num">480.00</b></span><span>Σ贷 <b class="num">480.00</b></span>
+            <span class="chip chip--ok">平衡 ✓</span>
+            <span class="muted">抵消后合并层存货 = 转出方原成本 400.00</span>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw-brand"></i>法人层凭证（进各自账套 LE_A / LE_B）</span>
+        <span><i class="swatch sw-ledger"></i>合并层凭证（进合并账套 CG）</span>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>金蝶导出格式 · 16 列</h2>
+          <span class="ref-chip">设计 §8.3</span>
+          <span class="fr">FR-54</span>
+        </div>
+        <div class="card-body">
+          <div class="code"><i>按账套分开导出：</i>
+LE_A → 自营主体A 账套
+LE_B → 自营主体B 账套
+CG   → <b>合并账套</b>
+
+<b>legal_entity</b>   法人主体      <i>← 决定进哪个账套</i>
+<b>voucher_source</b> 凭证来源      <i>CONSOLIDATE 单独一组</i>
+<b>owner_code</b>     货主编码
+voucher_no / voucher_date / period
+summary / subject_code / subject_name
+debit_amount / credit_amount
+currency / rate
+doc_type / doc_no / line_no
+settle_status</div>
+          <div class="callout callout--danger" style="margin-top:12px">
+            <span class="mark">!</span>
+            <div><b>凭证日期 = 记账期间首日</b>（本屏全部 2026-01-01），<b>不是系统当前日期</b>——否则同一业务期间的单据会落进不同会计月。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>价差三分类 · 不可合并</h2>
+          <span class="ref-chip">设计 §8.2 / §13.1</span>
+          <span class="fr">FR-55</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>variance_type</th><th>含义</th><th>科目</th><th>为什么不能合并</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">PRICE</td><td>价格差异</td><td class="mono">1404</td><td rowspan="3">合并后<b>无法归因到责任部门</b>——是采购谈价的问题、是用量的问题、还是汇率的问题，分不出来就没人认账</td></tr>
+                <tr><td class="mono">QTY</td><td>数量差异</td><td class="mono">1404.01</td></tr>
+                <tr><td class="mono">RATE</td><td>汇率差异</td><td class="mono">6603</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          科目映射按 <span class="mono">(单据类型 + 借贷方向 + 物料类别 + 仓库类型 + 价差分类 + 货主层级)</span> 匹配，<b>取最具体的一条</b>；
+          <span class="mono">owner_level = 2</span> 的行<b>不配科目</b>——二级不是会计主体。附录 §13.1 的科目编码<b>仅供参考</b>，须财务部确认。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M8</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li><b>11 个模板可分别生成</b>，UAT 覆盖无遗漏。</li>
+          <li>每张凭证 <b>Σ借 = Σ贷</b>，不平<b>拒绝落库并告警</b>——不允许「先入库、后补平」。</li>
+          <li>凭证<b>按法人分账</b>：<span class="mono">LE_A</span> / <span class="mono">LE_B</span> 各自账套，<span class="mono">CONSOLIDATE</span> 进合并账套，导出时分开。</li>
+          <li><b>凭证日期 = 记账期间首日</b>，与单据的 <span class="mono">biz_date</span> 无关。</li>
+          <li>导出字段 16 列与格式符合 <span class="mono">§8.3</span>。</li>
+          <li>价差三分类分别落 <span class="mono">1404</span> / <span class="mono">1404.01</span> / <span class="mono">6603</span>，<b>没有被合并</b>。</li>
+          <li><b>查不到 <span class="mono">OWNER_REASSIGN</span> 来源的任何凭证</b>（这是断言「不该有」，不是「忘了做」）。</li>
+          <li>税额<b>不进存货成本</b>：<span class="mono">PO-0001</span> 的 2,260.00 中，进存货的是 2,000.00。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 10 · 月结与对账
+       ============================================================ -->
+  <section class="screen" id="s-close">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>月结与对账</h1>
+        <span class="ref-chip">设计 §3.4.3 / §3.5.6 / §4.3.6 / §9</span>
+        <span class="fr">FR-56</span><span class="fr">FR-57</span><span class="fr">FR-58</span><span class="fr">FR-59</span><span class="fr">FR-60</span>
+        <span class="fr">FR-61</span><span class="fr">FR-62</span><span class="fr">FR-63</span><span class="fr">FR-64</span><span class="fr">FR-65</span><span class="fr">FR-66</span>
+      </div>
+      <p class="page-desc">
+        <b>日结只校验、月结即锁账。</b>锁账之后只剩两条路，且语义<b>不能互相代替</b>：
+        <b>「结错了」走反结账</b>（须审批留痕）、<b>「漏了一笔」走当期补录单</b>（必审，按当期口径量价）。混用会让审计无法区分「错误」与「遗漏」。
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>会计期间</h2>
+        <span class="ref-chip">设计 §4.3.6</span>
+        <span class="fr">FR-61</span><span class="fr">FR-64</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>期间</th><th>起止</th><th>is_closed</th><th>月结时间</th>
+                <th class="r">snapshot_version</th><th class="r">reopen_count</th><th>最后反结账</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="is-key">
+                <td class="mono">2026-01</td><td class="num">01-01 ~ 01-31</td>
+                <td><span class="chip chip--ghost">N · 未锁账</span></td>
+                <td class="muted">—</td>
+                <td class="r num">—</td><td class="r num">0</td><td class="muted">—</td>
+                <td><span class="btn btn--primary" style="padding:3px 9px">执行月结</span></td>
+              </tr>
+              <tr>
+                <td class="mono">2025-12</td><td class="num">12-01 ~ 12-31</td>
+                <td><span class="chip chip--ok">Y · 已锁账</span></td>
+                <td class="num">2026-01-05 09:12</td>
+                <td class="r num">3</td><td class="r num">1</td>
+                <td>
+                  <span class="mono" style="font-size:11.5px">2026-01-18 · 财务管理员 张</span>
+                  <span class="lb">原因：2025-12-28 一笔入库单漏推，需重开期间补录</span>
+                </td>
+                <td><span class="btn" style="padding:3px 9px">反结账</span></td>
+              </tr>
+              <tr class="is-dim">
+                <td class="mono">2025-11</td><td class="num">11-01 ~ 11-30</td>
+                <td><span class="chip chip--ok">Y · 已锁账</span></td>
+                <td class="num">2025-12-03 14:40</td>
+                <td class="r num">2</td><td class="r num">0</td><td class="muted">—</td>
+                <td><span class="btn" style="padding:3px 9px">反结账</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>反结账不是「回滚」</b>——它是「开期间 + 追加修正事件 + 重放」。
+        <span class="mono">snapshot_version</span> 递增而<b>旧版本保留</b>：审计要能看到「改之前是什么样」。
+      </div>
+    </div>
+
+    <div class="stepper">
+      <div class="step is-done"><div class="step-n">关 1</div><div class="step-t">日常对账</div><div class="step-s">数量日清 · 已通过</div></div>
+      <div class="step is-done"><div class="step-n">关 2</div><div class="step-t">守恒校验</div><div class="step-s">含二级硬校验 · 已通过</div></div>
+      <div class="step is-now"><div class="step-n">关 3</div><div class="step-t">跌价计提</div><div class="step-s">进行中</div></div>
+      <div class="step"><div class="step-n">关 4</div><div class="step-t">舍入结转</div><div class="step-s">待办</div></div>
+      <div class="step"><div class="step-n">关 5</div><div class="step-t">凭证生成导出</div><div class="step-s">待办</div></div>
+      <div class="step"><div class="step-n">关 6</div><div class="step-t">月结对账</div><div class="step-s">待办</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>关 1 · 数量对账（日清）</h2>
+        <span class="ref-chip">设计 §9.1</span>
+        <span class="fr">FR-56</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">维度：物理层 (物料, 仓库, 批次) · 基准：BIZ_SNAPSHOT · 每日</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>对账日</th><th>物料</th><th>仓库</th><th>批次</th><th class="r">系统值</th><th class="r">业务值</th><th class="r">diff</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="num">2026-01-20</td><td class="mono">M0001</td><td>WH01</td><td class="mono">B2601-A</td><td class="r num">20</td><td class="r num">20</td><td class="r num">0</td><td><span class="chip chip--ok">OK</span></td><td class="muted">—</td></tr>
+              <tr class="is-bad"><td class="num">2026-01-20</td><td class="mono">M0003</td><td>WH03</td><td class="muted">NULL</td><td class="r num">50</td><td class="r num">48</td><td class="r num">+2</td><td><span class="chip chip--danger">DIFF</span></td><td><span class="btn" style="padding:3px 9px">差异定位</span></td></tr>
+              <tr class="is-bad"><td class="num">2026-01-20</td><td class="mono">M9001</td><td>WH02</td><td class="muted">NULL</td><td class="r num">32</td><td class="r num">0</td><td class="r num">+32</td><td><span class="chip chip--danger">MISS</span></td><td><span class="btn" style="padding:3px 9px">差异定位</span></td></tr>
+              <tr class="is-bad"><td class="num">2026-01-20</td><td class="mono">M9005</td><td>WH01</td><td class="muted">NULL</td><td class="r num">0</td><td class="r num">5</td><td class="r num">−5</td><td><span class="chip chip--danger">EXTRA</span></td><td><span class="btn" style="padding:3px 9px">差异定位</span></td></tr>
+              <tr><td class="num">2026-01-20</td><td class="muted">…（另 46 个维度）</td><td></td><td></td><td></td><td></td><td class="r num">0</td><td><span class="chip chip--ok">OK</span></td><td class="muted">—</td></tr>
+              <tr class="is-total"><td colspan="5">当日 50 个维度</td><td colspan="2" class="r">3 个维度不一致</td><td><span class="chip chip--danger">97% 通过</span></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="swatch sw-ok"></i>OK —— diff = 0</span>
+        <span><i class="swatch sw-danger"></i>DIFF —— 双方都有值但不等</span>
+        <span><i class="swatch sw-danger"></i>MISS —— 系统有、业务无</span>
+        <span><i class="swatch sw-danger"></i>EXTRA —— 业务有、系统无</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>关 6 · 金额对账（月结）</h2>
+        <span class="ref-chip">设计 §9.2</span>
+        <span class="fr">FR-57</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ledger">基准：金蝶总账 GL_BALANCE</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>层</th><th>账套 / 法人</th><th class="r">系统值</th><th class="r">金蝶总账</th><th class="r">差异</th><th>容差</th><th>状态</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="chip chip--brand">LE</span> 法人层</td><td class="mono">LE_A · ENT_A</td><td class="r num">7,725.00</td><td class="r num">7,725.00</td><td class="r num">0.00</td><td class="r num">±0.01</td><td><span class="chip chip--ok">OK</span></td></tr>
+              <tr><td><span class="chip chip--brand">LE</span> 法人层</td><td class="mono">LE_B · ENT_B</td><td class="r num">20,875.29</td><td class="r num">20,875.29</td><td class="r num">0.00</td><td class="r num">±0.01</td><td><span class="chip chip--ok">OK</span></td></tr>
+              <tr class="is-key"><td><span class="chip chip--ledger">CG</span> 合并层</td><td class="mono">CG · 集团</td><td class="r num">28,600.29</td><td class="r num">28,600.29</td><td class="r num">0.00</td><td class="r num">±0.01</td><td><span class="chip chip--ok">OK</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>金额对账的对方不是业务系统</b>——业务侧没有金额权威，它只给数量快照。金额唯一能对的是<b>金蝶总账存货科目余额</b>。
+        <br>容差与 SLA <b>由双方书面确认</b>，系统不内置判定依据——设计文档给的是建议值，<b>不是单方设定的验收标准</b>。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>差异定位 <span class="mono" style="font-size:11.5px;color:var(--ink-3)">M0003 / WH03 / 2026-01-20 · +2 件</span></h2>
+        <span class="ref-chip">设计 §9.3</span>
+        <span class="fr">FR-58</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">汇总 → 下钻最近 50 笔 → 关联 t_calc_log</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>序</th><th>单据</th><th>类型</th><th>业务日期</th><th class="r">数量影响</th><th class="r">累计</th><th>calc_log</th><th>可疑</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="num">1</td><td class="mono">TRANSFER-0001</td><td class="mono">TRANSFER</td><td class="num">2026-01-22</td><td class="r num">+30</td><td class="r num">50</td><td class="mono">#8812</td><td><span class="chip chip--danger">调入行</span></td></tr>
+              <tr><td class="num">2</td><td class="muted">…（另 3 笔）</td><td></td><td></td><td class="r num">+20</td><td class="r num">20</td><td></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout--danger" style="margin:12px 16px">
+          <span class="mark">!</span>
+          <div>
+            <p><b>定位结论：</b><span class="mono">TRANSFER-0001</span> 的调入行（<span class="mono">is_in</span>=1）已入账 30 件，但业务侧快照只认 28 件。</p>
+            <p>典型原因：<b>业务的调拨单只落了一行</b>（把 1 张单当 1 行处理），或调入仓的实物尚未点收。</p>
+            <p><b>这正好是 V-02 那个缺口的现场</b>——「谁把 1 张单变成 2 行、两行的 <span class="mono">doc_type</span> 写什么」必须在下发前讲清。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>三条路 · 语义分离，不能互相代替</h2>
+        <span class="ref-chip">设计 §3.4.3 / FR-66</span>
+        <span class="fr">FR-64</span><span class="fr">FR-65</span><span class="fr">FR-66</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>情形</th><th>走哪条路</th><th>是否需审批</th><th>量价口径</th><th>留痕字段</th><th>能不能互相代替</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>未锁账</b>，发现单据错了</td>
+                <td>直接<b>改单</b></td>
+                <td>否</td>
+                <td>按原业务日期重算</td>
+                <td class="mono">version_no</td>
+                <td rowspan="3"><b style="color:var(--danger)">不能。</b><br>混用会让审计<b>无法区分「错误」与「遗漏」</b>——这是两种性质完全不同的事，责任归属也不同</td>
+              </tr>
+              <tr class="is-key">
+                <td><b>已锁账</b>，上次<b>结错了</b></td>
+                <td><b>反结账</b></td>
+                <td><b>是</b> · 审批</td>
+                <td>重开期间 → 追加修正事件 → 重放</td>
+                <td class="mono">reopen_count / last_reopen_at / last_reopen_by / last_reopen_reason</td>
+              </tr>
+              <tr class="is-key">
+                <td><b>已锁账</b>，<b>漏了一笔</b></td>
+                <td><b>当期补录单</b><br><span class="mono">PERIOD_ADJUST</span></td>
+                <td><b>是</b> · 必审</td>
+                <td><b>一律按当期口径量价</b><br><span class="lb">原业务日期只用于追溯，不用于取价</span></td>
+                <td class="mono">approved_by / approved_at / orig_biz_date</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>补录单为什么按当期口径量价？</b>因为 E-01 的排序键按<b>当日序号</b>分配，跨期回填<b>复原不出当时那个序号</b>——
+        按历史原值计价会得到与当时不一致的结果，反而是错的。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M9 / M10</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li>锁账后该期间<b>禁止任何重算、改单、作废</b>。</li>
+          <li>月结六关中<b>任一关失败阻塞定稿</b>；六关全过才出报表定稿 + 归档快照。</li>
+          <li>数量对账<b>按日</b>（物理层）；金额对账<b>按月</b>（法人层 + 合并层两段，对金蝶总账）。</li>
+          <li>反结账<b>须审批并留痕</b>，四个字段齐全；<b>不是回滚</b>——是开期间 + 追加修正事件 + 重放。</li>
+          <li>反结账后 <span class="mono">snapshot_version</span> 递增，<b>旧版本仍可查</b>。</li>
+          <li>补录单<b>必审</b>，且量价<b>按当期口径</b>——<b>不按历史原值</b>（这是最容易测错的一条）。</li>
+          <li>三条路<b>不能互相代替</b>；已锁账的改单请求被拒并指向正确的那条路。</li>
+          <li>差异可<b>从汇总行下钻到具体单据与计算过程</b>（含当时取到的价）。</li>
+          <li>容差是<b>可配参数</b>，不是硬编码。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 11 · 库存价值月报
+       ============================================================ -->
+  <section class="screen" id="s-report">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>库存价值月报</h1>
+        <span class="ref-chip">设计 §7.7 / §2.2</span>
+        <span class="fr">FR-67</span><span class="fr">FR-68</span><span class="fr">FR-69</span>
+      </div>
+      <p class="page-desc">
+        这是财务库存中心<b>反向回传业务侧</b>的唯一产物，随月结分发。
+        <b>每个指标都带口径标注</b>——因为业务侧拿到一个没有口径的「库存金额」，必然挑一个当权威值，红线就会以新形式复发。
+      </p>
+    </div>
+
+    <div class="callout callout--danger">
+      <span class="mark">!</span>
+      <div>
+        <p><b>口径标注是强制的，不是可选的。</b></p>
+        <p>若不区分口径，业务侧必然挑一个当「库存金额」——<b>红线以新形式复发，而且这次是「契约里写了、实现里没区分」</b>，更难查。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>9 个回传指标</h2>
+        <span class="ref-chip">设计 §7.7</span>
+        <span class="fr">FR-67</span><span class="fr">FR-68</span>
+        <div class="spacer"></div>
+        <span class="chip chip--ghost">期间 2026-01 · 分发日 2026-02-05</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>#</th><th>指标</th><th class="r">值</th><th>单位</th><th>口径</th><th>口径说明</th></tr>
+            </thead>
+            <tbody>
+              <tr class="is-key">
+                <td class="num">1</td><td><b>库存金额</b></td><td class="r num">28,600.29</td><td>元</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+                <td>一级货主层 · <span class="mono">is_internal = 1</span> · <b>对外唯一权威值</b></td>
+              </tr>
+              <tr>
+                <td class="num">2</td><td>库存数量（权属）</td><td class="r num">813</td><td>件</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+                <td>与库存金额同一口径，两者配套使用</td>
+              </tr>
+              <tr>
+                <td class="num">3</td><td>库存数量（在库）</td><td class="r num">863</td><td>件</td>
+                <td><span class="chip chip--ghost">物理口径</span></td>
+                <td>含代销 50 件（<span class="mono">is_internal = 0</span>）· 与数量对账基准一致</td>
+              </tr>
+              <tr>
+                <td class="num">4</td><td>成本单价</td><td class="r num">35.178708</td><td>元/件</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+                <td>= 28,600.29 ÷ 813 · 加权平均，<b>不是各核算单元单价的算术平均</b></td>
+              </tr>
+              <tr>
+                <td class="num">5</td><td>库龄结构</td><td class="r">见下</td><td>—</td>
+                <td><span class="chip chip--ghost">明细口径</span></td>
+                <td>按 <span class="mono">(物料, 仓库, 批次, 一级货主)</span> 分档</td>
+              </tr>
+              <tr>
+                <td class="num">6</td><td>跌价准备</td><td class="r num">26,025.00</td><td>元</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+                <td>本期应有额 · 双轨取孰高后汇总 · 仅 <span class="mono">is_internal = 1</span></td>
+              </tr>
+              <tr>
+                <td class="num">7</td><td>周转天数</td><td class="r num">388.2</td><td>天</td>
+                <td><span class="chip chip--brand">存货口径</span></td>
+                <td>= 平均库存 27,677.645 ÷ 出库成本 2,210.00 × 31</td>
+              </tr>
+              <tr class="is-key">
+                <td class="num">8</td><td><b>内部结算金额</b></td><td class="r num">528.00</td><td>元</td>
+                <td><span class="chip chip--l2">管理口径 · 非会计</span></td>
+                <td><span class="mono">internal_amount</span> · <b>不可加总回一级层</b></td>
+              </tr>
+              <tr class="is-key">
+                <td class="num">9</td><td><b>内部结算损益</b></td><td class="r num" style="color:var(--l2)">+48.00</td><td>元</td>
+                <td><span class="chip chip--l2">管理口径 · 非会计</span></td>
+                <td>内部未实现毛利 · 不确认会计损益、不出凭证</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>指标 1 与指标 7 是业务侧最容易拿错的一对。</b>所以第 8、9 项<b>必须与第 1 项同屏出现</b>——单独给出 <span class="mono">528.00</span> 而不给 <span class="mono">28,600.29</span>，等于把口径错误的种子递过去。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>两个金额 · 强制成对</h2>
+        <span class="ref-chip">FR-69</span>
+      </div>
+      <div class="card-body">
+        <div class="pair" style="margin-bottom:0">
+          <div>
+            <h4><span class="chip chip--brand">存货口径</span> 库存金额</h4>
+            <div class="metric-value" style="font-size:24px;margin:6px 0">28,600.29 <small>元</small></div>
+            <p>数量 813 件 · 一级货主层 · <span class="mono">is_internal = 1</span></p>
+            <p style="margin-top:6px;color:var(--brand-ink)"><b>业务侧展示「库存金额」只能用这一行。</b></p>
+          </div>
+          <div>
+            <h4><span class="chip chip--l2">管理口径 · 非会计</span> 内部结算金额</h4>
+            <div class="metric-value" style="font-size:24px;margin:6px 0;color:var(--l2)">528.00 <small>元</small></div>
+            <p>二级内部结算价累计 · <span class="mono">internal_amount</span></p>
+            <p style="margin-top:6px;color:var(--l2)"><b>不可加总、不可与上一行相加、不可单独使用。</b></p>
+          </div>
+        </div>
+      </div>
+      <div class="card-note">
+        <b>回传规则：</b>两个金额<b>必须成对出现</b>。内部结算金额单独使用<b>即口径错误</b>——不是「不太准确」，是错。
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>库龄结构</h2>
+          <span class="ref-chip">FR-46</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>库龄档</th><th class="r">数量</th><th class="r">金额</th><th class="r">金额占比</th></tr></thead>
+              <tbody>
+                <tr><td>0 – 90 天</td><td class="r num">160</td><td class="r num">970.00</td><td class="r num">3.4%</td></tr>
+                <tr><td>91 – 180 天</td><td class="r num">142</td><td class="r num">1,605.29</td><td class="r num">5.6%</td></tr>
+                <tr><td>181 – 365 天</td><td class="r num">500</td><td class="r num">20,000.00</td><td class="r num">69.9%</td></tr>
+                <tr class="is-bad"><td>365 天以上</td><td class="r num">11</td><td class="r num">6,025.00</td><td class="r num">21.1%</td></tr>
+                <tr class="is-total"><td>合计</td><td class="r num">813</td><td class="r num">28,600.29</td><td class="r num">100.0%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          库龄档来自 <span class="mono">t_depreciation_rule</span>，按物料类别分别配置、带生效期。<b>区间不重叠、不留缝。</b>
+          <br><b>各档跌价比例不在此列</b>——档位只决定「落在哪一档」，具体比例与计算结果见<b>屏 8 跌价计提</b>（逐批次的 AGE 双轨取孰高）。
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>分发记录</h2>
+          <span class="ref-chip">FR-67</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>期间</th><th>分发时间</th><th>接收方</th><th>状态</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">2026-01</td><td class="num muted">待月结定稿</td><td>业务库存中心</td><td><span class="chip chip--ghost">待分发</span></td></tr>
+                <tr><td class="mono">2025-12</td><td class="num">2026-01-05 09:20</td><td>业务库存中心</td><td><span class="chip chip--ok">已分发</span></td></tr>
+                <tr><td class="mono">2025-12</td><td class="num">2026-01-18 16:35</td><td>业务库存中心</td><td><span class="chip chip--brand">重出 v2</span></td></tr>
+                <tr><td class="mono">2025-11</td><td class="num">2025-12-03 14:50</td><td>业务库存中心</td><td><span class="chip chip--ok">已分发</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          2025-12 分发了两次——第一次是正常月结，第二次是<b>反结账重出</b>（<span class="mono">snapshot_version 2 → 3</span>）。
+          <b>两次记录都保留</b>，接收方能看到「哪个版本取代了哪个版本」。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M11</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li>月报含 <b>9 个指标</b>，随月结分发业务侧。</li>
+          <li><b>每个指标都带口径标注</b>——任取一个数字，都能回答「什么口径、哪個货主层」。</li>
+          <li><span class="mono">alloc_amount</span> 与 <span class="mono">internal_amount</span> <b>成对出现</b>，且<b>同屏可见</b>。</li>
+          <li>「库存金额」只有<b>存货口径那一行</b>，管理口径金额<b>没有被标成库存金额</b>。</li>
+          <li>反结账重出后，<b>两个版本的分发记录都保留</b>，能看出取代关系。</li>
+          <li>库龄结构按 <span class="mono">(物料, 仓库, 批次, 一级货主)</span> 分档，且<b>数量与金额都能勾稽回总额</b>。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       屏 12 · 主数据与字段
+       ============================================================ -->
+  <section class="screen" id="s-spec">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1>主数据与字段</h1>
+        <span class="ref-chip">设计 §4.1 / §4.8 / §13</span>
+        <span class="fr">FR-01</span><span class="fr">FR-02</span><span class="fr">FR-03</span><span class="fr">FR-04</span><span class="fr">FR-05</span><span class="fr">FR-06</span>
+        <span class="fr">FR-07</span><span class="fr">FR-08</span><span class="fr">FR-09</span><span class="fr">FR-10</span><span class="fr">FR-11</span>
+      </div>
+      <p class="page-desc">
+        <b>主数据是四轴的地基</b>——一级货主编码是 A 级主数据，两边不一致的话，四轴从第一天就是坏的。
+        本屏把后端要建的表、前端要做的维护界面、测试要覆盖的校验规则放在一处。
+      </p>
+    </div>
+
+    <div class="cols">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>货主树</h2>
+          <span class="ref-chip">设计 §4.1.8</span>
+          <span class="fr">FR-04</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead><tr><th>owner_code</th><th>名称</th><th class="r">level</th><th>parent</th><th>法人</th><th>is_internal</th><th>账套</th></tr></thead>
+              <tbody>
+                <tr class="is-key"><td class="mono">ENT_A</td><td>自营主体A</td><td class="r num">1</td><td class="muted">—</td><td><span class="chip chip--ok">是</span></td><td class="num">1</td><td class="mono">LE_A</td></tr>
+                <tr class="is-sub"><td class="mono">L2_EAST</td><td>二级-华东</td><td class="r num">2</td><td class="mono">ENT_A</td><td><span class="chip chip--ghost">否</span></td><td class="num">1</td><td class="mono">（随上级）</td></tr>
+                <tr class="is-sub"><td class="mono">L2_SOUTH</td><td>二级-华南</td><td class="r num">2</td><td class="mono">ENT_A</td><td><span class="chip chip--ghost">否</span></td><td class="num">1</td><td class="mono">（随上级）</td></tr>
+                <tr class="is-key"><td class="mono">ENT_B</td><td>自营主体B</td><td class="r num">1</td><td class="muted">—</td><td><span class="chip chip--ok">是</span></td><td class="num">1</td><td class="mono">LE_B</td></tr>
+                <tr class="is-dim"><td class="mono">EXT_01</td><td>外部货主-代销</td><td class="r num">1</td><td class="muted">—</td><td><span class="chip chip--danger">否</span></td><td class="num">0</td><td class="muted">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          <b>一级货主 = 法人主体</b>，与 <span class="mono">legal_entity</span> 同一概念。
+          <b>二级不进余额表主键、不进存货总额</b>——它只是一个内部管理维度。
+          <br><span class="mono">is_internal</span> 决定两件事：<b>是否进存货总额</b>、<b>是否计提跌价</b>。
+          表结构用<b>自关联树</b>表达，不写死两级——一期只做两级，但结构上为三层及以上留了位置。
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0">
+        <div class="card-head">
+          <h2>内部价目表 t_internal_price</h2>
+          <span class="ref-chip">设计 §4.1.9</span>
+          <span class="fr">FR-05</span><span class="fr">FR-40</span>
+        </div>
+        <div class="card-body tight">
+          <div class="tbl-wrap wrap">
+            <table class="data">
+              <thead>
+                <tr><th>物料</th><th>转入方（二级）</th><th>price_type</th><th class="r">FIXED 值</th><th class="r">markup_rate</th><th>生效期</th><th>来源</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="mono">M9002</td><td class="mono">L2_EAST</td><td><span class="chip chip--l2">MARKUP</span></td><td class="r muted">—</td><td class="r num">0.1000000</td><td class="num">2026-01-01 ~ 2026-06-30</td><td><span class="chip chip--ghost">政策数据</span></td></tr>
+                <tr><td class="mono">M9002</td><td class="mono">L2_SOUTH</td><td><span class="chip chip--l2">MARKUP</span></td><td class="r muted">—</td><td class="r num">0.1000000</td><td class="num">2026-01-01 ~ 2026-06-30</td><td><span class="chip chip--ghost">政策数据</span></td></tr>
+                <tr><td class="mono">M9001</td><td class="mono">L2_EAST</td><td><span class="chip chip--brand">FIXED</span></td><td class="r num">13.200000</td><td class="r muted">—</td><td class="num">2026-01-01 ~ 2026-12-31</td><td><span class="chip chip--ghost">政策数据</span></td></tr>
+                <tr class="is-dim"><td class="mono">M9002</td><td class="mono">L2_EAST</td><td><span class="chip chip--l2">MARKUP</span></td><td class="r muted">—</td><td class="r num">0.0500000</td><td class="num muted">2025-07-01 ~ 2025-12-31 <span class="lb">已失效</span></td><td><span class="chip chip--ghost">政策数据</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-note">
+          <b>取价三条铁律</b>：按<b>业务日期</b>取价 → 取到即<b>快照</b>进单据行 → 调价<b>不追溯</b>（最后那行 2025 年的失效价，对 2026 年的单据毫无影响）。
+          <br><span class="mono">price_type</span> 是<b>行属性、不进主键</b>——否则同一格子里两条行会互相竞争。<b>同一格子在生效期内不重叠。</b>
+          <br><b>一级 <span class="mono">transfer_price</span> 在这张表里配不到</b>——它是交易数据，由业务侧逐笔传入。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>主数据维护清单（11 张表 / FR-01 – FR-11）</h2>
+        <span class="ref-chip">设计 §4.1 / §4.8.1</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>FR</th><th>维护对象</th><th>表</th><th>关键约束</th><th>优先级</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">FR-01</td><td>物料</td><td class="mono">t_material</td>
+                <td>编码唯一；<b><span class="mono">launch_date</span> 必填</b>（3C 跌价依赖）；<span class="mono">batch_managed</span> 决定是否建批次行</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-02</td><td>仓库</td><td class="mono">t_warehouse</td>
+                <td>类型枚举 = 自营 / 平台 / 海外 / 在途 / 虚拟（<b>无原料库 / 在制品库</b>）；<span class="mono">legal_entity</span> 必填</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-03</td><td>供应商 / 客户</td><td class="mono">t_supplier · t_customer</td>
+                <td><span class="mono">taxpayer_id</span>、<span class="mono">is_related_party</span>；关联方标识缺失时在抵消与对账环节提示</td>
+                <td><span class="prio prio--p1">P1</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-04</td><td>货主（两级树）</td><td class="mono">t_cargo_owner</td>
+                <td><b>一级货主编码为 A 级主数据（须双方一致）</b>；二级必填上级；<span class="mono">is_internal</span> 决定存货总额与跌价范围</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-05</td><td>内部价目表</td><td class="mono">t_internal_price</td>
+                <td>同一格子生效期不重叠；<span class="mono">price_type</span> 不进主键；按业务日期取价 + 取到即快照 + 调价不追溯</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-06</td><td>计价方法配置</td><td class="mono">t_price_method_config</td>
+                <td>键 = <b>核算单元 <span class="mono">(物料, 仓库, 一级货主)</span></b>；<b>必须含一级货主</b>——少一维则「同物料+仓库、A 法人走 MA、B 法人走 SI」无法表达</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-07</td><td>跌价规则</td><td class="mono">t_depreciation_rule</td>
+                <td>同一类别可<b>并存 AGE 与 LAUNCH</b>；区间不重叠、不留缝</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-08</td><td>单位换算</td><td class="mono">t_unit_conversion</td>
+                <td>一律「1 业务单位 = N 基本单位」；<b>换算率缺失时拒绝入账，不做 1:1 兜底</b></td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-09</td><td>费用分摊规则</td><td class="mono">t_cost_allocation_rule</td>
+                <td>分摊结果<b>落单据行 <span class="mono">allocated_cost</span></b>，<b>不留到月末统一分摊</b></td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-10</td><td>系统参数</td><td class="mono">t_system_param</td>
+                <td><span class="mono">NEGATIVE_STOCK_TOLERANCE</span> 等；可改且<b>留痕</b>；默认 <span class="mono">0</span></td>
+                <td><span class="prio prio--p1">P1</span></td>
+              </tr>
+              <tr>
+                <td class="mono">FR-11</td><td>科目映射</td><td class="mono">t_subject_mapping</td>
+                <td>按 <span class="mono">(单据类型 + 借贷方向 + 物料类别 + 仓库类型 + 价差分类 + 货主层级)</span> 匹配，<b>取最具体</b>；<span class="mono">owner_level=2</span> 不配科目</td>
+                <td><span class="prio prio--p0">P0</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-note">
+        全库共 <b>28 张表</b>（v0.4 新增 14 张）：主数据 12 + 单据 4 + 余额与日志 6 + 凭证 2 + 对账 1 + 跌价 1 + 导入 1 + 科目 1。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>核心字段口径（后端建表 / 前端表单共用）</h2>
+        <span class="ref-chip">设计 §4.2 / §4.3</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead>
+              <tr><th>字段</th><th>表</th><th>类型</th><th>必填</th><th>口径</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="mono">base_qty</td><td class="mono">t_document_line</td><td>decimal(18,4)</td><td><span class="chip chip--danger">是</span></td><td><b>核算唯一口径</b>——数量一律用基本单位；业务单位只作展示</td></tr>
+              <tr><td class="mono">is_in</td><td class="mono">t_document_line</td><td>tinyint</td><td><span class="chip chip--danger">是</span></td><td><b>0 = 调出仓 / 1 = 调入仓</b>；调拨两行靠它区分</td></tr>
+              <tr><td class="mono">biz_status</td><td class="mono">t_document_header</td><td>varchar</td><td><span class="chip chip--danger">是</span></td><td>DRAFT / SUBMITTED / APPROVED / EFFECTIVE / VOID</td></tr>
+              <tr><td class="mono">cost_status</td><td class="mono">t_document_line</td><td>varchar</td><td><span class="chip chip--danger">是</span></td><td>PENDING / CALCULATED / ROLLED_BACK · <b>作废闸门就是它</b></td></tr>
+              <tr><td class="mono">red_flag</td><td class="mono">t_document_line</td><td>tinyint</td><td><span class="chip chip--danger">是</span></td><td>0 / 1 · 报表过滤 = <span class="mono">EFFECTIVE AND red_flag=0</span></td></tr>
+              <tr><td class="mono">red_ref_doc</td><td class="mono">t_document_line</td><td>varchar</td><td>条件</td><td>红冲时指向原单号</td></tr>
+              <tr><td class="mono">settle_status</td><td class="mono">t_document_line</td><td>varchar</td><td><span class="chip chip--danger">是</span></td><td>ESTIMATED / SETTLED / ADJUSTED · 支撑暂估冲回链路</td></tr>
+              <tr><td class="mono">estimate_ref_doc</td><td class="mono">t_document_line</td><td>varchar</td><td>条件</td><td>发票到达时指向原暂估单</td></tr>
+              <tr><td class="mono">alloc_amount</td><td class="mono">t_owner_allocation</td><td>decimal(18,2)</td><td><span class="chip chip--danger">是</span></td><td>= 数量 × <b>一级均价</b> · <b>硬校验能加总</b></td></tr>
+              <tr><td class="mono">internal_amount</td><td class="mono">t_owner_allocation</td><td>decimal(18,2)</td><td><span class="chip chip--danger">是</span></td><td>= 按 <span class="mono">internal_price</span> 累计 · <b>不做等式校验</b></td></tr>
+              <tr><td class="mono">internal_pl</td><td class="mono">t_owner_allocation</td><td>decimal(18,2)</td><td><span class="chip chip--danger">是</span></td><td>= <span class="mono">internal_amount − alloc_amount</span> · 内部未实现毛利</td></tr>
+              <tr><td class="mono">is_accounting_event</td><td class="mono">t_document_line</td><td>tinyint</td><td><span class="chip chip--danger">是</span></td><td><b>显式分列一二级</b>：一级=1 出凭证，二级=0 绝不出</td></tr>
+              <tr><td class="mono">price_source</td><td class="mono">t_document_line</td><td>varchar</td><td><span class="chip chip--danger">是</span></td><td>取价来源 · 必须可追（交易数据 / 政策数据）</td></tr>
+              <tr><td class="mono">price_base</td><td class="mono">t_document_line</td><td>decimal(18,6)</td><td>条件</td><td>MARKUP 时 = <b>当时该一级货主层均价</b>（<b>层级别取错</b>）</td></tr>
+              <tr><td class="mono">markup_rate</td><td class="mono">t_document_line</td><td>decimal(10,7)</td><td>条件</td><td>MARKUP 加成率</td></tr>
+              <tr><td class="mono">price_value</td><td class="mono">t_document_line</td><td>decimal(18,6)</td><td><span class="chip chip--danger">是</span></td><td>实际取到的价（快照）</td></tr>
+              <tr><td class="mono">batch_no</td><td class="mono">t_inventory_balance</td><td>varchar</td><td>否</td><td><b>NULL = 均价行</b>；非 NULL = 批次明细行且 <span class="mono">unit_price</span> 留空</td></tr>
+              <tr><td class="mono">rounding_diff_acc</td><td class="mono">t_inventory_balance</td><td>decimal(18,6)</td><td><span class="chip chip--danger">是</span></td><td>累计舍入差异 · <b>只在出库产生</b> · 月末一次性结转</td></tr>
+              <tr><td class="mono">prev_provision_amount</td><td class="mono">t_depreciation_result</td><td>decimal(18,2)</td><td><span class="chip chip--danger">是</span></td><td>上期已计提 · <b>没有它算不出本期该提多少</b></td></tr>
+              <tr><td class="mono">provision_by_age</td><td class="mono">t_depreciation_result</td><td>decimal(18,2)</td><td><span class="chip chip--danger">是</span></td><td>库龄法结果 · <b>与下一列并列出，不只留孰高</b></td></tr>
+              <tr><td class="mono">provision_by_launch</td><td class="mono">t_depreciation_result</td><td>decimal(18,2)</td><td><span class="chip chip--danger">是</span></td><td>上市周期法结果</td></tr>
+              <tr><td class="mono">snapshot_version</td><td class="mono">t_balance_snapshot</td><td>int</td><td><span class="chip chip--danger">是</span></td><td>反结账重出时 +1 · <b>旧版本保留</b></td></tr>
+              <tr><td class="mono">reopen_count</td><td class="mono">t_period</td><td>int</td><td><span class="chip chip--danger">是</span></td><td>反结账次数 · 配 <span class="mono">last_reopen_at / _by / _reason</span></td></tr>
+              <tr><td class="mono">is_closed</td><td class="mono">t_period</td><td>tinyint</td><td><span class="chip chip--danger">是</span></td><td><b>月结即锁账</b>；锁账后禁止重算 / 改单 / 作废</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>校验规则摘要（F01 – F23）</h2>
+        <span class="ref-chip">设计 §3.6 / §5.5 / §8.1</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead><tr><th>编号</th><th>规则</th><th>测试要点</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">F01</td><td>税额不入存货成本</td><td>含税入库<b>不得</b>使存货科目金额含税；进项税单独进科目</td></tr>
+              <tr><td class="mono">F02</td><td>入库只舍入单价、不回改金额</td><td><span class="mono">2,000.00 + 350.00 = 2,350.00</span>，<b>不是</b>按均价反算</td></tr>
+              <tr><td class="mono">F03</td><td>每张凭证 <span class="mono">Σ借 = Σ贷</span> + 按法人分账</td><td>不平<b>拒绝落库</b>；不允许先入库后补平</td></tr>
+              <tr><td class="mono">F04</td><td>金额对账比金蝶总账</td><td><b>业务侧不给金额</b>——拿它当金额基准是错的</td></tr>
+              <tr><td class="mono">F09</td><td>附加费用落行，不分摊到月末</td><td>分摊结果在<b>单据行</b> <span class="mono">allocated_cost</span> 上就能查到</td></tr>
+              <tr><td class="mono">F10</td><td><span class="mono">base_qty</span> 为核算唯一口径</td><td>换算率缺失<b>拒绝入账</b>，不做 1:1 兜底</td></tr>
+              <tr><td class="mono">F11</td><td><span class="mono">taxpayer_id</span> / <span class="mono">is_related_party</span></td><td>关联方标识缺失时<b>合并抵消与对账环节有提示</b></td></tr>
+              <tr><td class="mono">F12 / F13</td><td>数量守恒 / 金额守恒</td><td>期初 + 入 − 出 = 期末（两套都查）</td></tr>
+              <tr><td class="mono">F19</td><td>暂估 → 冲回链路</td><td>两笔事件<b>各出一张凭证</b>，不是一次 UPDATE</td></tr>
+              <tr><td class="mono">F21</td><td>容差与 SLA 须双方书面确认</td><td>系统<b>不内置</b>判定依据；容差是可配参数</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>非功能需求（NFR-01 – NFR-10）</h2>
+        <span class="ref-chip">设计 §10</span>
+      </div>
+      <div class="card-body tight">
+        <div class="tbl-wrap wrap">
+          <table class="data">
+            <thead><tr><th>编号</th><th>类别</th><th>要求</th><th>验收口径</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">NFR-01</td><td>性能</td><td>单据计算 TPS ≥ <b>100 单/秒</b></td><td>按核算单元串行、跨单元并行后的<b>聚合值</b>；<b>单单元内不提速</b></td></tr>
+              <tr><td class="mono">NFR-02</td><td>性能</td><td>库存余额表查询 &lt; <b>3 秒</b></td><td>在 D-09 量级参数下压测</td></tr>
+              <tr><td class="mono">NFR-03</td><td>性能</td><td>月末结账（10 万 SKU）&lt; <b>10 分钟</b></td><td>六关全流程计时</td></tr>
+              <tr><td class="mono">NFR-04</td><td>性能</td><td>并发用户 <b>50</b></td><td>压测通过</td></tr>
+              <tr><td class="mono">NFR-05</td><td>精度</td><td>数量 4 位 / 金额 2 位 / 单价 6 位</td><td>数量一律用<b>基本单位</b> <span class="mono">base_qty</span>；业务单位只作展示</td></tr>
+              <tr><td class="mono">NFR-06</td><td>安全</td><td>三种角色</td><td>财务管理员 / 财务操作员 / 业务查询员</td></tr>
+              <tr><td class="mono">NFR-07</td><td>安全</td><td>所有增删改记录审计轨迹</td><td>操作日志可查</td></tr>
+              <tr class="is-key"><td class="mono">NFR-08</td><td>安全</td><td><b>反结账权限独立于日常操作权限</b></td><td>补录权限与查询权限分离；三者在系统里是<b>不同权限点</b></td></tr>
+              <tr><td class="mono">NFR-09</td><td>可扩展</td><td>四处边界划在<b>接口</b>上</td><td>数据接入适配层 / <span class="mono">ApprovalGateway</span> / 计价方法 / 跌价双轨 + 科目映射多维</td></tr>
+              <tr><td class="mono">NFR-10</td><td>可审计</td><td>事件<b>只增不删</b>，余额可重放重建</td><td><span class="mono">t_calc_log</span> 删除任一行都会导致重放结果与余额不一致</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>本屏验收要点</h2>
+        <span class="ref-chip">PRD M1</span>
+      </div>
+      <div class="card-body">
+        <ul class="ac">
+          <li><b>一级货主编码为 A 级主数据</b>，须双方一致——这是四轴能否成立的前提。</li>
+          <li>货主树用<b>自关联树</b>表达，不写死两级。</li>
+          <li>仓库类型枚举中<b>没有「原料库 / 在制品库」</b>（无生产环节）。</li>
+          <li>计价方法配置的键<b>含一级货主</b>——少一维则「同物料+仓库、A 法人走 MA、B 法人走 SI」无法表达。</li>
+          <li>内部价目表同一格子在生效期内<b>不重叠</b>；失效价对后续期间<b>无影响</b>。</li>
+          <li><b>一级 <span class="mono">transfer_price</span> 在这张表里配不到</b>——它不配置。</li>
+          <li>跌价规则中同一类别可<b>并存 AGE 与 LAUNCH</b>，区间不重叠不留缝。</li>
+          <li>科目映射 <span class="mono">owner_level=2</span> 的行<b>不配科目</b>。</li>
+          <li><span class="mono">base_qty</span> 是核算唯一口径；换算率缺失<b>拒绝入账</b>。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ================= 状态栏 ================= -->
+  <footer class="statusbar">
+    <span><i class="dot dot--ok"></i>核算单元一致性 <b>通过</b></span>
+    <span><i class="dot dot--warn"></i>期间 <b>2026-01</b> 未锁账</span>
+    <span><i class="dot dot--off"></i>演示数据 · 自洽性已校验</span>
+    <span class="num">FR 69 条 · NFR 10 条 · 11 模块 · 12 屏</span>
+    <span style="margin-left:auto">依据《财务库存中心（一期）产品需求文档 v1.0》· 同步《详细设计文档 v0.4》</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var navItems = document.querySelectorAll('.nav-item[data-screen]');
+  var screens  = document.querySelectorAll('.screen');
+
+  function show(id){
+    screens.forEach(function(s){ s.classList.toggle('is-active', s.id === 's-' + id); });
+    navItems.forEach(function(b){
+      if(b.dataset.screen === id){ b.setAttribute('aria-current','page'); }
+      else { b.removeAttribute('aria-current'); }
+    });
+    if(window.scrollTo){ window.scrollTo({top:0, behavior:'auto'}); }
+  }
+
+  navItems.forEach(function(btn){
+    btn.addEventListener('click', function(){ show(btn.dataset.screen); });
+  });
+
+  document.querySelectorAll('.tabs').forEach(function(group){
+    var tabs = group.querySelectorAll('.tab');
+    tabs.forEach(function(tab){
+      tab.addEventListener('click', function(){
+        tabs.forEach(function(t){ t.setAttribute('aria-selected', t === tab ? 'true' : 'false'); });
+        var scope = group.parentElement;
+        scope.querySelectorAll('.tabpanel').forEach(function(p){
+          p.classList.toggle('is-active', p.id === tab.dataset.panel);
+        });
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

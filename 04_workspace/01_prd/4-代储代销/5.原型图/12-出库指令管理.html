@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出库指令管理 - 金融助手</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; line-height: 1.6; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 256px; background: #001529; color: #fff; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-brand { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .sidebar-brand::before { content: '⚡'; font-size: 20px; }
+        .sidebar-menu { flex: 1; padding: 12px 0; overflow-y: auto; }
+        .sidebar-item { padding: 14px 24px; color: rgba(255,255,255,0.65); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; border-left: 3px solid transparent; }
+        .sidebar-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-item.active { color: #fff; background: #1890ff; border-left-color: #fff; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header { background: #fff; height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8e8e8; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .breadcrumb { font-size: 14px; color: #8c8c8c; }
+        .breadcrumb span:last-child { color: #262626; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #8c8c8c; }
+        .header-icon:hover { background: #f5f5f5; color: #262626; }
+        .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+        .content-wrapper { flex: 1; padding: 24px; overflow-y: auto; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 600; color: #262626; }
+        .search-area { background: #fafafa; padding: 20px 24px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+        .search-item { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { display: block; font-size: 13px; color: #262626; margin-bottom: 6px; }
+        .form-input { padding: 9px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; transition: all 0.3s; min-width: 180px; }
+        .form-input:focus { outline: none; border-color: #1890ff; box-shadow: 0 0 0 3px rgba(24,144,255,0.1); }
+        select.form-input { cursor: pointer; }
+        .btn { padding: 9px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #595959; }
+        .btn-default:hover { border-color: #1890ff; color: #1890ff; }
+        .btn-success { background: #52c41a; color: #fff; }
+        .btn-success:hover { background: #73d13d; }
+        .btn-sm { padding: 5px 12px; font-size: 13px; }
+        .data-table { border-collapse: collapse; font-size: 14px; width: 100%; }
+        .data-table th { background: #fafafa; padding: 14px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; font-weight: 600; color: #262626; white-space: nowrap; }
+        .data-table td { padding: 16px; border-bottom: 1px solid #f0f0f0; color: #595959; white-space: nowrap; }
+        .data-table tr:hover { background: #fafafa; }
+        .table-scroll { overflow-x: auto; margin: 0 24px 24px; width: calc(100% - 48px); }
+        .table-scroll .data-table { width: auto; min-width: 100%; }
+        
+        /* 状态标签 */
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        
+        /* 指令状态标签 */
+        .tag-pending { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+        .tag-published { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .tag-outbound { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        
+        .link { color: #1890ff; cursor: pointer; }
+        .link:hover { text-decoration: underline; }
+        
+        /* 分页样式 */
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #f0f0f0; }
+        .pagination-total { font-size: 13px; color: #8c8c8c; margin-right: 12px; }
+        .pagination-page { display: flex; gap: 4px; }
+        .pagination-item { min-width: 32px; height: 32px; padding: 0 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; color: #595959; cursor: pointer; transition: all 0.3s; background: #fff; }
+        .pagination-item:hover { border-color: #1890ff; color: #1890ff; }
+        .pagination-item.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .pagination-item.disabled { color: #d9d9d9; cursor: not-allowed; border-color: #d9d9d9; }
+        .pagination-jump { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #595959; margin-left: 12px; }
+        .pagination-jump input { width: 48px; height: 32px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 6px; text-align: center; font-size: 14px; }
+        
+        .alert-info { background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: #1890ff; margin: 0 24px 24px; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; font-size: 14px; color: #fff; z-index: 9999; animation: slideDown 0.3s ease; }
+        .toast.success { background: #52c41a; }
+        .toast.error { background: #ff4d4f; }
+        .toast.warning { background: #faad14; }
+        .toast.info { background: #1890ff; }
+        @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        
+        /* V2.5 info-section styles */
+        .info-section { margin-bottom: 24px; }
+        .info-section:last-child { margin-bottom: 0; }
+        .section-title { font-size: 15px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-left: 12px; border-left: 3px solid #1890ff; }
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 24px; background: #fafafa; padding: 20px; border-radius: 8px; }
+        .info-item { display: flex; flex-direction: column; gap: 4px; }
+        .info-label { color: #8c8c8c; font-size: 13px; flex-shrink: 0; }
+        .info-value { color: #262626; font-weight: 500; }
+        
+        /* 弹窗样式 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #fff; border-radius: 8px; width: 640px; max-width: 90%; max-height: 80vh; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: modalIn 0.3s ease; }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 16px; font-weight: 600; color: #262626; }
+        .modal-close { font-size: 20px; color: #8c8c8c; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+        .modal-close:hover { background: #f5f5f5; color: #262626; }
+        .modal-body { padding: 24px; max-height: calc(80vh - 140px); overflow-y: auto; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px; }
+        
+        /* 详情区域 */
+        .detail-section { margin-bottom: 24px; }
+        .detail-section:last-child { margin-bottom: 0; }
+        .detail-title { font-size: 14px; font-weight: 600; color: #262626; margin-bottom: 16px; padding-left: 12px; border-left: 4px solid #1890ff; }
+        .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .detail-item { display: flex; align-items: flex-start; }
+        .detail-label { color: #8c8c8c; font-size: 13px; width: 100px; flex-shrink: 0; }
+        .detail-value { color: #262626; font-size: 14px; flex: 1; word-break: break-all; }
+        
+        /* 操作按钮组 */
+        .action-group { display: flex; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- 左侧菜单 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">金融助手</div>
+            </div>
+            <nav class="sidebar-menu">
+                <div class="sidebar-item" data-menu="audit" onclick="switchMenu('audit')">代储代销审核</div>
+                <div class="sidebar-item" data-menu="warehouse" onclick="switchMenu('warehouse')">电子仓单管理</div>
+                <div class="sidebar-item" data-menu="margin" onclick="switchMenu('margin')">保证金拨付</div>
+                <div class="sidebar-item" data-menu="order" onclick="switchMenu('order')">代储订单管理</div>
+                <div class="sidebar-item" data-menu="sale" onclick="switchMenu('sale')">销售订单管理</div>
+                <div class="sidebar-item active" data-menu="outbound" onclick="switchMenu('outbound')">出库指令管理</div>
+                <div class="sidebar-item" data-menu="settlement" onclick="switchMenu('settlement')">清结算中心</div>
+                <div class="sidebar-item" data-menu="invoice" onclick="switchMenu('invoice')">票据中心</div>
+                <div class="sidebar-item" data-menu="receipt" onclick="switchMenu('receipt')">提货凭证管理</div>
+            </nav>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="breadcrumb"><span>首页</span> / <span id="current-menu">出库指令管理</span></div>
+                <div class="header-right">
+                    <div class="header-icon">🔔</div>
+                    <div class="header-icon">⚙️</div>
+                    <div class="header-user">👤 管理员</div>
+                </div>
+            </header>
+            
+            <div class="content-wrapper">
+
+                
+                <!-- 列表卡片 -->
+                <div class="card">
+                    <!-- 搜索区域 -->
+                    <div class="search-area">
+                        <div class="search-item">
+                            <label class="form-label">指令编号</label>
+                            <input type="text" class="form-input" id="search-instruction-no" placeholder="请输入指令编号">
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">销售订单</label>
+                            <input type="text" class="form-input" id="search-order-no" placeholder="请输入销售订单编号">
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">指令状态</label>
+                            <select class="form-input" id="search-status">
+                                <option value="">全部</option>
+                                <option value="PENDING">待发布</option>
+                                <option value="PUBLISHED">已发布</option>
+                                <option value="OUTBOUND">已出库</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="handleQuery()">查询</button>
+                        <button class="btn btn-default" onclick="handleReset()">重置</button>
+                    </div>
+                    
+                    <!-- 表格区域 -->
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>指令编号</th>
+                                    <th>销售订单编号</th>
+                                    <th>采购商</th>
+                                    <th style="text-align: right;">提货数量</th>
+                                    <th>提货码</th>
+                                    <th>指令状态</th>
+                                    <th>发布时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td>ZL20250909001</td>
+                                    <td>XS20250909001</td>
+                                    <td>买家科技</td>
+                                    <td style="text-align: right;">10</td>
+                                    <td><span class="link" onclick="showPickupCode('TH20250909ABCD')">TH20250909ABCD</span></td>
+                                    <td><span class="tag tag-published">已发布</span></td>
+                                    <td>2026-09-09 15:00</td>
+                                    <td><span class="link" onclick="showDetail('ZL20250909001')">详情</span></td>
+                                </tr>
+                                <tr>
+                                    <td>ZL20250909002</td>
+                                    <td>XS20250909002</td>
+                                    <td>华东采购</td>
+                                    <td style="text-align: right;">5</td>
+                                    <td><span class="link" onclick="showPickupCode('TH20250909EFGH')">TH20250909EFGH</span></td>
+                                    <td><span class="tag tag-pending">待发布</span></td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="action-group">
+                                            <button class="btn btn-success btn-sm" onclick="publishInstruction('ZL20250909002')">发布指令</button>
+                                            <span class="link" onclick="showDetail('ZL20250909002')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ZL20250909003</td>
+                                    <td>XS20250909003</td>
+                                    <td>深圳数码</td>
+                                    <td style="text-align: right;">8</td>
+                                    <td><span class="link" onclick="showPickupCode('TH20250909IJKL')">TH20250909IJKL</span></td>
+                                    <td><span class="tag tag-outbound">已出库</span></td>
+                                    <td>2026-09-10 09:00</td>
+                                    <td><span class="link" onclick="showDetail('ZL20250909003')">详情</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <span class="pagination-total">共 3 条</span>
+                        <div class="pagination-page">
+                            <span class="pagination-item disabled">&lt;</span>
+                            <span class="pagination-item active">1</span>
+                            <span class="pagination-item disabled">&gt;</span>
+                        </div>
+                        <div class="pagination-jump">跳至 <input type="text" value="1"> 页</div>
+                    </div>
+                    
+                    <!-- 说明 -->
+                    <div class="alert-info">
+                        <strong>说明：</strong>
+                        <br>出库指令管理功能全部是二期功能
+                        <br>出库指令在销售订单支付成功后自动生成，初始状态为"待发布"。发布指令后生成提货码，采购商凭提货码到仓库提货。
+                        <br>指令状态流转：待发布 → 已发布（生成提货码） → 已出库（采购商提货完成）。
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" id="modal-outbound-detail" onclick="if(event.target===this)closeModal('modal-outbound-detail')">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">出库指令详情</span>
+                <span class="modal-close" onclick="closeModal('modal-outbound-detail')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="info-section"><div class="section-title">基本信息</div><div class="info-grid" style="grid-template-columns: repeat(2, 1fr);"><div class="info-item"><span class="info-label">指令编号</span><span class="info-value" id="detail-instruction-no">-</span></div><div class="info-item"><span class="info-label">销售订单编号</span><span class="info-value" id="detail-order-no">-</span></div><div class="info-item"><span class="info-label">采购商</span><span class="info-value" id="detail-buyer">-</span></div><div class="info-item"><span class="info-label">指令状态</span><span class="info-value" id="detail-status">-</span></div><div class="info-item"><span class="info-label">提货数量</span><span class="info-value" id="detail-quantity">-</span></div><div class="info-item"><span class="info-label">提货码</span><span class="info-value" id="detail-pickup-code">-</span></div><div class="info-item"><span class="info-label">发布时间</span><span class="info-value" id="detail-publish-time">-</span></div></div></div>
+                <div class="info-section"><div class="section-title">提货信息</div><div class="info-grid" style="grid-template-columns: repeat(2, 1fr);"><div class="info-item"><span class="info-label">收件人</span><span class="info-value" id="detail-receiver">-</span></div><div class="info-item"><span class="info-label">联系电话</span><span class="info-value" id="detail-phone">-</span></div><div class="info-item" style="grid-column: span 2;"><span class="info-label">收件地址</span><span class="info-value" id="detail-address">-</span></div></div></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('modal-outbound-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchMenu(menu) {
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            document.querySelector('.sidebar-item[data-menu="' + menu + '"]').classList.add('active');
+            var menuNames = {'audit':'代储代销审核','warehouse':'电子仓单管理','margin':'保证金拨付','order':'代储订单管理','sale':'销售订单管理','outbound':'出库指令管理','settlement':'清结算中心','invoice':'票据中心','receipt':'提货凭证管理'};
+            document.getElementById('current-menu').textContent = menuNames[menu];
+        }
+
+        // 示例数据
+        const instructionData = {
+            'ZL20250909001': {
+                instructionNo: 'ZL20250909001',
+                orderNo: 'XS20250909001',
+                buyer: '买家科技',
+                status: '已发布',
+                statusClass: 'tag-published',
+                quantity: '10',
+                pickupCode: 'TH20250909ABCD',
+                publishTime: '2026-09-09 15:00',
+                receiver: '张先生',
+                phone: '13800138001',
+                address: '北京市朝阳区建国路88号SOHO现代城A座1201室'
+            },
+            'ZL20250909002': {
+                instructionNo: 'ZL20250909002',
+                orderNo: 'XS20250909002',
+                buyer: '华东采购',
+                status: '待发布',
+                statusClass: 'tag-pending',
+                quantity: '5',
+                pickupCode: 'TH20250909EFGH',
+                publishTime: '-',
+                receiver: '李经理',
+                phone: '13900139002',
+                address: '上海市浦东新区陆家嘴金融中心18楼'
+            },
+            'ZL20250909003': {
+                instructionNo: 'ZL20250909003',
+                orderNo: 'XS20250909003',
+                buyer: '深圳数码',
+                status: '已出库',
+                statusClass: 'tag-outbound',
+                quantity: '8',
+                pickupCode: 'TH20250909IJKL',
+                publishTime: '2026-09-10 09:00',
+                receiver: '王先生',
+                phone: '13700137003',
+                address: '深圳市南山区科技园高新南一道飞亚达大厦3楼'
+            }
+        };
+        
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 2500);
+        }
+        
+        // 查询
+        function handleQuery() {
+            const instructionNo = document.getElementById('search-instruction-no').value;
+            const orderNo = document.getElementById('search-order-no').value;
+            const status = document.getElementById('search-status').value;
+            
+            showToast('正在查询...', 'info');
+            
+            setTimeout(() => {
+                showToast('查询完成', 'success');
+                console.log('查询条件：', { instructionNo, orderNo, status });
+            }, 600);
+        }
+        
+        // 重置
+        function handleReset() {
+            document.getElementById('search-instruction-no').value = '';
+            document.getElementById('search-order-no').value = '';
+            document.getElementById('search-status').value = '';
+            showToast('已重置查询条件', 'info');
+        }
+        
+        // 显示详情弹窗
+        function showDetail(instructionNo) {
+            const data = instructionData[instructionNo];
+            if (!data) return;
+            
+            document.getElementById('detail-instruction-no').textContent = data.instructionNo;
+            document.getElementById('detail-order-no').textContent = data.orderNo;
+            document.getElementById('detail-buyer').textContent = data.buyer;
+            document.getElementById('detail-status').innerHTML = `<span class="tag ${data.statusClass}">${data.status}</span>`;
+            document.getElementById('detail-quantity').textContent = data.quantity;
+            document.getElementById('detail-pickup-code').innerHTML = `<span class="link">${data.pickupCode}</span>`;
+            document.getElementById('detail-publish-time').textContent = data.publishTime;
+            document.getElementById('detail-receiver').textContent = data.receiver;
+            document.getElementById('detail-phone').textContent = data.phone;
+            document.getElementById('detail-address').textContent = data.address;
+            
+            document.getElementById('modal-outbound-detail').classList.add('active');
+        }
+        
+        // 关闭弹窗
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // 点击遮罩关闭弹窗
+        document.getElementById('modal-outbound-detail').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal('modal-outbound-detail');
+            }
+        });
+        
+        // 显示提货码
+        function showPickupCode(code) {
+            showToast(`提货码：${code}`, 'info');
+        }
+        
+        // 发布指令
+        function publishInstruction(instructionNo) {
+            showToast(`正在发布指令 ${instructionNo}...`, 'info');
+            setTimeout(() => {
+                showToast('指令发布成功！提货码已生成', 'success');
+            }, 800);
+        }
+        
+        // 分页点击
+        document.querySelectorAll('.pagination-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (!this.classList.contains('disabled')) {
+                    document.querySelectorAll('.pagination-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+        
+        // 回车搜索
+        document.getElementById('search-instruction-no').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleQuery();
+        });
+        document.getElementById('search-order-no').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleQuery();
+        });
+        
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal('modal-outbound-detail');
+            }
+        });
+    </script>
+</body>
+</html>

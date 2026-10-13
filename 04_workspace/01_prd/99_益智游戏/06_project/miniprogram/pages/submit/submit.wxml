@@ -1,0 +1,49 @@
+<view class="page-container fade-in">
+
+  <!-- 拍照验证 -->
+  <block wx:if="{{verifyType === 'photo'}}">
+    <view class="big-icon">📷</view>
+    <view class="section-title">拍张照片吧！</view>
+    <view class="card upload-card">
+      <view class="upload-area" bindtap="takePhoto">
+        <image wx:if="{{photoUrl}}" class="preview-image" src="{{photoUrl}}"></image>
+        <view wx:else class="upload-placeholder">
+          <text class="upload-icon">📷</text>
+          <text class="upload-hint">点我拍照</text>
+        </view>
+      </view>
+      <button class="btn-secondary upload-btn" bindtap="choosePhoto">从相册选</button>
+    </view>
+  </block>
+
+  <!-- 录音验证 -->
+  <block wx:elif="{{verifyType === 'audio'}}">
+    <view class="big-icon">🎙️</view>
+    <view class="section-title">录下来吧！</view>
+    <view class="card upload-card">
+      <view class="record-section">
+        <view class="record-btn {{isRecording ? 'recording' : ''}}" bindtap="{{isRecording ? 'stopRecord' : 'startRecord'}}">
+          <text>{{isRecording ? '⏹️' : '🎙️'}}</text>
+        </view>
+        <text class="record-label">{{isRecording ? '录音中...' : '点我录音'}}</text>
+        <text wx:if="{{audioDuration}}" class="record-duration">已录 {{audioDurationDisplay}} 秒</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 家长确认 -->
+  <block wx:elif="{{verifyType === 'parent_confirm'}}">
+    <view class="big-icon">👨‍👩‍👦</view>
+    <view class="section-title">找爸爸妈妈确认！</view>
+    <view class="card confirm-card">
+      <view class="confirm-text">让爸爸妈妈看看你完成得怎么样</view>
+    </view>
+  </block>
+
+  <!-- 提交按钮 -->
+  <view class="action-section">
+    <button class="submit-btn" bindtap="submitTask" disabled="{{submitDisabled}}">
+      <text>✅ 提交</text>
+    </button>
+  </view>
+</view>

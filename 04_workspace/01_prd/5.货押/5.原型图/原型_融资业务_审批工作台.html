@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>审批工作台 - 融资业务</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.topbar-right .badge { background: #2563eb; color: #fff; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; vertical-align: middle; }
+tr:hover td { background: #f9fafb; }
+tr.row-urgent { background: #fffbeb; }
+tr.row-urgent:hover td { background: #fef3c7; }
+tr.row-overdue { background: #fef2f2; }
+tr.row-overdue:hover td { background: #fee2e2; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-gold { background: #fbbf24; color: #78350f; }
+.tag-orange { background: #ffedd5; color: #9a3412; }
+.tag-s { background: linear-gradient(135deg,#fbbf24,#f59e0b); color: #78350f; font-weight: 700; }
+.tag-a { background: #dbeafe; color: #1e40af; }
+.tag-b { background: #e0e7ff; color: #3730a3; }
+.tag-c { background: #f3f4f6; color: #6b7280; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-warning:hover { background: #d97706; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; color: #374151; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.layout-split { display: grid; grid-template-columns: 260px 1fr; gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: left; }
+.stat-card .num { font-size: 24px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.stat-card .sub { font-size: 11px; color: #9ca3af; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.stat-card .sub .up { color: #10b981; font-weight: 600; }
+.stat-card .sub .metric { color: #2563eb; font-weight: 600; }
+.score-bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; position: relative; }
+.score-bar .fill { height: 100%; border-radius: 999px; }
+.risk-dim { display: flex; flex-direction: column; gap: 14px; margin: 12px 0; }
+.risk-item { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+.risk-item .label-cell { width: 90px; flex-shrink: 0; color: #374151; font-weight: 500; }
+.risk-item .weight-cell { width: 52px; flex-shrink: 0; color: #9ca3af; font-size: 11px; }
+.risk-item .bar-wrap { flex: 1; }
+.risk-item .score-cell { width: 40px; flex-shrink: 0; font-weight: 700; font-size: 14px; text-align: right; }
+.core-info { background: linear-gradient(135deg,#f5f3ff,#ede9fe); border: 1px solid #c4b5fd; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; }
+.core-info .ci-row { display: flex; align-items: center; padding: 4px 0; gap: 8px; }
+.core-info .ci-label { color: #6d28d9; font-weight: 500; min-width: 130px; }
+.core-info .ci-value { color: #1f2937; }
+.approval-actions { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; }
+.btn-group { display: flex; gap: 8px; margin-top: 12px; }
+.radio-group { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+.radio-group label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 400; }
+.radio-group input[type="radio"] { width: auto; margin: 0; }
+.checkbox-group { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.checkbox-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 400; }
+.checkbox-group input[type="checkbox"] { width: auto; margin: 0; }
+.filter-panel { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px; }
+.filter-panel .fp-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: #1f2937; }
+.filter-panel .fp-section { margin-bottom: 16px; }
+.filter-panel .fp-section-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.filter-panel .fp-radio { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-panel .fp-radio label { display: flex; align-items: center; gap: 3px; font-size: 12px; cursor: pointer; padding: 4px 10px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; font-weight: 400; }
+.filter-panel .fp-radio label:hover { border-color: #93c5fd; }
+.filter-panel .fp-radio input[type="radio"] { display: none; }
+.filter-panel .fp-radio input[type="radio"]:checked + span { color: #fff; }
+.filter-panel .fp-radio input[type="radio"]:checked ~ span { color: #fff; }
+.filter-panel .fp-radio label:has(input:checked) { background: #2563eb; border-color: #2563eb; color: #fff; }
+.filter-panel .fp-range { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.filter-panel .fp-range input { width: 80px; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; }
+.filter-panel .fp-range .slider-wrap { flex: 1; }
+.filter-panel .fp-range input[type="range"] { width: 100%; padding: 0; border: none; }
+.filter-panel .fp-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.filter-panel .fp-date { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.filter-panel .fp-date input { flex: 1; padding: 5px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; }
+.filter-panel .fp-actions { display: flex; gap: 8px; margin-top: 10px; }
+.filter-panel .fp-actions .btn { flex: 1; text-align: center; font-size: 12px; padding: 7px 0; }
+
+.sort-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 12px; flex-wrap: wrap; }
+.sort-bar .sort-label { color: #6b7280; }
+.sort-bar .sort-item { padding: 4px 10px; border-radius: 999px; border: 1px solid #e5e7eb; cursor: pointer; color: #6b7280; }
+.sort-bar .sort-item:hover { border-color: #93c5fd; color: #2563eb; }
+.sort-bar .sort-item.active { background: #eff6ff; border-color: #2563eb; color: #2563eb; font-weight: 600; }
+.sort-bar .sort-select { padding: 4px 10px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; }
+
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; }
+.pagination .info { color: #6b7280; }
+.pagination .pages { display: flex; gap: 4px; }
+.pagination .pages span { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 6px; border: 1px solid #e5e7eb; cursor: pointer; font-size: 12px; color: #374151; }
+.pagination .pages span:hover { border-color: #93c5fd; background: #eff6ff; }
+.pagination .pages span.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.pagination .pages span.dots { border: none; cursor: default; }
+
+/* Detail page styles */
+.detail-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 0; }
+.detail-header .dh-left { display: flex; flex-direction: column; gap: 2px; }
+.detail-header .dh-left .dh-biz { font-size: 16px; font-weight: 700; color: #1f2937; }
+.detail-header .dh-left .dh-cust { font-size: 13px; color: #6b7280; }
+.detail-header .dh-right { display: flex; align-items: center; gap: 12px; font-size: 12px; }
+.detail-header .dh-right .fast-tag { background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+.detail-header .dh-right .time-tag { background: #eff6ff; color: #1e40af; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+
+.info-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.info-card-item { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; }
+.info-card-item .ic-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+.info-card-item .ic-field { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; color: #4b5563; }
+.info-card-item .ic-field .ic-val { font-weight: 500; color: #1f2937; }
+.info-card-item .ic-link { font-size: 12px; color: #2563eb; cursor: pointer; text-decoration: underline; margin-top: 6px; display: inline-block; }
+
+.ai-suggestion { background: linear-gradient(135deg,#f0fdf4,#ecfdf5); border: 1px solid #a7f3d0; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; }
+.ai-suggestion .ai-title { font-weight: 600; color: #065f46; margin-bottom: 6px; }
+.ai-suggestion .ai-line { padding: 2px 0; display: flex; align-items: baseline; gap: 6px; }
+.ai-suggestion .ai-line .ai-label { color: #6b7280; min-width: 80px; }
+.ai-suggestion .ai-warn { margin-top: 6px; padding-top: 6px; border-top: 1px solid #a7f3d0; }
+.ai-suggestion .ai-warn .warn-item { display: flex; align-items: center; gap: 4px; padding: 1px 0; font-size: 12px; }
+.ai-suggestion .ai-warn .warn-item .warn-icon { width: 16px; text-align: center; }
+
+.approval-opts { margin-bottom: 12px; }
+.approval-opts .opt-group { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+.approval-opts .opt-group label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 400; padding: 6px 14px; border: 1px solid #e5e7eb; border-radius: 6px; }
+.approval-opts .opt-group label:hover { border-color: #93c5fd; }
+.approval-opts .opt-group label:has(input:checked) { background: #eff6ff; border-color: #2563eb; color: #2563eb; font-weight: 600; }
+.approval-opts .opt-group input[type="radio"] { width: auto; margin: 0; }
+.cond-field { display: none; margin-top: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; }
+.cond-field.show { display: block; }
+
+.history-timeline { position: relative; padding-left: 24px; }
+.history-timeline::before { content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: #e5e7eb; }
+.history-item { position: relative; padding: 0 0 16px 16px; font-size: 13px; }
+.history-item:last-child { padding-bottom: 0; }
+.history-item::before { content: ''; position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #e5e7eb; border: 2px solid #fff; }
+.history-item.current::before { background: #2563eb; }
+.history-item .hi-time { font-size: 11px; color: #9ca3af; }
+.history-item .hi-actor { font-weight: 600; color: #374151; }
+.history-item .hi-action { color: #2563eb; font-weight: 500; }
+.history-item .hi-comment { color: #6b7280; }
+.history-item .hi-status { font-size: 11px; color: #6b7280; }
+
+.back-link { font-size: 13px; color: #2563eb; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+.back-link:hover { text-decoration: underline; }
+
+.risk-summary { display: flex; align-items: center; gap: 20px; margin: 12px 0; padding: 12px 16px; background: #f9fafb; border-radius: 8px; }
+.risk-summary .rs-score { font-size: 28px; font-weight: 700; }
+.risk-summary .rs-info { font-size: 13px; }
+.risk-summary .rs-info .rs-level { font-weight: 600; }
+.risk-formula { font-size: 11px; color: #9ca3af; text-align: center; margin-top: 6px; }
+
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item active">💰 融资业务</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">审批工作台</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item">🧾 结算管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="breadcrumb">融资业务 / <strong>审批工作台</strong></span>
+      <span class="badge">审批待办 12</span>
+    </div>
+    <div class="topbar-right">
+      <span>🔔</span>
+      <span>审批专员</span>
+      <span>退出</span>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ============ LIST VIEW ============ -->
+    <div id="listView">
+      <div class="page-title">审批工作台</div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="num" style="color:#2563eb;">12</div>
+          <div class="label">待审批（笔）</div>
+          <div class="sub"><span class="up">+3</span> 较昨日</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" style="color:#10b981;">156</div>
+          <div class="label">已审批（笔）</div>
+          <div class="sub">本月累计</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" style="color:#f59e0b;">4.2</div>
+          <div class="label">平均时效（小时）</div>
+          <div class="sub">目标 <span class="metric">≤ 8h</span></div>
+        </div>
+      </div>
+
+      <div class="layout-split">
+        <!-- Left filter panel -->
+        <div class="filter-panel">
+          <div class="fp-title">🔍 筛选条件</div>
+
+          <!-- 客户等级 -->
+          <div class="fp-section">
+            <div class="fp-section-label">客户等级</div>
+            <div class="fp-radio">
+              <label><input type="radio" name="custLevel" value="全部" checked onchange="onFilterChange()"><span>全部</span></label>
+              <label><input type="radio" name="custLevel" value="A级" onchange="onFilterChange()"><span>A级</span></label>
+              <label><input type="radio" name="custLevel" value="B级" onchange="onFilterChange()"><span>B级</span></label>
+              <label><input type="radio" name="custLevel" value="C级" onchange="onFilterChange()"><span>C级</span></label>
+            </div>
+          </div>
+
+          <!-- 融资金额区间 -->
+          <div class="fp-section">
+            <div class="fp-section-label">融资金额区间（万元）</div>
+            <div class="fp-range">
+              <input type="number" id="amountMin" value="10" min="0" onchange="onFilterChange()">
+              <span>—</span>
+              <input type="number" id="amountMax" value="500" min="0" onchange="onFilterChange()">
+            </div>
+            <div class="fp-range" style="margin-top:4px;">
+              <input type="range" id="amountSlider" min="0" max="500" value="10,500" oninput="syncAmountRange()">
+            </div>
+          </div>
+
+          <!-- 审批节点 -->
+          <div class="fp-section">
+            <div class="fp-section-label">审批节点</div>
+            <div class="checkbox-group">
+              <label><input type="checkbox" value="初审" checked onchange="onFilterChange()"> 初审</label>
+              <label><input type="checkbox" value="实地核查" checked onchange="onFilterChange()"> 实地核查</label>
+              <label><input type="checkbox" value="风控审批" checked onchange="onFilterChange()"> 风控审批</label>
+              <label><input type="checkbox" value="高管审批" checked onchange="onFilterChange()"> 高管审批</label>
+              <label><input type="checkbox" value="终审" checked onchange="onFilterChange()"> 终审</label>
+            </div>
+          </div>
+
+          <!-- 申请时间范围 -->
+          <div class="fp-section">
+            <div class="fp-section-label">申请时间范围</div>
+            <div class="fp-date">
+              <input type="date" id="dateFrom" value="2026-04-01" onchange="onFilterChange()">
+              <span>至</span>
+              <input type="date" id="dateTo" value="2026-04-30" onchange="onFilterChange()">
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="fp-actions">
+            <button class="btn btn-outline" onclick="resetFilters()">重置筛选</button>
+            <button class="btn btn-primary" onclick="applyFilters()">应用筛选</button>
+          </div>
+        </div>
+
+        <!-- Right: list area -->
+        <div>
+          <!-- Sort bar -->
+          <div class="sort-bar">
+            <span class="sort-label">排序：</span>
+            <select class="sort-select">
+              <option>默认</option>
+              <option>紧急程度</option>
+              <option>金额</option>
+              <option>时间</option>
+              <option>风险评分</option>
+            </select>
+            <span class="sort-item active">默认</span>
+            <span class="sort-item">紧急程度</span>
+            <span class="sort-item">金额</span>
+            <span class="sort-item">时间</span>
+            <span class="sort-item">风险评分</span>
+          </div>
+
+          <!-- Table -->
+          <div class="card" style="padding:12px 16px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>编号</th>
+                  <th>客户名称</th>
+                  <th>申请金额（万元）</th>
+                  <th>客户等级</th>
+                  <th>核心企业等级</th>
+                  <th>风险评分</th>
+                  <th>当前节点 / 倒计时</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="showDetail('FIN-20260427-001')" style="cursor:pointer;">
+                  <td>FIN-20260427-001</td>
+                  <td>XX商贸有限公司</td>
+                  <td>40.0</td>
+                  <td><span class="tag tag-a">A级</span></td>
+                  <td><span class="tag-s">S级</span></td>
+                  <td><span style="color:#10b981;font-weight:700;">88</span></td>
+                  <td><span class="tag tag-blue">初审</span> <span style="font-size:11px;color:#6b7280;">⏱ 23h</span></td>
+                </tr>
+                <tr onclick="showDetail('FIN-20260427-002')" style="cursor:pointer;" class="row-urgent">
+                  <td>FIN-20260427-002</td>
+                  <td>YY科技有限公司</td>
+                  <td>120.0</td>
+                  <td><span class="tag tag-b">B级</span></td>
+                  <td><span class="tag-a">A级</span></td>
+                  <td><span style="color:#ef4444;font-weight:700;">55</span></td>
+                  <td><span class="tag tag-purple">风控审批</span> <span style="font-size:11px;color:#f59e0b;font-weight:600;">⏱ 5h ⚠</span></td>
+                </tr>
+                <tr onclick="showDetail('FIN-20260426-003')" style="cursor:pointer;" class="row-overdue">
+                  <td>FIN-20260426-003</td>
+                  <td>ZZ贸易有限公司</td>
+                  <td>25.0</td>
+                  <td><span class="tag tag-a">A级</span></td>
+                  <td><span class="tag-s">S级</span></td>
+                  <td><span style="color:#10b981;font-weight:700;">92</span></td>
+                  <td><span class="tag tag-purple">终审</span> <span style="font-size:11px;color:#ef4444;font-weight:600;">⏱ 45h 🔴</span></td>
+                </tr>
+                <tr onclick="showDetail('FIN-20260426-004')" style="cursor:pointer;">
+                  <td>FIN-20260426-004</td>
+                  <td>AA电子有限公司</td>
+                  <td>80.0</td>
+                  <td><span class="tag tag-a">A级</span></td>
+                  <td><span class="tag-b">B级</span></td>
+                  <td><span style="color:#2563eb;font-weight:700;">72</span></td>
+                  <td><span class="tag tag-blue">初审</span> <span style="font-size:11px;color:#6b7280;">⏱ 18h</span></td>
+                </tr>
+                <tr onclick="showDetail('FIN-20260425-005')" style="cursor:pointer;" class="row-urgent">
+                  <td>FIN-20260425-005</td>
+                  <td>BB建材有限公司</td>
+                  <td>200.0</td>
+                  <td><span class="tag-c">C级</span></td>
+                  <td><span class="tag-c">C级</span></td>
+                  <td><span style="color:#ef4444;font-weight:700;">48</span></td>
+                  <td><span class="tag tag-purple">高管审批</span> <span style="font-size:11px;color:#f59e0b;font-weight:600;">⏱ 2h ⚠</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <!-- Pagination -->
+            <div class="pagination">
+              <div class="info">共 12 条</div>
+              <div class="pages">
+                <span class="active">1</span>
+                <span>2</span>
+                <span>3</span>
+                <span class="dots">...</span>
+                <span>10</span>
+                <span>&gt;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DETAIL VIEW ============ -->
+    <div id="detailView" class="hidden">
+      <a class="back-link" onclick="goBackToList()">← 返回审批列表</a>
+
+      <!-- Detail header -->
+      <div class="card detail-header">
+        <div class="dh-left">
+          <div class="dh-biz">业务编号：FIN-20260427-001</div>
+          <div class="dh-cust">客户：XX商贸有限公司</div>
+        </div>
+        <div class="dh-right">
+          <span class="fast-tag">🏷 快速通道</span>
+          <span class="time-tag">⏱ 剩余23h</span>
+        </div>
+      </div>
+
+      <!-- Core enterprise info (purple highlight) -->
+      <div class="core-info">
+        <div style="font-weight:700;color:#5b21b6;margin-bottom:8px;font-size:14px;">🟣 核心企业信息</div>
+        <div class="ci-row">
+          <span class="ci-label">核心企业</span>
+          <span class="ci-value">XX科技有限公司</span>
+        </div>
+        <div class="ci-row">
+          <span class="ci-label">核心企业等级</span>
+          <span class="ci-value"><span class="tag-s">S级</span> ⭐⭐⭐⭐⭐</span>
+        </div>
+        <div class="ci-row">
+          <span class="ci-label">推荐质量得分</span>
+          <span class="ci-value">92分（优秀） ｜ 推荐质量等级：<span class="tag tag-green">优秀</span></span>
+        </div>
+        <div class="ci-row">
+          <span class="ci-label">经销商信用评级</span>
+          <span class="ci-value">A+（平台侧视为 <span class="tag tag-a">A级</span>）</span>
+        </div>
+        <div class="ci-row">
+          <span class="ci-label">风险预警状态</span>
+          <span class="ci-value"><span style="color:#10b981;">[✓]</span> 正常（无核心企业风险标注）</span>
+        </div>
+      </div>
+
+      <!-- 3 info cards -->
+      <div class="info-card-grid">
+        <div class="info-card-item">
+          <div class="ic-title">📋 客户资质</div>
+          <div class="ic-field"><span>征信评级</span><span class="ic-val">A级</span></div>
+          <div class="ic-field"><span>经营年限</span><span class="ic-val">5年</span></div>
+          <div class="ic-field"><span>注册资本</span><span class="ic-val">500万</span></div>
+          <a class="ic-link">查看征信报告 →</a>
+        </div>
+        <div class="info-card-item">
+          <div class="ic-title">📈 历史表现</div>
+          <div class="ic-field"><span>融资笔数</span><span class="ic-val">8笔</span></div>
+          <div class="ic-field"><span>累计金额</span><span class="ic-val">320万</span></div>
+          <div class="ic-field"><span>逾期率</span><span class="ic-val">0%</span></div>
+          <div class="ic-field"><span>M3+逾期</span><span class="ic-val">0笔</span></div>
+          <a class="ic-link">查看历史明细 →</a>
+        </div>
+        <div class="info-card-item">
+          <div class="ic-title">📦 质押物评估</div>
+          <div class="ic-field"><span>品类</span><span class="ic-val">3C电子</span></div>
+          <div class="ic-field"><span>品类风险</span><span class="ic-val" style="color:#10b981;">低</span></div>
+          <div class="ic-field"><span>质押率</span><span class="ic-val">66.7%</span></div>
+          <div class="ic-field"><span>货值稳定性</span><span class="ic-val" style="color:#10b981;">高</span></div>
+          <a class="ic-link">查看估值详情 →</a>
+        </div>
+      </div>
+
+      <!-- 5-dimension risk -->
+      <div class="card">
+        <div class="card-title">📊 综合风险评分（5维度）</div>
+        <div class="risk-dim">
+          <div class="risk-item">
+            <span class="label-cell">客户资质</span>
+            <span class="weight-cell">(20%)</span>
+            <div class="bar-wrap">
+              <div class="score-bar"><div class="fill" style="width:85%;background:#059669;"></div></div>
+            </div>
+            <span class="score-cell" style="color:#059669;">85</span>
+          </div>
+          <div class="risk-item">
+            <span class="label-cell">核心企业背书</span>
+            <span class="weight-cell">(25%)</span>
+            <div class="bar-wrap">
+              <div class="score-bar"><div class="fill" style="width:95%;background:#2563eb;"></div></div>
+            </div>
+            <span class="score-cell" style="color:#2563eb;font-weight:700;">95</span>
+          </div>
+          <div class="risk-item">
+            <span class="label-cell">历史表现</span>
+            <span class="weight-cell">(25%)</span>
+            <div class="bar-wrap">
+              <div class="score-bar"><div class="fill" style="width:90%;background:#059669;"></div></div>
+            </div>
+            <span class="score-cell" style="color:#059669;">90</span>
+          </div>
+          <div class="risk-item">
+            <span class="label-cell">质押物评估</span>
+            <span class="weight-cell">(20%)</span>
+            <div class="bar-wrap">
+              <div class="score-bar"><div class="fill" style="width:80%;background:#f59e0b;"></div></div>
+            </div>
+            <span class="score-cell" style="color:#f59e0b;">80</span>
+          </div>
+          <div class="risk-item">
+            <span class="label-cell">市场风险</span>
+            <span class="weight-cell">(10%)</span>
+            <div class="bar-wrap">
+              <div class="score-bar"><div class="fill" style="width:70%;background:#f59e0b;"></div></div>
+            </div>
+            <span class="score-cell" style="color:#f59e0b;">70</span>
+          </div>
+        </div>
+
+        <div class="risk-summary">
+          <div>
+            <div class="rs-score" style="color:#059669;">88</div>
+            <div style="font-size:11px;color:#6b7280;">综合得分</div>
+          </div>
+          <div>
+            <div class="rs-info">
+              风险等级：<span class="rs-level" style="color:#059669;">🟢 低风险</span>
+            </div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px;">
+              建议通过，可适用快速审批通道
+            </div>
+          </div>
+        </div>
+        <div class="risk-formula">评分计算：88 = 85×20% + 95×25% + 90×25% + 80×20% + 70×10%</div>
+      </div>
+
+      <!-- AI suggestion -->
+      <div class="ai-suggestion">
+        <div class="ai-title">🤖 系统智能建议</div>
+        <div class="ai-line">
+          <span class="ai-label">综合评估结果：</span>
+          <span style="color:#059669;font-weight:700;">[✓] 建议通过</span>
+        </div>
+        <div class="ai-line">
+          <span class="ai-label">建议通道：</span>
+          <span>快速通道（2级审批：初审→终审）</span>
+        </div>
+        <div class="ai-line">
+          <span class="ai-label">建议理由：</span>
+          <span>核心企业S级背书+经销商A级资质，历史表现优秀，质押物风险可控</span>
+        </div>
+        <div class="ai-warn">
+          <div class="warn-item"><span class="warn-icon" style="color:#10b981;">✓</span> 无核心企业风险标注</div>
+          <div class="warn-item"><span class="warn-icon" style="color:#10b981;">✓</span> 无市场风险异常波动</div>
+          <div class="warn-item"><span class="warn-icon" style="color:#f59e0b;">⚠</span> 建议关注质押物市场价格波动（3C电子品类近期波动率+5%）</div>
+        </div>
+      </div>
+
+      <!-- Approval actions -->
+      <div class="card">
+        <div class="card-title">✍️ 审批操作</div>
+        <div class="approval-opts">
+          <div class="opt-group" onchange="toggleApprovalFields()">
+            <label><input type="radio" name="approvalAction" value="approve" checked> 通过并进入下一节点</label>
+            <label><input type="radio" name="approvalAction" value="reject"> 驳回</label>
+            <label><input type="radio" name="approvalAction" value="return"> 退回</label>
+            <label><input type="radio" name="approvalAction" value="escalate"> 转上级</label>
+          </div>
+        </div>
+
+        <!-- 通过 -->
+        <div id="field_approve" class="cond-field show">
+          <div class="form-group">
+            <label>审批意见 <span style="color:#ef4444;">*</span></label>
+            <textarea placeholder="请输入审批意见，不少于10字符..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>建议授信额度（万元）</label><input value="50"></div>
+            <div class="form-group"><label>建议客户等级</label><select><option>A级</option><option>B级</option><option>C级</option></select></div>
+          </div>
+        </div>
+
+        <!-- 驳回 -->
+        <div id="field_reject" class="cond-field">
+          <div class="form-group">
+            <label>驳回原因 <span style="color:#ef4444;">*</span></label>
+            <select>
+              <option value="">请选择驳回原因</option>
+              <option>授信额度不足</option>
+              <option>质押物货值不足</option>
+              <option>客户资质不符</option>
+              <option>风险过高</option>
+              <option>资料不完整</option>
+              <option>信息不真实</option>
+              <option>其他原因</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>补充说明</label>
+            <textarea placeholder="请输入补充说明..."></textarea>
+          </div>
+        </div>
+
+        <!-- 退回 -->
+        <div id="field_return" class="cond-field">
+          <div class="form-group">
+            <label>退回节点 <span style="color:#ef4444;">*</span></label>
+            <select>
+              <option value="">请选择退回节点</option>
+              <option>初审节点</option>
+              <option>实地核查节点</option>
+              <option>风控审批节点</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>退回意见 <span style="color:#ef4444;">*</span></label>
+            <textarea placeholder="请输入退回原因及补充说明..."></textarea>
+          </div>
+        </div>
+
+        <!-- 转上级 -->
+        <div id="field_escalate" class="cond-field">
+          <div class="form-group">
+            <label>转交原因 <span style="color:#ef4444;">*</span></label>
+            <textarea placeholder="请输入转交原因..."></textarea>
+          </div>
+        </div>
+
+        <div class="btn-group" style="justify-content:flex-end;border-top:1px solid #e5e7eb;padding-top:12px;margin-top:12px;">
+          <button class="btn btn-outline" onclick="goBackToList()">取消</button>
+          <button class="btn btn-primary" onclick="alert('审批已提交')">提交审批</button>
+        </div>
+      </div>
+
+      <!-- Approval history -->
+      <div class="card">
+        <div class="card-title" style="cursor:pointer;" onclick="toggleHistory()">📜 审批历史记录 <span id="historyToggle" style="font-size:11px;color:#6b7280;">[收起]</span></div>
+        <div id="historyContent">
+          <div class="history-timeline">
+            <div class="history-item current">
+              <div class="hi-time">2026-04-26 14:20</div>
+              <div><span class="hi-actor">系统</span> 任务分配至终审员-<span class="hi-action">王五（当前）</span></div>
+            </div>
+            <div class="history-item">
+              <div class="hi-time">2026-04-26 11:05</div>
+              <div><span class="hi-actor">系统</span> 状态流转：<span class="hi-action">初审通过 → 待终审</span></div>
+            </div>
+            <div class="history-item">
+              <div class="hi-time">2026-04-26 11:00</div>
+              <div><span class="hi-actor">李四</span> <span class="hi-action">[初审通过]</span> <span class="hi-comment">资料齐全，基本信息核验无误</span></div>
+            </div>
+            <div class="history-item">
+              <div class="hi-time">2026-04-26 10:15</div>
+              <div><span class="hi-actor">系统</span> 任务分配至<span class="hi-action">初审员-李四</span></div>
+            </div>
+            <div class="history-item">
+              <div class="hi-time">2026-04-26 09:30</div>
+              <div><span class="hi-actor">系统</span> <span class="hi-action">自动校验通过</span>，进入初审队列</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Demo data
+var approvalData = {
+  'FIN-20260427-001': {
+    client: 'XX商贸有限公司',
+    coreEnterprise: 'XX科技有限公司',
+    coreLevel: 'S级',
+    coreStars: '⭐⭐⭐⭐⭐',
+    recommendScore: '92',
+    recommendLevel: '优秀',
+    dealerRating: 'A+',
+    dealerLevel: 'A级',
+    riskStatus: '正常',
+    hasRiskWarning: false,
+    bizType: '标准货押',
+    amount: '40.0',
+    term: '6个月',
+    repayment: '按月付息到期还本',
+    pledgeValue: '895,000',
+    coverage: '179%',
+    fastTag: '快速通道',
+    remainingTime: '23h',
+    // 3 cards
+    creditRating: 'A级',
+    years: '5年',
+    regCapital: '500万',
+    loanCount: '8笔',
+    totalAmount: '320万',
+    overdueRate: '0%',
+    m3Overdue: '0笔',
+    pledgeCategory: '3C电子',
+    categoryRisk: '低',
+    pledgeRate: '66.7%',
+    valueStability: '高',
+    // 5 dimensions
+    dimCustomer: 85,
+    dimCore: 95,
+    dimHistory: 90,
+    dimPledge: 80,
+    dimMarket: 70,
+    totalScore: 88,
+    riskLevel: '低风险',
+    riskColor: '#059669',
+    // AI
+    aiSuggestion: '建议通过',
+    aiChannel: '快速通道（2级审批：初审→终审）',
+    aiReason: '核心企业S级背书+经销商A级资质，历史表现优秀，质押物风险可控'
+  }
+};
+
+function selectFilter(el) {
+  document.querySelectorAll('.fp-item').forEach(function(i) { i.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+function showDetail(id) {
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.remove('hidden');
+  document.getElementById('detailView').scrollIntoView({behavior:'smooth'});
+}
+
+function goBackToList() {
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('listView').classList.remove('hidden');
+}
+
+function toggleHistory() {
+  var content = document.getElementById('historyContent');
+  var toggle = document.getElementById('historyToggle');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    toggle.textContent = '[收起]';
+  } else {
+    content.style.display = 'none';
+    toggle.textContent = '[展开]';
+  }
+}
+
+function toggleApprovalFields() {
+  var val = document.querySelector('input[name="approvalAction"]:checked').value;
+  var fields = ['field_approve', 'field_reject', 'field_return', 'field_escalate'];
+  fields.forEach(function(id) {
+    document.getElementById(id).classList.remove('show');
+  });
+  if (val === 'approve') document.getElementById('field_approve').classList.add('show');
+  else if (val === 'reject') document.getElementById('field_reject').classList.add('show');
+  else if (val === 'return') document.getElementById('field_return').classList.add('show');
+  else if (val === 'escalate') document.getElementById('field_escalate').classList.add('show');
+}
+
+function syncAmountRange() {
+  var slider = document.getElementById('amountSlider');
+  // Placeholder for range slider sync
+}
+
+function onFilterChange() {
+  // placeholder
+}
+
+function resetFilters() {
+  document.querySelectorAll('input[name="custLevel"]').forEach(function(el) {
+    el.checked = el.value === '全部';
+  });
+  document.getElementById('amountMin').value = 10;
+  document.getElementById('amountMax').value = 500;
+  document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(function(el) {
+    el.checked = true;
+  });
+  document.getElementById('dateFrom').value = '2026-04-01';
+  document.getElementById('dateTo').value = '2026-04-30';
+}
+
+function applyFilters() {
+  alert('筛选已应用，列表将按条件刷新');
+}
+</script>
+</body>
+</html>

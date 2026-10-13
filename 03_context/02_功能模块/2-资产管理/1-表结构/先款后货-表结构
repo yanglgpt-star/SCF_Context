@@ -1,0 +1,341 @@
+基本信息
+
+目标上线时间：4月中旬
+
+# 背景
+
+资产管理
+
+# 目标
+
+资产管理搭建
+
+
+
+# 流程图
+
+
+
+
+
+![](https://tcs-devops.aliyuncs.com/storage/113s4e06e133e18644a96e61b54a422696e9?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc3NzQzOTc4NCwiaWF0IjoxNzc2ODM0OTg0LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM3M0ZTA2ZTEzM2UxODY0NGE5NmU2MWI1NGE0MjI2OTZlOSJ9.8j9PibOpa2-C_YzMDvIj2V8V8HMuTUVfuxgvp8tWztY&download=%E4%BA%A4%E4%BA%92%E6%B5%81%E7%A8%8B%E5%9B%BE3.jpg "")
+
+# 相关表设计
+
+## 1.代采业务中心
+
+### 1.1采购协议详情表
+
+```text
+CREATE TABLE `fa_purchase_agreement` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `agreement_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '协议名称',
+  `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '协议唯一编号',
+  `agent_purchase_amount` decimal(12,2) DEFAULT NULL COMMENT '代采总额',
+  `client_id` bigint DEFAULT NULL COMMENT '委托方id',
+  `client_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '委托方名称',
+  `pay_company_id` bigint NOT NULL COMMENT '代采方id',
+  `pay_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '代采方名称',
+  `supplier_id` bigint NOT NULL COMMENT '供应商id',
+  `supplier_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '供应商名称',
+  `goods_start_date` date DEFAULT NULL COMMENT '提货开始日期',
+  `goods_deadline_date` date DEFAULT NULL COMMENT '提货截止日期',
+  `business_type` int DEFAULT NULL COMMENT '业务模式',
+  `daily_service_rate` decimal(10,2) DEFAULT NULL COMMENT '每日服务费率（小数形式）',
+  `deposit_rate` decimal(5,2) DEFAULT NULL COMMENT '保证金百分比，如12.50表示12.5%',
+  `deposit_latest_payment_date` date DEFAULT NULL COMMENT '保证金最晚付款日期',
+  `deposit_amount` decimal(12,2) DEFAULT NULL COMMENT '保证金金额',
+  `agreement_status` int DEFAULT NULL COMMENT '协议状态（1.保存2.待签署合同3.待交保证金4.生效5.执行中6.已结清7.已违约） ',
+  `contract_status` int DEFAULT NULL COMMENT '合同状态（1.未上传2.已上传）',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_agreement_no` (`agreement_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='采购协议详情表';
+
+
+
+```
+
+### 1.2采购订单明细表
+
+```text
+CREATE TABLE `fa_purchase_agreement_detail` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `agreement_id` bigint DEFAULT NULL COMMENT '采购协议详情表id',
+  `category` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '产品类别',
+  `brand` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '品牌名称',
+  `common_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品名称',
+  `common_sku` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品SKU',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '无仓SKU编码',
+  `sku_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商家SKU编码',
+  `price` decimal(10,2) NOT NULL COMMENT '采购单价',
+  `quantity` int NOT NULL COMMENT '采购数量',
+  `purchase_total_price` decimal(10,2) DEFAULT NULL COMMENT '采购总价',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_agreement_id` (`agreement_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=144 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='采购订单明细表';
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 2.保证金管理
+
+```text
+	
+CREATE TABLE `fa_deposit_manage` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `code` varchar(50) NOT NULL COMMENT '单据编码（唯一）',
+  `agreement_no` varchar(50) NOT NULL COMMENT '关联协议编号',
+  `receivable_amount` decimal(12,2) NOT NULL COMMENT '应收金额',
+  `bill_date` date NOT NULL COMMENT '账单日期',
+  `due_date` date NOT NULL COMMENT '最迟付款日期',
+  `received_amount` decimal(12,2) DEFAULT NULL COMMENT '实收金额',
+  `received_date` date DEFAULT NULL COMMENT '实收日期',
+  `deposit_status` tinyint DEFAULT '0' COMMENT '保证金状态（0-待生效 1.待支付2.已支付3.已退回4.已抵扣）',
+  `process_date` datetime DEFAULT NULL COMMENT '处理日期（操作时间）',
+  `payment_serial_no` varchar(50) DEFAULT NULL COMMENT '支付流水号',
+  `refund_amount` decimal(12,2) DEFAULT NULL COMMENT '退回金额',
+  `deduct_amount` decimal(12,2) DEFAULT NULL COMMENT '抵扣金额',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_code` (`code`),
+  KEY `idx_agreement_no` (`agreement_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=96 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='保证金管理表';
+
+
+```
+
+## 3.采购管理
+
+### 3.1采购信息表
+
+```text
+
+
+CREATE TABLE `fa_purchase_agreement_order` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '采购单号（唯一）',
+  `batch_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '采购批次号',
+  `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '关联协议编号',
+  `client_id` bigint DEFAULT NULL COMMENT '委托方id',
+  `client_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '委托方名称',
+  `supplier_id` bigint DEFAULT NULL COMMENT '供应商id',
+  `supplier_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '供应商名称',
+  `pay_company_id` bigint DEFAULT NULL COMMENT '付款主体id',
+  `pay_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '付款企业主体',
+  `entrepot_address_id` bigint DEFAULT NULL COMMENT '收货仓库id',
+  `entrepot_address_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '收货仓库名称',
+  `category` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '产品类别',
+  `brand` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商品编号',
+  `common_sku` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商品sku',
+  `sku_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商家sku编码',
+  `common_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商品名称',
+  `unit_price` decimal(10,2) DEFAULT '0.00' COMMENT '采购单价',
+  `quantity` int DEFAULT '0' COMMENT '采购数量',
+  `total_price` decimal(10,2) DEFAULT NULL COMMENT '采购总价',
+  `original_order_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '原始单号',
+  `order_create_id` bigint DEFAULT NULL COMMENT '下单人id',
+  `order_create_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '下单人',
+  `order_date` date DEFAULT NULL COMMENT '下单日期',
+  `settlement_type` int DEFAULT NULL COMMENT '结算方式',
+  `delivery_deadline_date` date DEFAULT NULL COMMENT '提货截止日期',
+  `picked_quantity` int DEFAULT '0' COMMENT '拣货数量',
+  `unpicked_quantity` int DEFAULT NULL COMMENT '未拣货数量',
+  `refund_quantity` int DEFAULT NULL COMMENT '退货数量',
+  `picked_completed` tinyint(1) DEFAULT '0' COMMENT '是否完成拣货：0-未完成，1-已完成',
+  `payment_time` datetime DEFAULT NULL COMMENT '付款时间',
+  `signed_time` datetime DEFAULT NULL COMMENT '签收时间',
+  `status` int DEFAULT NULL COMMENT '状态',
+  `sync_status` int DEFAULT '2' COMMENT '同步状态（1.已同步，2.未同步）',
+  `stock_in_quantity` int DEFAULT NULL COMMENT '入库数量',
+  `stock_in_completed` tinyint(1) DEFAULT '0' COMMENT '0-未完成，1-已完成',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_code` (`order_code`),
+  KEY `idx_agreement_no` (`agreement_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='采购订单表';
+
+
+
+```
+
+## 4.退款管理
+
+### 4.1退款申请表
+
+```text
+
+CREATE TABLE `fa_refund_application` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `refund_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '退款申请编码（唯一）',
+  `apply_date` date NOT NULL COMMENT '申请日期',
+  `order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '采购单号',
+  `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '协议编号',
+  `supplier_id` bigint NOT NULL COMMENT '供应商id',
+  `supplier_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '供应商名称',
+  `pay_company_id` bigint DEFAULT NULL COMMENT '付款主体id',
+  `pay_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '付款企业主体',
+  `entrepot_address_id` bigint NOT NULL COMMENT '收货仓库id',
+  `entrepot_address_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '收货仓库名称',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品编号',
+  `common_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品名称',
+  `unit_price` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '采购单价',
+  `quantity` int NOT NULL DEFAULT '0' COMMENT '采购数量',
+  `total_price` decimal(10,2) DEFAULT NULL COMMENT '采购总价',
+  `picked_quantity` int DEFAULT '0' COMMENT '拣货数量',
+  `unpicked_quantity` int DEFAULT '0' COMMENT '未拣货数量',
+  `refund_quantity` int DEFAULT '0' COMMENT '退货数量',
+  `refund_amount` decimal(12,2) DEFAULT '0.00' COMMENT '待退款金额',
+  `actual_received_amount` decimal(12,2) DEFAULT '0.00' COMMENT '实收金额',
+  `confirm_date` date DEFAULT NULL COMMENT '确认日期',
+  `status` int DEFAULT '1' COMMENT '退款状态（1.待退款2.已退款）',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_refund_code` (`refund_code`),
+  KEY `idx_order_code` (`order_code`),
+  KEY `idx_agreement_no` (`agreement_no`),
+  KEY `idx_product_code` (`common_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='退款申请表';
+
+
+
+```
+
+## 5.销售管理
+
+### 5.1分销活动表
+
+```text
+
+CREATE TABLE `fa_activity_info` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `activity_id` bigint DEFAULT NULL COMMENT '活动ID',
+  `activity_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '活动号',
+  `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '协议编号',
+  `order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '采购单号',
+  `create_source` int DEFAULT NULL COMMENT '活动来源',
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '产品类别',
+  `brand` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `common_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商品（商品名称）',
+  `common_sku` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '产品型号(商品sku)',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '无仓SKU编码',
+  `sku_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商家SKU编码',
+  `quantity` int DEFAULT NULL COMMENT '数量',
+  `purchase_price` decimal(12,2) DEFAULT NULL COMMENT '集采入仓价格',
+  `pay_company_id` bigint DEFAULT NULL COMMENT '收款主体id',
+  `pay_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '收款主体名称',
+  `client_id` bigint DEFAULT NULL COMMENT '分销商id',
+  `client_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分销商名称',
+  `distribution_type` int DEFAULT NULL COMMENT '发布渠道',
+  `activity_type` int DEFAULT NULL COMMENT '活动类型',
+  `pay_type` int DEFAULT NULL COMMENT '付款方式',
+  `delivery_time` int DEFAULT NULL COMMENT '发货时效',
+  `performance_strategy` int DEFAULT NULL COMMENT '履约策略',
+  `publish_type` int DEFAULT NULL COMMENT '发布类型',
+  `publish_time` datetime DEFAULT NULL COMMENT '发布时间',
+  `off_time` datetime DEFAULT NULL COMMENT '下架时间',
+  `entrepot_address_id` bigint DEFAULT NULL COMMENT '收货仓库id',
+  `entrepot_address_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '收货仓库名称',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_agreement_no` (`agreement_no`),
+  KEY `idx_order_code` (`order_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='分销活动信息表';
+
+
+```
+
+### 5.2分销销售订单
+
+
+
+```text
+
+CREATE TABLE `fa_sales_order` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `activity_id` bigint DEFAULT NULL COMMENT '活动ID',
+  `activity_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '活动单号',
+  `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '协议编号',
+  `order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '采购单号',
+  `subscribe_type` int DEFAULT NULL COMMENT '订单类型',
+  `sales_demand_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '需求单号',
+  `sales_order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '销售订单编号',
+  `category` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '产品类别',
+  `brand` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `common_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商品（商品名称）',
+  `common_sku` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '产品型号(商品sku)',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '无仓SKU编码',
+  `sku_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '商家SKU编码',
+  `purchase_price` decimal(12,2) DEFAULT NULL COMMENT '集采入仓价格(成交价)',
+  `quantity` int DEFAULT NULL COMMENT '数量',
+  `sales_price` decimal(12,2) DEFAULT NULL COMMENT '实际销售价格',
+  `sales_quantity` int DEFAULT NULL COMMENT '实际销售数量',
+  `pay_company_id` bigint DEFAULT NULL COMMENT '收款主体id',
+  `pay_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '收款主体名称',
+  `client_id` bigint DEFAULT NULL COMMENT '分销商id',
+  `client_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分销商名称',
+  `stock_out_completed` tinyint(1) DEFAULT '0' COMMENT '出库状态：0-未出库，1-已出库',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` bigint DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` bigint DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sales_order_no` (`sales_order_code`),
+  KEY `idx_activity_id` (`activity_id`),
+  KEY `idx_agreement_no` (`agreement_no`),
+  KEY `idx_order_code` (`order_code`)
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='分销销售订单表';
+
+
+```
+
+
+
+## 附录
+
+
+

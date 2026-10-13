@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电子整机货押 · 风控看板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* ========== Reset & Base ========== */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", monospace;
+  background: #0b0e1a;
+  color: #cad1e6;
+  padding: 16px;
+  min-height: 100vh;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #131726; }
+::-webkit-scrollbar-thumb { background: #2a3052; border-radius: 2px; }
+
+/* ========== Colors ========== */
+:root {
+  --bg-primary: #0b0e1a;
+  --bg-card: #111522;
+  --bg-card-alt: #161b2d;
+  --border: #1e2440;
+  --cyan: #00e5ff;
+  --orange: #ff9100;
+  --red: #ff1744;
+  --green: #00e676;
+  --purple: #7c4dff;
+  --blue: #448aff;
+  --text-primary: #f0f4ff;
+  --text-secondary: #8892b0;
+  --text-muted: #4a5278;
+}
+
+/* ========== Layout ========== */
+.dashboard {
+  max-width: 1600px; margin:0 auto;
+  display:grid; gap:14px;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto auto auto;
+}
+
+/* ========== Cards ========== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: border-color .2s;
+  position: relative;
+  overflow: hidden;
+}
+.card:hover { border-color: #2e3660; }
+.card-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:12px; font-size:13px; color:var(--text-secondary); letter-spacing:.3px;
+}
+.card-header .title { font-weight:600; display:flex; align-items:center; gap:6px; }
+.card-header .badge {
+  font-size:10px; background:#1a2040; padding:2px 8px; border-radius:4px; color:var(--text-secondary);
+}
+
+/* ========== Top Stats Row ========== */
+.stats-row {
+  grid-column:1 / -1;
+  display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:14px;
+}
+.stat-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:10px;
+  padding:18px 20px; position:relative; overflow:hidden;
+}
+.stat-card .label { font-size:12px; color:var(--text-secondary); letter-spacing:.5px; }
+.stat-card .value {
+  font-size:28px; font-weight:700; color:var(--text-primary); margin-top:4px;
+  font-variant-numeric:tabular-nums;
+}
+.stat-card .sub {
+  font-size:12px; margin-top:4px;
+}
+.stat-card .accent-line {
+  position:absolute; top:0; left:0; width:100%; height:3px;
+}
+.stat-card:nth-child(1) .accent-line { background:var(--cyan); }
+.stat-card:nth-child(2) .accent-line { background:var(--blue); }
+.stat-card:nth-child(3) .accent-line { background:var(--orange); }
+.stat-card:nth-child(4) .accent-line { background:var(--red); }
+
+/* ========== Charts ========== */
+.chart-wrapper { position:relative; height:200px; }
+.chart-wrapper-sm { height:160px; }
+.chart-wrapper-lg { height:210px; }
+
+/* ========== Tables / Lists ========== */
+.alert-list { list-style:none; }
+.alert-list li {
+  padding:10px 0; border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:13px; line-height:1.5; display:flex; gap:8px; align-items:flex-start;
+}
+.alert-list li:last-child { border-bottom:none; }
+.alert-list .dot {
+  display:inline-block; width:6px; height:6px; border-radius:50%; margin-top:6px; flex-shrink:0;
+}
+.dot-orange { background:var(--orange); }
+.dot-red { background:var(--red); }
+.dot-cyan { background:var(--cyan); }
+.dot-green { background:var(--green); }
+
+.ticker { height:280px; overflow-y:auto; }
+
+/* ========== Liquidation Table ========== */
+.table-mini { width:100%; border-collapse:collapse; font-size:12px; }
+.table-mini th { text-align:left; color:var(--text-muted); font-weight:500; padding:6px 4px; border-bottom:1px solid var(--border); }
+.table-mini td { padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.03); }
+
+/* ========== Top N ========== */
+.top-n {
+  height:240px; overflow-y:auto;
+}
+.top-n-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 0; border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:13px;
+}
+.top-n-item .rank { width:20px; color:var(--text-muted); font-weight:700; }
+.top-n-item .name  { flex:1; }
+.top-n-item .change { font-weight:600; font-variant-numeric:tabular-nums; }
+.change-down { color:var(--red); }
+.change-up   { color:var(--green); }
+
+/* ========== Security Badges ========== */
+.security-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+.security-item {
+  background:rgba(255,255,255,.02); border-radius:8px; padding:12px;
+  border-left:3px solid var(--green); font-size:13px;
+}
+.security-item.warn { border-left-color:var(--orange); }
+.security-item.danger { border-left-color:var(--red); }
+.security-item .val { font-size:20px; font-weight:700; margin-top:4px; }
+.security-item .lbl { font-size:11px; color:var(--text-secondary); }
+
+/* ========== Progress Bar ========== */
+.progress-bar {
+  height:6px; background:#1a2040; border-radius:3px; margin-top:6px; overflow:hidden;
+}
+.progress-bar .fill {
+  height:100%; border-radius:3px; transition:width .8s ease;
+}
+.fill-cyan { background:var(--cyan); }
+.fill-orange { background:var(--orange); }
+.fill-green { background:var(--green); }
+.fill-purple { background:var(--purple); }
+
+/* ========== Grid Span Classes ========== */
+.span-1 { grid-column: span 1; }
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+.span-4 { grid-column: span 4; }
+
+/* ========== Alerts Center ========== */
+.alert-popup {
+  background:rgba(255,23,68,.12); border:1px solid rgba(255,23,68,.3);
+  border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:12px;
+  animation: pulse-border 1.5s ease-in-out infinite;
+}
+@keyframes pulse-border {
+  0%,100% { border-color:rgba(255,23,68,.3); }
+  50% { border-color:rgba(255,23,68,.7); }
+}
+.alert-popup .icon { font-size:20px; }
+.alert-popup .msg { font-size:13px; line-height:1.4; }
+.alert-popup .time { font-size:11px; color:var(--text-secondary); margin-left:auto; white-space:nowrap; }
+
+/* ========== Filter Tabs ========== */
+.filter-bar {
+  grid-column:1 / -1;
+  display:flex; gap:8px; align-items:center;
+}
+.filter-btn {
+  background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px;
+  padding:6px 14px; font-size:12px; color:var(--text-secondary); cursor:pointer;
+  transition:all .2s;
+}
+.filter-btn:hover { border-color:var(--cyan); color:var(--text-primary); }
+.filter-btn.active { background:rgba(0,229,255,.1); border-color:var(--cyan); color:var(--cyan); }
+
+/* ========== Swap Review ========== */
+.swap-pair {
+  display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center;
+  padding:10px 0; border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:13px;
+}
+.swap-pair:last-child { border-bottom:none; }
+.swap-arrow { color:var(--cyan); font-size:18px; font-weight:700; }
+.swap-out .tag { color:var(--orange); }
+.swap-in .tag { color:var(--green); }
+.swap-val { font-weight:600; }
+
+/* ========== IMEI Drill ========== */
+.imei-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:6px;
+  max-height:200px; overflow-y:auto;
+}
+.imei-chip {
+  background:rgba(255,255,255,.03); border-radius:4px;
+  padding:4px 8px; font-size:11px; font-family:monospace;
+  text-align:center; color:var(--text-secondary); border:1px solid transparent;
+}
+.imei-chip.verified { border-color:rgba(0,230,118,.3); color:var(--green); }
+.imei-chip.pending { border-color:rgba(255,145,0,.2); color:var(--orange); }
+
+/* ========== Responsive ========== */
+@media (max-width:1100px) {
+  .stats-row { grid-template-columns:1fr 1fr; }
+  .span-2 { grid-column:span 2; }
+}
+@media (max-width:700px) {
+  .dashboard { grid-template-columns:1fr; }
+  .stats-row { grid-template-columns:1fr; }
+  .span-2, .span-3, .span-4 { grid-column:1; }
+  .security-grid { grid-template-columns:1fr; }
+}
+
+/* ========== Glow Accents ========== */
+.glow-cyan { box-shadow:0 0 30px rgba(0,229,255,.04); }
+.glow-orange { box-shadow:0 0 30px rgba(255,145,0,.04); }
+.glow-red { box-shadow:0 0 30px rgba(255,23,68,.05); }
+
+/* small text */
+.fs-10 { font-size:10px; }
+.fs-11 { font-size:11px; }
+.fs-12 { font-size:12px; }
+.text-muted { color:var(--text-secondary); }
+.text-cyan { color:var(--cyan); }
+.text-orange { color:var(--orange); }
+.text-red { color:var(--red); }
+.text-green { color:var(--green); }
+.mt-4 { margin-top:4px; }
+.mt-8 { margin-top:8px; }
+.mb-8 { margin-bottom:8px; }
+.flex { display:flex; }
+.flex-between { display:flex; justify-content:space-between; align-items:center; }
+.gap-8 { gap:8px; }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <!-- ===== Filter Bar ===== -->
+  <div class="filter-bar">
+    <span class="fs-12 text-muted" style="margin-right:4px;">⚡ 快速筛选</span>
+    <button class="filter-btn active">全部</button>
+    <button class="filter-btn">仓库 A</button>
+    <button class="filter-btn">仓库 B</button>
+    <button class="filter-btn">经销商：华强数码</button>
+    <button class="filter-btn">经销商：华盛电子</button>
+    <button class="filter-btn">品牌：Apple</button>
+    <button class="filter-btn">品牌：华为</button>
+    <span class="fs-11 text-muted" style="margin-left:auto;">每 5 分钟刷新 · 最后更新: 14:32:08</span>
+  </div>
+
+  <!-- ===== Row 1: Top Stats ===== -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="label">📦 在押总数 / 总市值</div>
+      <div class="value">15,200 台</div>
+      <div class="sub text-cyan">¥ 85,000,000</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="label">📊 当前质押率 (LTV)</div>
+      <div class="value">62.8%</div>
+      <div class="sub text-muted">贷款余额 ¥53,380,000</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="label">🛡️ 安全垫 (Margin)</div>
+      <div class="value" id="marginValue">31.7%</div>
+      <div class="sub text-green">差额 ¥31,620,000</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="label">⚠️ 待处理预警</div>
+      <div class="value" id="alertCount">9</div>
+      <div class="sub">
+        <span class="text-orange">价格 3</span> ·
+        <span class="text-red">货龄 4</span> ·
+        <span class="text-muted">系统 2</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Alert Popup (防拆封/防掉包) ===== -->
+  <div class="span-4 alert-popup" id="alertPopup">
+    <span class="icon">🚨</span>
+    <div class="msg">
+      <strong>仓库 A · 5号托盘</strong> — 智能RFID封条检测到异常开锁！请立即查看监控视频。
+      <span class="fs-11 text-muted">（封条编号：RFID-A05-3129）</span>
+    </div>
+    <span class="time">30 秒前</span>
+  </div>
+
+  <!-- ===== Row 2: Brand Pie + Category Pie + Newness ===== -->
+  <div class="card span-2 glow-cyan">
+    <div class="card-header"><span class="title">🏷️ 品牌占比</span><span class="badge">避免单一品牌风险</span></div>
+    <div class="chart-wrapper"><canvas id="brandChart"></canvas></div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">📂 品类分布</span></div>
+    <div class="chart-wrapper"><canvas id="categoryChart"></canvas></div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">📱 机型新旧度</span></div>
+    <div class="chart-wrapper-sm" style="margin-bottom:10px;"><canvas id="newnessChart"></canvas></div>
+    <div class="flex-between fs-12 text-muted">
+      <span>最新旗舰 <span class="text-cyan">42%</span></span>
+      <span>次旗舰 <span class="text-muted">35%</span></span>
+      <span>老款 <span class="text-orange">23%</span></span>
+    </div>
+  </div>
+
+  <!-- ===== Row 3: Price Trend + Top 5 Decliners + Aging Funnel ===== -->
+  <div class="card span-2">
+    <div class="card-header">
+      <span class="title">📈 总市值 vs 融资余额</span>
+      <span class="badge">多源价格加权</span>
+    </div>
+    <div class="chart-wrapper-lg"><canvas id="priceTrendChart"></canvas></div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">📉 价格跌幅 Top 5</span><span class="badge text-red">高风险</span></div>
+    <div class="top-n">
+      <div class="top-n-item"><span class="rank">1</span><span class="name">iPhone 15 Pro (256G)</span><span class="change change-down">-8.2%</span></div>
+      <div class="top-n-item"><span class="rank">2</span><span class="name">华为 Mate 60 Pro</span><span class="change change-down">-5.7%</span></div>
+      <div class="top-n-item"><span class="rank">3</span><span class="name">小米 14 Ultra</span><span class="change change-down">-4.1%</span></div>
+      <div class="top-n-item"><span class="rank">4</span><span class="name">MacBook Air M3</span><span class="change change-down">-3.5%</span></div>
+      <div class="top-n-item"><span class="rank">5</span><span class="name">iPad Pro M4</span><span class="change change-down">-2.8%</span></div>
+    </div>
+    <div class="mt-8 fs-11 text-muted" style="border-top:1px solid var(--border);padding-top:8px;">
+      多源比价: 京东 <span class="text-cyan">¥6,299</span> · 华强北 <span class="text-cyan">¥5,880</span> · 爱回收 <span class="text-cyan">¥5,450</span>
+    </div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">⏳ 货龄结构漏斗</span><span class="badge text-orange">呆滞风险</span></div>
+    <div class="chart-wrapper-sm"><canvas id="agingChart"></canvas></div>
+    <div class="flex-between fs-12 mt-4">
+      <span>0-15天 <span class="text-green">28%</span></span>
+      <span>16-30天 <span class="text-cyan">35%</span></span>
+      <span>31-60天 <span class="text-orange">22%</span></span>
+      <span>60天+ <span class="text-red">15%</span></span>
+    </div>
+    <div class="mt-4 fs-11 text-muted flex-between">
+      <span>平均 DSO</span>
+      <span class="text-orange" style="font-size:18px;font-weight:700;">34<small> 天</small></span>
+    </div>
+    <div class="progress-bar mt-4"><div class="fill-orange" style="width:34%"></div></div>
+  </div>
+
+  <!-- ===== Row 4: Price Deviation + Security + Alerts ===== -->
+  <div class="card span-2">
+    <div class="card-header">
+      <span class="title">📐 价格偏离度 · iPhone 15 Pro</span>
+      <span class="badge">公允价 vs 质押评估价</span>
+    </div>
+    <div class="chart-wrapper-lg"><canvas id="deviationChart"></canvas></div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">🔐 物理安全与真伪</span><span class="badge text-green">实时</span></div>
+    <div class="security-grid">
+      <div class="security-item">
+        <div class="lbl">IMEI/SN 核验率</div>
+        <div class="val text-green">96.4%</div>
+        <div class="progress-bar mt-4"><div class="fill-green" style="width:96.4%"></div></div>
+        <div class="fs-11 text-muted mt-4">8,712 / 9,032 已完成比对</div>
+      </div>
+      <div class="security-item warn">
+        <div class="lbl">电子围栏报警</div>
+        <div class="val text-orange">2 次</div>
+        <div class="fs-11 text-muted mt-4">今日 · 仓库B 3号通道</div>
+      </div>
+      <div class="security-item">
+        <div class="lbl">称重对比通过率</div>
+        <div class="val text-green">99.8%</div>
+        <div class="fs-11 text-muted mt-4">18 台重量异常待复核</div>
+      </div>
+      <div class="security-item danger">
+        <div class="lbl">异常出库频次</div>
+        <div class="val text-red">5 次</div>
+        <div class="fs-11 text-muted mt-4">深夜时段 23:00-05:00</div>
+      </div>
+    </div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">📋 预警清单</span><span class="badge text-orange">滚动</span></div>
+    <div class="ticker">
+      <ul class="alert-list">
+        <li><span class="dot dot-orange"></span><div><strong>华强数码</strong> — iPhone 14 库存超 45 天，价值下跌 5%</div></li>
+        <li><span class="dot dot-orange"></span><div><strong>华盛电子</strong> — 小米 13 库存 52 天，建议启动催赎</div></li>
+        <li><span class="dot dot-red"></span><div><strong>仓库 A · 5号托盘</strong> — 发生异常位移，请查看视频</div></li>
+        <li><span class="dot dot-orange"></span><div><strong>仓库 B</strong> — 23:47 出库记录 12 台未备注原因</div></li>
+        <li><span class="dot dot-red"></span><div><strong>iPhone 15 Pro</strong> — 市场价跌破质押评估价 97%，Margin 逼近 20%</div></li>
+        <li><span class="dot dot-cyan"></span><div><strong>新品发布</strong> — 华为 Pura 80 将于 5 月 15 日发布，旧款建议下调质押率</div></li>
+        <li><span class="dot dot-orange"></span><div><strong>爱回收报价</strong> — MacBook Pro M3 二手回收价周跌 3.2%</div></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== Row 5: Swap Mgmt + IMEI Drill + Logistics ===== -->
+  <div class="card span-1">
+    <div class="card-header"><span class="title">🔄 置换审查 (Swap)</span><span class="badge text-cyan">换入 ≥ 换出</span></div>
+    <div style="max-height:280px;overflow-y:auto;">
+      <div class="swap-pair">
+        <div class="swap-out"><span class="fs-11 text-muted">换出</span><br>iPhone 15 Pro × 50<span class="swap-val text-orange"> ¥299,500</span></div>
+        <div class="swap-arrow">→</div>
+        <div class="swap-in"><span class="fs-11 text-muted">换入</span><br>iPhone 16 Pro × 50<span class="swap-val text-green"> ¥349,500</span></div>
+      </div>
+      <div class="swap-pair">
+        <div class="swap-out"><span class="fs-11 text-muted">换出</span><br>华为 Mate 60 × 30<span class="swap-val text-orange"> ¥149,700</span></div>
+        <div class="swap-arrow">→</div>
+        <div class="swap-in"><span class="fs-11 text-muted">换入</span><br>华为 Pura 70 × 30<span class="swap-val text-green"> ¥179,400</span></div>
+      </div>
+      <div class="swap-pair">
+        <div class="swap-out"><span class="fs-11 text-muted">换出</span><br>MacBook Air M2 × 20<span class="swap-val text-orange"> ¥159,800</span></div>
+        <div class="swap-arrow">→</div>
+        <div class="swap-in"><span class="fs-11 text-muted">换入</span><br>MacBook Air M4 × 20<span class="swap-val text-green"> ¥199,800</span></div>
+      </div>
+    </div>
+    <div class="fs-11 text-muted mt-4" style="border-top:1px solid var(--border);padding-top:8px;">
+      ✅ 3 笔置换均符合价值守恒规则 · 审核人: 风控部
+    </div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">🔍 IMEI 穿透查询</span><span class="badge text-cyan">穿透到单台</span></div>
+    <div class="fs-12 text-muted mb-8">iPhone 15 Pro · 批次 2025-03-A · 共 24 台</div>
+    <div class="imei-grid">
+      <div class="imei-chip verified">359487123456789</div>
+      <div class="imei-chip verified">359487123456790</div>
+      <div class="imei-chip verified">359487123456791</div>
+      <div class="imei-chip pending">359487123456792</div>
+      <div class="imei-chip verified">359487123456793</div>
+      <div class="imei-chip verified">359487123456794</div>
+      <div class="imei-chip pending">359487123456795</div>
+      <div class="imei-chip verified">359487123456796</div>
+      <div class="imei-chip verified">359487123456797</div>
+      <div class="imei-chip verified">359487123456798</div>
+      <div class="imei-chip pending">359487123456799</div>
+      <div class="imei-chip verified">359487123456800</div>
+      <div class="imei-chip verified">359487123456801</div>
+      <div class="imei-chip verified">359487123456802</div>
+      <div class="imei-chip pending">359487123456803</div>
+    </div>
+    <div class="flex-between mt-8 fs-11 text-muted">
+      <span>已核验 <span class="text-green">12</span> / 待核验 <span class="text-orange">3</span></span>
+      <span class="text-cyan" style="cursor:pointer;">查看全部 200 台 →</span>
+    </div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">📥 今日入库 / 解押动态</span><span class="badge">实时滚动</span></div>
+    <div class="ticker" style="height:260px;">
+      <ul class="alert-list">
+        <li><span class="dot dot-green"></span><div><strong>14:28</strong> 华强数码 解押 iPhone 15 Pro × 120 台</div></li>
+        <li><span class="dot dot-cyan"></span><div><strong>13:15</strong> 华盛电子 入库 Mate 60 Pro × 200 台</div></li>
+        <li><span class="dot dot-green"></span><div><strong>11:42</strong> 华强数码 解押 MacBook Air × 50 台</div></li>
+        <li><span class="dot dot-cyan"></span><div><strong>10:30</strong> 顺电科技 入库 iPad Pro × 80 台</div></li>
+        <li><span class="dot dot-green"></span><div><strong>09:18</strong> 华盛电子 解押 小米 14 × 60 台</div></li>
+        <li><span class="dot dot-cyan"></span><div><strong>08:50</strong> 华强数码 入库 iPhone 16 Pro × 300 台</div></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card span-1">
+    <div class="card-header"><span class="title">💰 赎货进度</span><span class="badge text-green">进行中</span></div>
+    <div class="flex-between mt-8">
+      <span class="fs-12">华强数码 · 第 3 期赎货</span>
+      <span class="text-cyan fs-12 font-weight:600;">68%</span>
+    </div>
+    <div class="progress-bar"><div class="fill-cyan" style="width:68%"></div></div>
+    <div class="flex-between fs-11 text-muted mt-4">
+      <span>已还 ¥8,160,000</span>
+      <span>待还 ¥3,840,000</span>
+    </div>
+    <div class="mt-8" style="border-top:1px solid var(--border);padding-top:8px;">
+      <div class="flex-between mt-4">
+        <span class="fs-12">华盛电子 · 第 1 期赎货</span>
+        <span class="text-orange fs-12">32%</span>
+      </div>
+      <div class="progress-bar"><div class="fill-orange" style="width:32%"></div></div>
+      <div class="flex-between fs-11 text-muted mt-4">
+        <span>已还 ¥1,920,000</span>
+        <span>待还 ¥4,080,000</span>
+      </div>
+    </div>
+    <div class="mt-8 fs-11 text-muted">
+      新品发布日历: <span class="text-cyan">华为 Pura 80</span> 5/15 · <span class="text-cyan">iPhone SE 4</span> 预计 Q3
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ========== Color palette ==========
+const colors = {
+  cyan: '#00e5ff', orange:'#ff9100', red:'#ff1744', green:'#00e676',
+  purple:'#7c4dff', blue:'#448aff', yellow:'#ffd740',
+  cardBg:'#111522', border:'#1e2440', text:'#8892b0', textLight:'#f0f4ff',
+};
+const defaultOpts = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ labels:{ color:colors.text, boxWidth:10, padding:8, font:{size:10}}}},
+};
+const gaugeBg = { id:'custom', beforeDraw(c) {
+  const {ctx,chartArea:{top,bottom,left,right}} = c;
+  ctx.save(); ctx.strokeStyle='rgba(255,255,255,.04)'; ctx.lineWidth=1;
+  ctx.strokeRect(left, top, right-left, bottom-top);
+  ctx.restore();
+}};
+
+// 1. Brand Pie
+new Chart(document.getElementById('brandChart'), {
+  type:'doughnut',
+  data:{
+    labels:['Apple','华为','小米','联想','OPPO','其他'],
+    datasets:[{ data:[34,26,18,10,7,5], backgroundColor:[colors.cyan,colors.red,colors.orange,colors.blue,colors.purple,colors.text] }]
+  },
+  options:{ ...defaultOpts, cutout:'65%', plugins:{ ...defaultOpts.plugins, legend:{ ...defaultOpts.plugins.legend, position:'right'}}},
+  plugins:[gaugeBg]
+});
+
+// 2. Category Pie
+new Chart(document.getElementById('categoryChart'), {
+  type:'doughnut',
+  data:{
+    labels:['手机','笔记本','平板','智能家电'],
+    datasets:[{ data:[52,22,16,10], backgroundColor:[colors.cyan,colors.blue,colors.purple,colors.orange] }]
+  },
+  options:{ ...defaultOpts, cutout:'62%', plugins:{ ...defaultOpts.plugins, legend:{ ...defaultOpts.plugins.legend, position:'bottom'}}},
+});
+
+// 3. Newness (doughnut)
+new Chart(document.getElementById('newnessChart'), {
+  type:'doughnut',
+  data:{
+    labels:['最新旗舰','次旗舰','老款'],
+    datasets:[{ data:[42,35,23], backgroundColor:[colors.cyan,colors.blue,colors.orange] }]
+  },
+  options:{ ...defaultOpts, cutout:'72%', plugins:{ legend:{ display:false }}},
+});
+
+// 4. Price Trend (line)
+const labels = ['1/1','1/8','1/15','1/22','2/1','2/8','2/15','2/22','3/1','3/8','3/15','3/22','4/1','4/8','4/15','4/22','5/1','5/6'];
+const marketVal = [820,818,815,810,808,805,800,795,790,785,780,778,775,770,768,765,762,760].map(v=>v*100000);
+const loanBal  = [620,625,630,635,638,640,642,643,645,646,648,650,652,653,654,655,656,657].map(v=>v*100000);
+new Chart(document.getElementById('priceTrendChart'), {
+  type:'line',
+  data:{
+    labels,
+    datasets:[
+      { label:'市场总市值', data:marketVal, borderColor:colors.cyan, backgroundColor:'rgba(0,229,255,.06)', fill:true, tension:.3, pointRadius:2, borderWidth:2 },
+      { label:'融资余额', data:loanBal, borderColor:colors.orange, backgroundColor:'rgba(255,145,0,.06)', fill:true, tension:.3, pointRadius:2, borderWidth:2, borderDash:[4,3] },
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ intersect:false, mode:'index'},
+    plugins:{
+      legend:{ labels:{ color:colors.text, boxWidth:12, font:{size:10}}, position:'top' },
+      tooltip:{ callbacks:{ label:ctx => ctx.dataset.label +': ¥'+Number(ctx.raw).toLocaleString()}}
+    },
+    scales:{
+      x:{ ticks:{ color:colors.text, font:{size:9}, maxTicksLimit:10 }, grid:{ color:'rgba(255,255,255,.04)' }},
+      y:{ ticks:{ color:colors.text, font:{size:9}, callback:v => '¥'+(v/1e6).toFixed(1)+'M' }, grid:{ color:'rgba(255,255,255,.04)' }},
+    }
+  }
+});
+
+// 5. Aging Funnel (bar)
+new Chart(document.getElementById('agingChart'), {
+  type:'bar',
+  data:{
+    labels:['0-15天','16-30天','31-60天','60天+'],
+    datasets:[{
+      data:[28,35,22,15],
+      backgroundColor:[colors.green,colors.cyan,colors.orange,colors.red],
+      borderRadius:3,
+    }]
+  },
+  options:{
+    ...defaultOpts,
+    indexAxis:'y',
+    plugins:{ ...defaultOpts.plugins, legend:{ display:false }, tooltip:{ callbacks:{ label:ctx => ctx.parsed.x+'%'}}},
+    scales:{
+      x:{ max:100, ticks:{ color:colors.text, font:{size:9}, callback:v=>v+'%' }, grid:{ color:'rgba(255,255,255,.04)' }},
+      y:{ ticks:{ color:colors.text, font:{size:10} }, grid:{ display:false }},
+    }
+  }
+});
+
+// 6. Deviation Chart
+const devLabels = ['1月','2月','3月','4月','5月'];
+const fairPrice = [6299,6250,6180,6100,5999];
+const pledgePx  = [5900,5900,5900,5900,5900];
+const deviation = fairPrice.map((f,i) => ((f-pledgePx[i])/pledgePx[i]*100));
+new Chart(document.getElementById('deviationChart'), {
+  type:'line',
+  data:{
+    labels:devLabels,
+    datasets:[
+      { label:'京东公允价', data:fairPrice, borderColor:colors.cyan, tension:.3, pointRadius:3, borderWidth:2 },
+      { label:'质押评估价', data:pledgePx, borderColor:colors.orange, tension:0, pointRadius:3, borderWidth:2, borderDash:[4,3] },
+      { label:'偏离度 %', data:deviation, yAxisID:'y1', borderColor:colors.green, tension:.3, pointRadius:2, borderWidth:1.5, borderDash:[2,2] },
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    interaction:{ intersect:false, mode:'index'},
+    plugins:{
+      legend:{ labels:{ color:colors.text, boxWidth:12, font:{size:10}}, position:'top' },
+      tooltip:{ callbacks:{ label:ctx => ctx.dataset.label +': '+(ctx.raw>100?'¥':'')+Number(ctx.raw).toLocaleString()+(ctx.dataset.yAxisID==='y1'?'%':'')}}
+    },
+    scales:{
+      x:{ ticks:{ color:colors.text, font:{size:10} }, grid:{ color:'rgba(255,255,255,.04)' }},
+      y:{ position:'left', ticks:{ color:colors.text, font:{size:9}, callback:v=>'¥'+v }, grid:{ color:'rgba(255,255,255,.04)' }},
+      y1:{ position:'right', ticks:{ color:colors.green, font:{size:9}, callback:v=>v.toFixed(1)+'%' }, grid:{ display:false }},
+    }
+  }
+});
+
+// ========== Simulate real-time updates ==========
+function simulateTick() {
+  // Margin random walk
+  const marginEl = document.getElementById('marginValue');
+  if (marginEl) {
+    const cur = parseFloat(marginEl.textContent);
+    const delta = (Math.random()-0.5)*0.6;
+    const next = Math.max(15, Math.min(45, cur+delta));
+    marginEl.textContent = next.toFixed(1)+'%';
+    marginEl.style.color = next < 20 ? '#ff1744' : next < 30 ? '#ff9100' : '#00e676';
+  }
+  // Alert count fluctuation
+  const alertEl = document.getElementById('alertCount');
+  if (alertEl) {
+    const cur = parseInt(alertEl.textContent);
+    const dir = Math.random()>0.7 ? (Math.random()>0.5?1:-1) : 0;
+    const next = Math.max(0, Math.min(15, cur+dir));
+    alertEl.textContent = next;
+  }
+}
+setInterval(simulateTick, 8000);
+</script>
+</body>
+</html>

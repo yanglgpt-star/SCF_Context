@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "unit": 7.5,
+  "unitLabel": "基准单位 a = 正方形边长（cm）",
+  "source": "标准通用套装默认值（非实测，待卡尺核对）",
+  "updatedAt": "2026-09-17T02:52:25.020Z",
+  "shapes": [
+    {
+      "id": "SQ",
+      "name": "正方形",
+      "en": "Square",
+      "family": "right",
+      "planar": true,
+      "edges": [
+        {
+          "label": "边长",
+          "ratio": 1,
+          "count": 4
+        }
+      ],
+      "areaRatio": 1,
+      "atomCount": 2
+    },
+    {
+      "id": "TRI-R",
+      "name": "等腰直角三角形",
+      "en": "Right Triangle",
+      "family": "right",
+      "planar": true,
+      "edges": [
+        {
+          "label": "直角边",
+          "ratio": 1,
+          "count": 2
+        },
+        {
+          "label": "斜边",
+          "ratio": 1.4142135623730951,
+          "count": 1
+        }
+      ],
+      "areaRatio": 0.5,
+      "atomCount": 1
+    },
+    {
+      "id": "RECT",
+      "name": "长方形",
+      "en": "Rectangle",
+      "family": "right",
+      "planar": true,
+      "edges": [
+        {
+          "label": "长边",
+          "ratio": 2,
+          "count": 2
+        },
+        {
+          "label": "短边",
+          "ratio": 1,
+          "count": 2
+        }
+      ],
+      "areaRatio": 2,
+      "atomCount": 4
+    },
+    {
+      "id": "TRI-E",
+      "name": "等边三角形",
+      "en": "Equilateral Triangle",
+      "family": "equilateral",
+      "planar": false,
+      "edges": [
+        {
+          "label": "边长",
+          "ratio": 1,
+          "count": 3
+        }
+      ],
+      "areaRatio": 0.433,
+      "atomCount": null
+    },
+    {
+      "id": "SECTOR",
+      "name": "扇形（1/4 圆）",
+      "en": "Quarter Circle",
+      "family": "arc",
+      "planar": false,
+      "edges": [
+        {
+          "label": "半径",
+          "ratio": 1,
+          "count": 2
+        },
+        {
+          "label": "弧",
+          "ratio": 1.5707963267948966,
+          "count": 1
+        }
+      ],
+      "areaRatio": 0.785,
+      "atomCount": null
+    },
+    {
+      "id": "SEMI",
+      "name": "半圆",
+      "en": "Semicircle",
+      "family": "arc",
+      "planar": false,
+      "edges": [
+        {
+          "label": "直径",
+          "ratio": 1,
+          "count": 1
+        },
+        {
+          "label": "弧",
+          "ratio": 1.5707963267948966,
+          "count": 1
+        }
+      ],
+      "areaRatio": 0.393,
+      "atomCount": null
+    }
+  ]
+}

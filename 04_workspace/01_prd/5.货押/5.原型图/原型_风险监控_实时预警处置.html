@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>实时预警处置 - 风险监控</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-success { background: #10b981; color: #fff; }
+.warn-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.layout-split { display: grid; grid-template-columns: 260px 1fr; gap: 16px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: center; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.filter-panel { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px; }
+.filter-panel .fp-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.filter-panel .fp-item { padding: 8px 10px; margin-bottom: 4px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
+.filter-panel .fp-item:hover { background: #f9fafb; }
+.filter-panel .fp-item.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+.filter-panel .fp-item .count { background: #e5e7eb; border-radius: 999px; padding: 0 8px; font-size: 11px; }
+.filter-panel .fp-item .count.red { background: #fee2e2; color: #ef4444; }
+.filter-panel .fp-section { font-size: 11px; color: #6b7280; padding: 8px 0 4px; font-weight: 600; }
+.timeline { font-size: 13px; }
+.timeline .tl-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+.timeline .tl-item .dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.evidence-chain { display: flex; gap: 8px; flex-wrap: wrap; }
+.evidence-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; font-size: 12px; cursor: pointer; }
+.evidence-item:hover { border-color: #2563eb; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item active">⚠️ 风险监控</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">实时预警处置</div>
+    <div class="menu-item">📋 贷后管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">风险监控 / <strong>实时预警处置</strong></span></div>
+    <div class="topbar-right"><span>👤 风控专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">实时预警处置</div>
+    <div class="stats">
+      <div class="stat-card"><div class="num" style="color:#8b5cf6;">3</div><div class="label">紧急(紫)</div></div>
+      <div class="stat-card"><div class="num" style="color:#ef4444;">5</div><div class="label">超标(红)</div></div>
+      <div class="stat-card"><div class="num" style="color:#f59e0b;">7</div><div class="label">警戒(黄)</div></div>
+      <div class="stat-card"><div class="num" style="color:#10b981;">12</div><div class="label">正常(绿)</div></div>
+    </div>
+
+    <div class="layout-split">
+      <!-- Left filter panel -->
+      <div class="filter-panel">
+        <div class="fp-title">⚠️ 预警筛选</div>
+        <div class="fp-section">按预警级别</div>
+        <div class="fp-item active" onclick="selectFP(this)"><span>🟣 紧急</span><span class="count red">3</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>🔴 超标</span><span class="count red">5</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>🟡 警戒</span><span class="count">7</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>🟢 正常</span><span class="count">12</span></div>
+        <div class="fp-section">按预警来源</div>
+        <div class="fp-item" onclick="selectFP(this)"><span>质押物减值</span><span class="count">6</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>逾期预警</span><span class="count">5</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>证照过期</span><span class="count">2</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>经营异常</span><span class="count">2</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>仓库异常</span><span class="count">1</span></div>
+        <div class="fp-section">处理状态</div>
+        <div class="fp-item" onclick="selectFP(this)"><span>待处置</span><span class="count">15</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>处置中</span><span class="count">5</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>已处置</span><span class="count">7</span></div>
+        <div class="fp-section">时间范围</div>
+        <div class="fp-item" onclick="selectFP(this)"><span>今日</span><span class="count">8</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>近3天</span><span class="count">15</span></div>
+        <div class="fp-item" onclick="selectFP(this)"><span>近7天</span><span class="count">27</span></div>
+      </div>
+
+      <!-- Right content -->
+      <div>
+        <div class="card" style="padding:12px 16px;">
+          <div class="filter-bar">
+            <select><option>全部来源</option><option>质押物减值</option><option>逾期预警</option><option>证照过期</option><option>经营异常</option><option>仓库异常</option></select>
+            <select><option>全部级别</option><option>紧急</option><option>超标</option><option>警戒</option><option>正常</option></select>
+            <input placeholder="搜索企业" style="width:160px;padding:6px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">
+            <button class="btn btn-primary btn-sm">搜索</button>
+            <span style="flex:1;"></span>
+            <button class="btn btn-outline btn-sm" onclick="alert('批量处理')">批量处理</button>
+          </div>
+          <table>
+            <thead><tr><th>预警编号</th><th>企业</th><th>预警类型</th><th>预警内容</th><th>触发值/阈值</th><th>发生时间</th><th>剩余时效</th><th>级别</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>WARN-20260427-001</td><td>YY电子科技</td><td>逾期预警</td><td>M3逾期56天，金额¥68,000</td><td><span style="color:#ef4444;">56天/30天</span></td><td>10:30</td><td><span style="color:#ef4444;">-26h</span></td><td><span class="tag tag-purple">紧急</span></td><td><span class="tag tag-yellow">待处置</span></td><td><button class="btn btn-primary btn-sm" onclick="showDetail()">处置</button></td></tr>
+              <tr><td>WARN-20260427-002</td><td>ZZ食品经销</td><td>质押物减值</td><td>坚果类市价下跌12%</td><td><span style="color:#ef4444;">-12%/-8%</span></td><td>09:15</td><td><span style="color:#ef4444;">-2h</span></td><td><span class="tag tag-purple">紧急</span></td><td><span class="tag tag-yellow">待处置</span></td><td><button class="btn btn-outline btn-sm" onclick="showDetail()">处置</button></td></tr>
+              <tr><td>WARN-20260427-003</td><td>WW家电贸易</td><td>经营异常</td><td>工商信息"经营异常"标记</td><td><span style="color:#ef4444;">异常/正常</span></td><td>08:45</td><td><span style="color:#f59e0b;">1.5h</span></td><td><span class="tag tag-red">超标</span></td><td><span class="tag tag-yellow">待处置</span></td><td><button class="btn btn-outline btn-sm" onclick="showDetail()">处置</button></td></tr>
+              <tr><td>WARN-20260426-001</td><td>YY电子科技</td><td>证照过期</td><td>法人身份证剩余19天</td><td><span style="color:#f59e0b;">19天/30天</span></td><td>昨日</td><td>23h</td><td><span class="tag tag-yellow">警戒</span></td><td><span class="tag tag-blue">处置中</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+              <tr><td>WARN-20260426-002</td><td>AA建材经销</td><td>仓库异常</td><td>上海仓连接中断30分钟</td><td><span style="color:#10b981;">已恢复/正常</span></td><td>昨日</td><td>已处置</td><td><span class="tag tag-green">正常</span></td><td><span class="tag tag-green">已处置</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Detail -->
+        <div class="card" id="detailArea">
+          <div class="card-title">📋 预警详情：WARN-20260427-001</div>
+
+          <!-- Alert cause -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px;">预警信息</div>
+              <div style="font-size:13px;">
+                <div><strong>企业：</strong>YY电子科技</div>
+                <div><strong>预警类型：</strong><span class="tag tag-purple">逾期预警</span></div>
+                <div><strong>预警级别：</strong><span class="tag tag-purple">紧急</span></div>
+                <div><strong>发生时间：</strong>2026-04-27 10:30</div>
+                <div><strong>风险等级：</strong>M3（逾期56天）</div>
+                <div><strong>逾期金额：</strong>¥68,000</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px;">预警原因</div>
+              <div style="font-size:13px;background:#fef2f2;border-radius:8px;padding:10px;">
+                <div><strong>触发条件：</strong>逾期天数 > 30天</div>
+                <div><strong>当前值：</strong>56天</div>
+                <div><strong>阈值：</strong>30天</div>
+                <div><strong>超标幅度：</strong>86.7%</div>
+                <div><strong>计算说明：</strong>(56-30)/30 × 100% = 86.7%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Linked data -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;">
+            <div>
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px;">关联数据</div>
+              <div style="font-size:13px;">
+                <div><strong>业务编号：</strong>FIN-20260301-001</div>
+                <div><strong>质押物：</strong>iPhone15 × 100台</div>
+                <div><strong>质押物估值：</strong>¥680,000</div>
+                <div><strong>覆盖率：</strong>135%</div>
+                <div><strong>核心企业：</strong>XX科技有限公司 (S级)</div>
+                <div><strong>近期催收：</strong>4次（最后：04-26）</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:13px;margin-bottom:8px;">证据链</div>
+              <div class="evidence-chain">
+                <div class="evidence-item">📄 融资合同</div>
+                <div class="evidence-item">📊 还款记录</div>
+                <div class="evidence-item">📞 催收记录（4次）</div>
+                <div class="evidence-item">📧 逾期通知函</div>
+                <div class="evidence-item">🏢 工商信息截图</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommended disposal measures -->
+          <div style="margin:12px 0;background:#f0fdf4;border-radius:8px;padding:12px;border:1px solid #bbf7d0;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:6px;">📋 建议处置措施</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="tag tag-green" style="font-size:12px;padding:4px 12px;cursor:pointer;" onclick="alert('补充质押物')">补充质押物</span>
+              <span class="tag tag-blue" style="font-size:12px;padding:4px 12px;cursor:pointer;" onclick="alert('部分还款')">部分还款</span>
+              <span class="tag tag-yellow" style="font-size:12px;padding:4px 12px;cursor:pointer;" onclick="alert('加强监控')">加强监控</span>
+              <span class="tag tag-yellow" style="font-size:12px;padding:4px 12px;cursor:pointer;" onclick="alert('协商展期')">协商展期</span>
+              <span class="tag tag-red" style="font-size:12px;padding:4px 12px;cursor:pointer;" onclick="alert('启动处置')">启动处置</span>
+            </div>
+          </div>
+
+          <!-- Disposal actions -->
+          <div style="background:#f9fafb;border-radius:8px;padding:12px;margin:12px 0;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:8px;">🚀 快捷操作</div>
+            <div class="form-row">
+              <div class="form-group"><label>处置方式</label>
+                <select><option>发送催收通知</option><option>冻结融资</option><option>冻结出库</option><option>推送协同</option><option>客户降级</option></select>
+              </div>
+              <div class="form-group"><label>通知对象</label>
+                <select><option>企业联系人</option><option>核心企业</option><option>银行</option><option>内部风控</option></select>
+              </div>
+            </div>
+            <div class="form-group"><label>处置说明</label><textarea placeholder="输入处置说明..."></textarea></div>
+            <div class="btn-group">
+              <button class="btn btn-outline">暂存</button>
+              <button class="btn btn-danger">冻结额度</button>
+              <button class="btn btn-primary">推送协同</button>
+              <button class="btn btn-success">标记已处理</button>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div style="margin-top:12px;">
+            <div style="font-weight:600;font-size:13px;margin-bottom:8px;">处置时间线</div>
+            <div class="timeline">
+              <div class="tl-item"><div class="dot" style="background:#2563eb;"></div><div><strong>预警触发</strong><br><span style="font-size:12px;color:#6b7280;">2026-04-27 10:30 — 系统自动检测逾期>30天</span></div></div>
+              <div class="tl-item"><div class="dot" style="background:#f59e0b;"></div><div><strong>自动冻结</strong><br><span style="font-size:12px;color:#6b7280;">2026-04-27 10:31 — 系统自动冻结额度</span></div></div>
+              <div class="tl-item"><div class="dot" style="background:#10b981;"></div><div><strong>确认接收</strong><br><span style="font-size:12px;color:#6b7280;">2026-04-27 10:35 — 风控专员确认接收预警</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectFP(el) {
+  document.querySelectorAll('.fp-item').forEach(function(i) { i.classList.remove('active'); });
+  el.classList.add('active');
+}
+function showDetail() {
+  document.getElementById('detailArea').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>

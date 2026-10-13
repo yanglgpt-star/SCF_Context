@@ -1,0 +1,64 @@
+<view class="page-container fade-in" wx:if="{{task}}">
+  <!-- 类别徽章 -->
+  <view class="category-badge">
+    <text>{{categoryEmoji}}</text>
+  </view>
+
+  <!-- 语音区：家长录制 → 自定义按钮 + InnerAudio -->
+  <block wx:if="{{task.voiceUrl}}">
+    <view class="voice-section">
+      <view class="voice-circle {{voiceStatus}}" bindtap="playVoice">
+        <text class="voice-icon">{{voiceIcon}}</text>
+      </view>
+      <text class="voice-hint">{{voiceHint}}</text>
+    </view>
+  </block>
+
+  <!-- 语音区：无录制 → 使用 RealtimeTTS 插件 -->
+  <block wx:else>
+    <view class="voice-section">
+      <text2audio voice_type="501001" content="{{ttsText}}" msg_id="tts_{{taskId}}" custom="{{true}}">
+        <view slot="default" class="voice-circle idle">
+          <text class="voice-icon">🔈</text>
+        </view>
+        <view slot="playing" class="voice-circle playing">
+          <text class="voice-icon">🔊</text>
+        </view>
+      </text2audio>
+      <text class="voice-hint">点我听任务</text>
+    </view>
+  </block>
+
+  <!-- 任务详情 -->
+  <view class="card task-card">
+    <view class="task-title">{{task.title}}</view>
+    <view class="task-desc">{{task.description}}</view>
+    <view class="difficulty-row">
+      <text wx:for="{{starsArr}}" wx:key="*this">⭐</text>
+    </view>
+  </view>
+
+  <!-- 小提示 -->
+  <view class="tip-banner">
+    <text>💡 {{task.tips}}</text>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-row">
+    <view class="action-btn" bindtap="goSubmit">
+      <text class="action-icon">✅</text>
+      <text class="action-label">做完啦</text>
+    </view>
+    <view class="action-btn" bindtap="goBack">
+      <text class="action-icon">🔄</text>
+      <text class="action-label">换一个</text>
+    </view>
+  </view>
+</view>
+
+<!-- 无任务状态 -->
+<view wx:else class="empty-state">
+  <text class="empty-icon">📭</text>
+  <text class="empty-text">暂无任务</text>
+  <button class="btn-primary" bindtap="goBack">回到首页</button>
+</view>

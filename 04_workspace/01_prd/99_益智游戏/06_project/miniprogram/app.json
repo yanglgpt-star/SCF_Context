@@ -1,0 +1,35 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/task/task",
+    "pages/submit/submit",
+    "pages/review/review",
+    "pages/success/success",
+    "pages/safety/safety",
+    "pages/achievement/achievement",
+    "pages/wishes/wishes",
+    "pages/admin/admin",
+    "pages/admin-task/admin-task",
+    "pages/report/report"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FFA07A",
+    "navigationBarTitleText": "家庭大冒险",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FFF8F0"
+  },
+  "usingComponents": {
+    "star-effect": "/components/star-effect/star-effect",
+    "character": "/components/character/character",
+    "progress-bar": "/components/progress-bar/progress-bar"
+  },
+"plugins": {
+    "text2audio": {
+      "version": "1.0.3",
+      "provider": "wxe1b17419621fcc3e",
+      "export": "index.js"
+    }
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子仓单状态机图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .legend {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        .legend h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>电子仓单状态机图</h1>
+        <div class="subtitle">Electronic Warehouse Receipt State Machine</div>
+        
+        <div class="mermaid">
+flowchart TD
+    Start([开始]) --> Create[创建仓单]
+    Create --> Draft[待审]
+    Draft -->|审核通过| Normal[普通存单]
+    Draft -->|审核拒绝| Cancelled[已作废]
+    
+    Normal -->|保证金拨付| Pledged[已质押]
+    Normal -->|直接提货| Completed[已核销]
+    
+    Pledged -->|部分付款| Partial[部分释放]
+    Pledged -->|全额回购| Normal
+    
+    Partial -->|继续付款| Partial
+    Partial -->|最后一批出库| Completed
+    
+    Partial -->|生成提货码| Pickup[提货码已生成]
+    Pickup -->|仓库核销| Partial
+    
+    Completed --> End([结束])
+    Cancelled --> End
+    
+    style Start fill:#48bb78,stroke:#276749,color:#fff
+    style End fill:#a0aec0,stroke:#4a5568,color:#fff
+    style Draft fill:#e2e8f0,stroke:#718096
+    style Normal fill:#4299e1,stroke:#2b6cb0,color:#fff
+    style Pledged fill:#9f7aea,stroke:#6b46c1,color:#fff
+    style Partial fill:#ed8936,stroke:#c05621,color:#fff
+    style Completed fill:#48bb78,stroke:#276749,color:#fff
+    style Cancelled fill:#cbd5e0,stroke:#718096
+    style Pickup fill:#fbd38d,stroke:#d69e2e
+        </div>
+        
+        <div class="legend">
+            <h3>状态说明</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e2e8f0;"></div>
+                <span>待审 - 仓单创建中，尚未生效</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4299e1;"></div>
+                <span>普通存单 - 已生效，可作为普通凭证，未质押</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #9f7aea;"></div>
+                <span>已质押 - 已设定质押，货物全部锁定</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ed8936;"></div>
+                <span>部分释放 - 部分货物已释放，剩余仍质押中</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #48bb78;"></div>
+                <span>已核销 - 货物全部出库，仓单失效</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

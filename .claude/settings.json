@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+
+    ],
+   "claude-code.initialPermissionMode": "auto-accept",
+  "chat.useClaudeSkills": true,
+  "chat.agentSkillsLocations": [
+    "~/.claude/skills",
+    "${workspaceFolder}/.claude/skills"
+  ]
+  }
+}
+ 

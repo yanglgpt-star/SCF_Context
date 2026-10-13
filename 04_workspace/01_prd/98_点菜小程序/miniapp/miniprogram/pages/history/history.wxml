@@ -1,0 +1,60 @@
+<!-- 饮食记录页 -->
+<view class="page-history">
+
+  <!-- 日历 -->
+  <view class="calendar-card">
+    <view class="calendar-header">
+      <text class="month-nav" bindtap="prevMonth">‹</text>
+      <text class="month-title">{{year}} 年 {{month}} 月</text>
+      <text class="month-nav" bindtap="nextMonth">›</text>
+    </view>
+    <view class="weekday-row">
+      <text class="weekday" wx:for="{{weekDays}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="days-grid">
+      <view class="day-cell {{d.isToday ? 'today' : ''}} {{d.isSelected ? 'selected' : ''}} {{d.isMarked ? 'marked' : ''}} {{d.empty ? 'empty' : ''}}"
+        wx:for="{{calendarDays}}" wx:key="day"
+        data-date="{{d.date}}"
+        bindtap="selectDate">
+        <text class="day-text" wx:if="{{!d.empty}}">{{d.day}}</text>
+        <text class="mark-dot" wx:if="{{d.isMarked}}">●</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 选中日期的记录 -->
+  <view class="section">
+    <text class="section-title">{{selectedDate}} 的饮食</text>
+
+    <view class="empty-state" wx:if="{{selectedLogs.length === 0 && !loading}}">
+      <text>🍽️ 当天没有记录</text>
+    </view>
+
+    <!-- 按餐次分开展示 -->
+    <view class="meal-group" wx:for="{{selectedLogs}}" wx:key="_id">
+      <text class="meal-group-title">{{item.meal_type}}</text>
+      <view class="log-dish-item" wx:for="{{item.dishes}}" wx:key="_id"
+        data-id="{{item._id || item.name}}" bindtap="goDetail">
+        <text class="log-dish-name">{{item.name}}</text>
+        <text class="log-dish-stars">{{renderStars(item.difficulty)}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 本周看板 -->
+  <view class="section">
+    <text class="section-title">📅 本周记录</text>
+    <view class="week-board">
+      <!-- 按照日期分组 -->
+      <view class="week-group" wx:for="{{weekLogs}}" wx:key="_id">
+        <text class="week-date">{{item.date}}</text>
+        <text class="week-meal">{{item.meal_type}} · {{item.food_ids ? item.food_ids.length : 0}}道菜</text>
+      </view>
+      <view class="empty-state" wx:if="{{weekLogs.length === 0}}">
+        <text>本周还没有记录</text>
+      </view>
+    </view>
+  </view>
+
+  <view style="height: 60rpx;"></view>
+</view>

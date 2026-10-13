@@ -1,0 +1,9 @@
+{
+  "name": "imageUploader",
+  "version": "1.0.0",
+  "description": "上传图片到云存储",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

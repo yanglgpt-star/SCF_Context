@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子仓单详情 - 部分释放</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            color: #262626;
+        }
+        
+        /* 顶部导航 */
+        .header {
+            background: #fff;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 20px; font-weight: 600; color: #1e3a5f; margin-right: 48px; }
+        .nav-menu { display: flex; gap: 32px; flex: 1; }
+        .nav-item { color: #595959; font-size: 14px; cursor: pointer; }
+        .nav-item.active { color: #1e3a5f; font-weight: 500; }
+        .user-info { display: flex; align-items: center; gap: 8px; color: #595959; font-size: 14px; }
+        .avatar { width: 32px; height: 32px; background: #1e3a5f; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+        
+        /* 主内容区 */
+        .main { padding: 88px 24px 24px; }
+        
+        /* 详情头部 */
+        .detail-header {
+            background: linear-gradient(135deg, #d46b08 0%, #fa8c16 100%);
+            border-radius: 8px;
+            padding: 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .detail-header::before {
+            content: '部分释放';
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-15deg);
+            font-size: 72px;
+            font-weight: bold;
+            opacity: 0.15;
+            border: 4px solid rgba(255,255,255,0.3);
+            padding: 20px 40px;
+            border-radius: 8px;
+        }
+        .detail-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .detail-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 24px;
+        }
+        .detail-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn-light {
+            height: 36px;
+            padding: 0 20px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-light:hover { background: rgba(255,255,255,0.25); }
+        
+        /* 内容布局 */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            background: #e6f7ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .card-title { font-size: 16px; font-weight: 500; }
+        .card-body { padding: 24px; }
+        
+        /* 信息网格 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .info-item {}
+        .info-label {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-bottom: 6px;
+        }
+        .info-value {
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+        }
+        .info-value.link { color: #1e3a5f; cursor: pointer; }
+        .info-value.link:hover { text-decoration: underline; }
+        .copy-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 6px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+        .copy-icon:hover { opacity: 1; }
+        
+        /* 货物表格 */
+        .goods-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .goods-table th {
+            background: #fafafa;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            color: #595959;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .goods-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .goods-table tr:last-child td { border-bottom: none; }
+        
+        /* 价值汇总 */
+        .value-summary {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+            border: 1px solid #ffccc7;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .value-label {
+            font-size: 14px;
+            color: #cf1322;
+            margin-bottom: 8px;
+        }
+        .value-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #cf1322;
+            font-family: "SF Mono", monospace;
+        }
+        .value-meta {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 8px;
+        }
+        
+        /* 释放进度 - 特色组件 */
+        .release-progress {
+            background: linear-gradient(135deg, #fff7e6 0%, #fff1d6 100%);
+            border: 1px solid #ffd591;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+        .release-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .release-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ad6800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .release-percent {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d46b08;
+        }
+        .progress-bar {
+            height: 12px;
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #ffd591;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fa8c16 0%, #ffa940 100%);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        .release-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .release-stat {
+            text-align: center;
+            padding: 16px;
+            background: #fff;
+            border-radius: 6px;
+        }
+        .release-stat-label {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        .release-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #262626;
+        }
+        .release-stat-value.original { color: #1e3a5f; }
+        .release-stat-value.released { color: #52c41a; }
+        .release-stat-value.locked { color: #fa8c16; }
+        
+        /* 释放子单列表 */
+        .sub-orders {
+            margin-top: 20px;
+        }
+        .sub-order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .sub-order-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+        }
+        .sub-order-link {
+            font-size: 13px;
+            color: #1e3a5f;
+            cursor: pointer;
+        }
+        .sub-order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .sub-order-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 6px;
+            border-left: 3px solid #52c41a;
+        }
+        .sub-order-info {}
+        .sub-order-no {
+            font-size: 13px;
+            color: #1e3a5f;
+            margin-bottom: 4px;
+        }
+        .sub-order-meta {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        .sub-order-qty {
+            font-size: 14px;
+            font-weight: 500;
+            color: #52c41a;
+        }
+        
+        /* 质押信息 */
+        .pledge-info {
+            background: #f3e8ff;
+            border: 1px solid #d3adf7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .pledge-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #531dab;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pledge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .pledge-item {}
+        .pledge-label {
+            font-size: 12px;
+            color: #722ed1;
+            margin-bottom: 4px;
+        }
+        .pledge-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #531dab;
+        }
+        
+        /* 合同列表 */
+        .contract-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .contract-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-radius: 6px;
+        }
+        .contract-info {}
+        .contract-name {
+            font-size: 14px;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+        .contract-no {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        .contract-status {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .status-signed { background: #f6ffed; color: #52c41a; }
+        .status-pending { background: #fff7e6; color: #fa8c16; }
+        
+        /* 时间轴 */
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: #e8e8e8;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            background: #fa8c16;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 1px #e8e8e8;
+        }
+        .timeline-time {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-bottom: 4px;
+        }
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+        .timeline-desc {
+            font-size: 13px;
+            color: #595959;
+        }
+        .timeline-user {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+        
+        /* 侧边栏 */
+        .sidebar {}
+        .sidebar-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        .sidebar-body { padding: 20px; }
+        
+        /* QR码 */
+        .qr-section {
+            text-align: center;
+        }
+        .qr-code {
+            width: 160px;
+            height: 160px;
+            background: #f5f5f5;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        .qr-text {
+            font-size: 13px;
+            color: #595959;
+        }
+        
+        /* 验证信息 */
+        .verify-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .verify-label { color: #8c8c8c; min-width: 80px; }
+        .verify-value { color: #262626; }
+        .verify-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #f6ffed;
+            color: #52c41a;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .verify-hash {
+            font-family: "SF Mono", monospace;
+            font-size: 11px;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #595959;
+        }
+        
+        /* 提货码列表 */
+        .pickup-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pickup-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #f6ffed;
+            border-radius: 4px;
+            border: 1px solid #b7eb8f;
+        }
+        .pickup-code {
+            font-family: "SF Mono", monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: #52c41a;
+        }
+        .pickup-status {
+            font-size: 12px;
+            color: #52c41a;
+        }
+        
+        /* 限制说明 */
+        .restriction-box {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-top: 16px;
+        }
+        .restriction-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #d48806;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .restriction-text {
+            font-size: 12px;
+            color: #ad6800;
+            line-height: 1.6;
+        }
+            /* 分页样式 */
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #f0f0f0; }
+        .pagination-total { font-size: 13px; color: #8c8c8c; margin-right: 12px; }
+        .pagination-page { display: flex; gap: 4px; }
+        .pagination-item { min-width: 32px; height: 32px; padding: 0 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; color: #595959; cursor: pointer; transition: all 0.3s; background: #fff; }
+        .pagination-item:hover { border-color: #1890ff; color: #1890ff; }
+        .pagination-item.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .pagination-item.disabled { color: #d9d9d9; cursor: not-allowed; border-color: #d9d9d9; }
+        .pagination-jump { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #595959; margin-left: 12px; }
+        .pagination-jump input { width: 48px; height: 32px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 6px; text-align: center; font-size: 14px; }
+        .data-table th, .data-table td { white-space: nowrap; }
+        .table-scroll { overflow-x: auto; width: 100%; margin-bottom: 16px; }
+        .table-scroll .data-table { width: auto; min-width: 100%; }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="logo">金融助手</div>
+        <div class="nav-menu">
+            <div class="nav-item">首页</div>
+            <div class="nav-item">供应商管理</div>
+            <div class="nav-item active">资产管理</div>
+            <div class="nav-item">订单管理</div>
+            <div class="nav-item">财务管理</div>
+            <div class="nav-item">系统设置</div>
+        </div>
+        <div class="user-info">
+            <div class="avatar">管</div>
+            <span>管理员</span>
+        </div>
+    </div>
+    
+    <!-- 主内容 -->
+    <div class="main">
+        <!-- 详情头部 -->
+        <div class="detail-header">
+            <div class="detail-title">电子仓单 EWR-20231026-0089</div>
+            <div class="detail-subtitle">签发日期：2023年10月26日 | 有效期至：2024年10月25日</div>
+            <div class="detail-actions">
+                <button class="btn-light">📥 下载PDF</button>
+                <button class="btn-light">🔗 分享链接</button>
+                <button class="btn-light">📋 复制编号</button>
+            </div>
+        </div>
+        
+        <!-- 内容布局 -->
+        <div class="content-layout">
+            <!-- 左侧主内容 -->
+            <div class="main-content">
+                <!-- 基础信息 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📋</div>
+                        <div class="card-title">基础信息</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">仓单编号</div>
+                                <div class="info-value">
+                                    EWR-20231026-0089
+                                    <span class="copy-icon">📋</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">签发日期</div>
+                                <div class="info-value">2023-10-26</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">有效期至</div>
+                                <div class="info-value">2024-10-25</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">当前状态</div>
+                                <div class="info-value" style="color: #d46b08; font-weight: 600;">部分释放</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">存货人</div>
+                                <div class="info-value link">华东金属材料有限公司</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">统一社会信用代码</div>
+                                <div class="info-value">91350000M0002DEF34</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">保管人（仓库）</div>
+                                <div class="info-value">华东物流监管仓</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">权利人（质权人）</div>
+                                <div class="info-value" style="color: #1e3a5f; font-weight: 600;">金融助手</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">平台ID</div>
+                                <div class="info-value">CUST-202300256</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 货物明细 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📦</div>
+                        <div class="card-title">货物明细</div>
+                    </div>
+                    <div class="card-body">
+                        <table class="goods-table">
+                            <thead>
+                                <tr>
+                                    <th>货物名称</th>
+                                    <th>品牌/规格型号</th>
+                                    <th>计量单位</th>
+                                    <th>入库数量</th>
+                                    <th>入库重量</th>
+                                    <th>等级/质量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>热轧钢板</td>
+                                    <td>品牌B / 3.0mm×1500mm</td>
+                                    <td>吨</td>
+                                    <td>150</td>
+                                    <td>151.200 MT</td>
+                                    <td>一级品</td>
+                                </tr>
+                                <tr>
+                                    <td>冷轧钢卷</td>
+                                    <td>品牌A / 1.2mm×1250mm</td>
+                                    <td>吨</td>
+                                    <td>50</td>
+                                    <td>50.350 MT</td>
+                                    <td>合格品</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 16px; padding: 16px; background: #fafafa; border-radius: 6px;">
+                            <div class="info-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="info-item">
+                                    <div class="info-label">批次/炉号</div>
+                                    <div class="info-value">Batch-20230920-001</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">质检报告编号</div>
+                                    <div class="info-value link">QC-2023-0920-B078</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">评估基准日</div>
+                                    <div class="info-value">2023-10-26</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="value-summary">
+                            <div class="value-label">货物总价值（人民币）</div>
+                            <div class="value-amount">¥800,000.00</div>
+                            <div class="value-meta">评估单价：¥4,000.00/吨</div>
+                        </div>
+                        
+                        <!-- 释放进度 -->
+                        <div class="release-progress">
+                            <div class="release-header">
+                                <div class="release-title">
+                                    <span>📊</span>
+                                    <span>释放进度</span>
+                                </div>
+                                <div class="release-percent">60%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 60%;"></div>
+                            </div>
+                            <div class="release-stats">
+                                <div class="release-stat">
+                                    <div class="release-stat-label">原始数量</div>
+                                    <div class="release-stat-value original">200 吨</div>
+                                </div>
+                                <div class="release-stat">
+                                    <div class="release-stat-label">已释放</div>
+                                    <div class="release-stat-value released">120 吨</div>
+                                </div>
+                                <div class="release-stat">
+                                    <div class="release-stat-label">锁定中</div>
+                                    <div class="release-stat-value locked">80 吨</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 释放子单 -->
+                        <div class="sub-orders">
+                            <div class="sub-order-header">
+                                <div class="sub-order-title">已释放子单</div>
+                                <div class="sub-order-link">查看全部 →</div>
+                            </div>
+                            <div class="sub-order-list">
+                                <div class="sub-order-item">
+                                    <div class="sub-order-info">
+                                        <div class="sub-order-no">释放单号：REL-20231105-001</div>
+                                        <div class="sub-order-meta">订单号：ORD-20231105-0089 | 2023-11-05</div>
+                                    </div>
+                                    <div class="sub-order-qty">50吨</div>
+                                </div>
+                                <div class="sub-order-item">
+                                    <div class="sub-order-info">
+                                        <div class="sub-order-no">释放单号：REL-20231030-002</div>
+                                        <div class="sub-order-meta">订单号：ORD-20231030-0156 | 2023-10-30</div>
+                                    </div>
+                                    <div class="sub-order-qty">40吨</div>
+                                </div>
+                                <div class="sub-order-item">
+                                    <div class="sub-order-info">
+                                        <div class="sub-order-no">释放单号：REL-20231028-001</div>
+                                        <div class="sub-order-meta">订单号：ORD-20231028-0034 | 2023-10-28</div>
+                                    </div>
+                                    <div class="sub-order-qty">30吨</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 质押信息 -->
+                        <div class="pledge-info">
+                            <div class="pledge-title">
+                                <span>🔒</span>
+                                <span>质押信息（剩余锁定部分）</span>
+                            </div>
+                            <div class="pledge-grid">
+                                <div class="pledge-item">
+                                    <div class="pledge-label">剩余质押金额</div>
+                                    <div class="pledge-value">¥224,000.00</div>
+                                </div>
+                                <div class="pledge-item">
+                                    <div class="pledge-label">剩余质押比例</div>
+                                    <div class="pledge-value">70%</div>
+                                </div>
+                                <div class="pledge-item">
+                                    <div class="pledge-label">中登网登记号</div>
+                                    <div class="pledge-value" style="font-size: 12px;">ZHONGDENG-20231026-005678</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 仓储信息 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🏭</div>
+                        <div class="card-title">仓储与监管信息</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">存放位置</div>
+                                <div class="info-value">华东物流监管仓 B区-05货位</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">入库单号（WMS）</div>
+                                <div class="info-value">IN-20231026-01234</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">保险单号</div>
+                                <div class="info-value">PICC-2023-WH-567891</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">承保公司</div>
+                                <div class="info-value">中国人民财产保险股份有限公司</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">保险有效期</div>
+                                <div class="info-value">2023-10-26 至 2024-10-25</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">保管要求</div>
+                                <div class="info-value">室内存放、防潮、堆码限高3层</div>
+                            </div>
+                        </div>
+                        <div class="restriction-box">
+                            <div class="restriction-title">
+                                <span>⚠️</span>
+                                <span>限制说明</span>
+                            </div>
+                            <div class="restriction-text">
+                                本仓单已设定质押，部分货物已释放。剩余锁定货物（80吨）未经质权人书面指令不得出库。已释放货物凭有效提货码可办理出库。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 关联合同 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📄</div>
+                        <div class="card-title">关联合同</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="contract-list">
+                            <div class="contract-item">
+                                <div class="contract-info">
+                                    <div class="contract-name">代储代销监管协议</div>
+                                    <div class="contract-no">AGR-2023-1026-001</div>
+                                </div>
+                                <div class="contract-status status-signed">已签署</div>
+                            </div>
+                            <div class="contract-item">
+                                <div class="contract-info">
+                                    <div class="contract-name">货物质押合同</div>
+                                    <div class="contract-no">AGR-2023-1026-002</div>
+                                </div>
+                                <div class="contract-status status-signed">已签署</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 变更记录 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">变更记录</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-time">2023-11-05 16:45:22</div>
+                                <div class="timeline-title">第三批货物释放</div>
+                                <div class="timeline-desc">释放50吨，剩余锁定80吨，生成提货码PICKUP-20231105-003</div>
+                                <div class="timeline-user">操作人：系统自动</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-time">2023-10-30 11:20:15</div>
+                                <div class="timeline-title">第二批货物释放</div>
+                                <div class="timeline-desc">释放40吨，剩余锁定130吨，生成提货码PICKUP-20231030-002</div>
+                                <div class="timeline-user">操作人：系统自动</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-time">2023-10-28 09:35:08</div>
+                                <div class="timeline-title">第一批货物释放</div>
+                                <div class="timeline-desc">释放30吨，剩余锁定170吨，生成提货码PICKUP-20231028-001</div>
+                                <div class="timeline-user">操作人：系统自动</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot" style="background: #722ed1;"></div>
+                                <div class="timeline-time">2023-10-26 14:20:33</div>
+                                <div class="timeline-title">仓单质押锁定</div>
+                                <div class="timeline-desc">保证金拨付成功，仓单状态变更为"已质押"，货物全部锁定200吨</div>
+                                <div class="timeline-user">操作人：系统自动</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot" style="background: #8c8c8c;"></div>
+                                <div class="timeline-time">2023-10-26 10:00:00</div>
+                                <div class="timeline-title">仓单生成</div>
+                                <div class="timeline-desc">实物入库完成，系统自动生成电子仓单</div>
+                                <div class="timeline-user">操作人：系统自动</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧边栏 -->
+            <div class="sidebar">
+                <!-- 快速验证 -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">🔐 安全验证</div>
+                    <div class="sidebar-body">
+                        <div class="qr-section">
+                            <div class="qr-code">[二维码]</div>
+                            <div class="qr-text">扫码验证仓单真伪</div>
+                        </div>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #f0f0f0;">
+                            <div class="verify-item">
+                                <span class="verify-label">电子签章</span>
+                                <span class="verify-badge">✓ CA认证有效</span>
+                            </div>
+                            <div class="verify-item">
+                                <span class="verify-label">签章主体</span>
+                                <span class="verify-value">华东物流监管仓</span>
+                            </div>
+                            <div class="verify-item">
+                                <span class="verify-label">区块链哈希</span>
+                            </div>
+                            <div class="verify-hash">0x9c8d7e6f...5a4b3c2d</div>
+                            <div class="verify-item" style="margin-top: 8px;">
+                                <span class="verify-label">存证时间</span>
+                                <span class="verify-value" style="font-size: 12px;">2023-10-26 14:20:33</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 有效提货码 -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">🎫 有效提货码</div>
+                    <div class="sidebar-body">
+                        <div class="pickup-list">
+                            <div class="pickup-item">
+                                <span class="pickup-code">PICKUP-20231105-003</span>
+                                <span class="pickup-status">未提货</span>
+                            </div>
+                            <div class="pickup-item">
+                                <span class="pickup-code">PICKUP-20231030-002</span>
+                                <span class="pickup-status">已提货</span>
+                            </div>
+                            <div class="pickup-item">
+                                <span class="pickup-code">PICKUP-20231028-001</span>
+                                <span class="pickup-status">已提货</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 操作日志摘要 -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">📝 最近操作</div>
+                    <div class="sidebar-body">
+                        <div class="timeline" style="padding-left: 20px;">
+                            <div class="timeline-item" style="padding-bottom: 16px;">
+                                <div class="timeline-dot" style="left: -20px; width: 12px; height: 12px; background: #fa8c16;"></div>
+                                <div class="timeline-time" style="font-size: 11px;">11-05 16:45</div>
+                                <div class="timeline-title" style="font-size: 13px;">第三批释放</div>
+                            </div>
+                            <div class="timeline-item" style="padding-bottom: 16px;">
+                                <div class="timeline-dot" style="left: -20px; width: 12px; height: 12px; background: #fa8c16;"></div>
+                                <div class="timeline-time" style="font-size: 11px;">10-30 11:20</div>
+                                <div class="timeline-title" style="font-size: 13px;">第二批释放</div>
+                            </div>
+                            <div class="timeline-item" style="padding-bottom: 16px;">
+                                <div class="timeline-dot" style="left: -20px; width: 12px; height: 12px; background: #fa8c16;"></div>
+                                <div class="timeline-time" style="font-size: 11px;">10-28 09:35</div>
+                                <div class="timeline-title" style="font-size: 13px;">第一批释放</div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot" style="left: -20px; width: 12px; height: 12px; background: #722ed1;"></div>
+                                <div class="timeline-time" style="font-size: 11px;">10-26 14:20</div>
+                                <div class="timeline-title" style="font-size: 13px;">质押锁定</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 快捷操作 -->
+                <div class="sidebar-card">
+                    <div class="sidebar-header">⚡ 快捷操作</div>
+                    <div class="sidebar-body">
+                        <button class="btn-light" style="width: 100%; background: #1e3a5f; color: #fff; margin-bottom: 12px; border: none; justify-content: center;">查看关联订单</button>
+                        <button class="btn-light" style="width: 100%; background: #fff; color: #595959; border: 1px solid #d9d9d9; margin-bottom: 12px; justify-content: center;">查看释放记录</button>
+                        <button class="btn-light" style="width: 100%; background: #fff; color: #595959; border: 1px solid #d9d9d9; justify-content: center;">联系仓库</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

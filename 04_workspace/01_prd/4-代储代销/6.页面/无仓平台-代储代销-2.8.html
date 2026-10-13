@@ -622,6 +622,59 @@
         .action-link.success {
             color: #52c41a;
         }
+        .action-link.orange {
+            color: #ff6b35;
+        }
+
+        /* 送货码卡片 */
+        .delivery-card {
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .delivery-card:last-child {
+            margin-bottom: 0;
+        }
+        .delivery-goods {
+            font-size: 15px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 10px;
+        }
+        .delivery-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #595959;
+            margin-bottom: 6px;
+        }
+        .delivery-row:last-child {
+            margin-bottom: 0;
+        }
+        .delivery-code {
+            font-family: monospace;
+            font-weight: 600;
+            color: #262626;
+        }
+        .delivery-status {
+            display: inline-block;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .delivery-status.pending {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        .delivery-status.done {
+            background: #f5f5f5;
+            color: #8c8c8c;
+            border: 1px solid #d9d9d9;
+        }
         
         /* 协议勾选 */
         .agreement-box {
@@ -741,18 +794,23 @@
             justify-content: center;
             z-index: 1000;
             animation: fadeIn 0.2s ease;
+            padding: 24px;
+            overflow: hidden;
         }
         .modal-overlay.active {
             display: flex;
         }
-        .modal {
+        .modal, .modal-content {
             background: #fff;
             border-radius: 12px;
-            width: 90%;
+            width: min(90vw, 600px);
             max-width: 600px;
-            max-height: 90vh;
-            overflow: auto;
+            max-height: calc(100vh - 48px);
+            overflow: hidden;
             animation: scaleIn 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 12px 40px rgba(0,0,0,.2);
         }
         .modal-header {
             padding: 20px 24px;
@@ -760,6 +818,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex: 0 0 auto;
         }
         .modal-title {
             font-size: 18px;
@@ -777,6 +836,10 @@
         }
         .modal-body {
             padding: 24px;
+            min-height: 0;
+            overflow: auto;
+            flex: 1 1 auto;
+            overscroll-behavior: contain;
         }
         .modal-footer {
             padding: 16px 24px;
@@ -784,6 +847,39 @@
             display: flex;
             justify-content: flex-end;
             gap: 12px;
+            flex-wrap: wrap;
+            flex: 0 0 auto;
+            background: #fff;
+        }
+        @media (max-width: 900px) {
+            .top-nav { height: auto; min-height: 76px; padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
+            .nav-left { gap: 12px; flex-wrap: wrap; }
+            .nav-brand { font-size: 20px; }
+            .nav-brand .logo-icon, .nav-service-icon { width: 40px; height: 40px; font-size: 20px; }
+            .nav-service-card { padding: 8px 12px; }
+            .nav-service-title { font-size: 15px; }
+            .nav-right { gap: 8px; flex-wrap: wrap; }
+            .page-container { padding: 12px; }
+            .page-header { padding: 18px 20px; margin-bottom: 12px; }
+            .search-area { padding: 16px; }
+            .search-item { flex: 1 1 180px; }
+            .search-item .form-input, .search-item select.form-input { width: 100%; min-width: 0; }
+        }
+        @media (max-width: 600px) {
+            .top-nav { align-items: flex-start; }
+            .nav-left, .nav-right { width: 100%; }
+            .nav-right { justify-content: flex-start; }
+            .nav-user { margin-left: auto; }
+            .modal-overlay { padding: 8px; }
+            .modal, .modal-content { width: 100%; max-height: calc(100dvh - 16px); border-radius: 8px; }
+            .modal-header { padding: 14px 16px; }
+            .modal-title { font-size: 16px; }
+            .modal-body { padding: 16px; }
+            .modal-footer { padding: 12px 16px; }
+            .form-row { display: block; margin-bottom: 0; }
+            .form-group, .form-group.half, .form-group.third { min-width: 0; width: 100%; margin-bottom: 16px; }
+            .table-scroll { margin: 0 12px 18px; width: calc(100% - 24px); }
+            .pagination { overflow-x: auto; justify-content: flex-start; }
         }
         
         /* Toast */
@@ -892,6 +988,7 @@
             </div>
         </div>
         <div class="nav-right">
+            <button class="btn btn-default" onclick="goToCompensationBills()" style="padding:6px 16px;height:36px;font-size:13px;position:relative;">补偿金账单 <span style="display:inline-block;background:#ff4d4f;color:#fff;border-radius:10px;padding:0 6px;margin-left:4px;font-size:11px;">2</span></button>
             <button class="btn btn-primary" onclick="goToApplyRecords()" style="padding: 6px 16px; height: 36px; font-size: 13px;">申请记录</button>
             <div class="nav-user">👤 能良科技</div>
         </div>
@@ -948,6 +1045,20 @@
                 </div>
             </div>
             
+        </div>
+
+        <!-- 差价补偿金账单 -->
+        <div id="page-compensation-bills" class="page-content hidden">
+            <div class="page-header"><div class="page-title">差价补偿金账单</div><div class="page-subtitle">查看应收账单并完成缴纳</div></div>
+            <div class="card">
+                <div class="search-area"><div class="search-item"><label class="form-label">应收单号</label><input class="form-input" placeholder="请输入"></div><div class="search-item"><label class="form-label">账单状态</label><select class="form-input"><option>全部</option><option>待缴纳</option><option>缴纳中</option><option>已缴清</option><option>已退回</option><option>已划转</option></select></div><button class="btn btn-primary" onclick="handleQuery()">查询</button><button class="btn btn-default" onclick="handleReset()">重置</button></div>
+                <div class="table-scroll"><table class="data-table"><thead><tr><th>应收单号</th><th>代储订单编码</th><th>主体类型</th><th>生成原因</th><th style="text-align:right;">应收金额</th><th style="text-align:right;">未缴金额</th><th>缴款期限</th><th>状态</th><th>操作</th></tr></thead><tbody>
+                    <tr><td>BCAR202609090001</td><td>DC20250909001</td><td><span class="tag tag-processing">企业</span></td><td>代储代销差价补偿</td><td style="text-align:right;">¥50,000.00</td><td style="text-align:right;color:#cf1322;font-weight:600;">¥50,000.00</td><td>2026-09-15</td><td><span class="tag tag-warning">待缴纳</span></td><td><div class="action-links"><span class="action-link" onclick="showModal('modal-compensation-pay')">企业钱包支付</span><span class="action-link" onclick="showToast('企业账单：BCAR202609090001，应缴 ¥50,000.00','info')">详情</span></div></td></tr>
+                    <tr><td>BCAR202609090002</td><td>DC20250909002</td><td><span class="tag tag-warning">个人</span></td><td>代储代销差价补偿</td><td style="text-align:right;">¥20,000.00</td><td style="text-align:right;color:#cf1322;font-weight:600;">¥20,000.00</td><td>2026-09-15</td><td><span class="tag tag-warning">待缴纳</span></td><td><div class="action-links"><span class="action-link" onclick="showModal('modal-compensation-personal-pay')">个人转账支付</span><span class="action-link" onclick="showToast('个人账单：BCAR202609090002，应缴 ¥20,000.00','info')">详情</span></div></td></tr>
+                    <tr><td>BCAR202609070003</td><td>DC20250907004</td><td><span class="tag tag-processing">企业</span></td><td>代储代销差价补偿</td><td style="text-align:right;">¥32,000.00</td><td style="text-align:right;">¥0.00</td><td>2026-09-10</td><td><span class="tag tag-success">已缴清</span></td><td><span class="action-link" onclick="showToast('企业账单已缴清，等待资金处置','info')">详情</span></td></tr>
+                </tbody></table></div>
+                <div class="alert-info" style="margin:0 24px 24px;"><strong>资金说明：</strong>主体类型由其他系统判定。企业使用平安钱包余额支付；个人使用“一张应收单一个临时账户”银行转账。销售完成后以清结算完成为整单退款触发点；未销售处置由平台后台人工处理。</div>
+            </div>
         </div>
 
         <!-- 申请记录 -->
@@ -1062,6 +1173,7 @@
                             <td>
                                 <div class="action-links">
                                     <span class="action-link" onclick="showDetailModal('SQ20250907003')">查看</span>
+                                    <span class="action-link orange" onclick="showDeliveryCodes('SQ20250907003')">送货码</span>
                                 </div>
                             </td>
                         </tr>
@@ -1603,6 +1715,41 @@
     </div>
     
     <!-- 协议弹窗 -->
+    <!-- 差价补偿金企业钱包支付 -->
+    <div class="modal-overlay" id="modal-compensation-pay" onclick="closeModalOnOverlay(event, 'modal-compensation-pay')">
+        <div class="modal-content" style="max-width:640px;"><div class="modal-header"><div class="modal-title">企业差价补偿金支付</div><div class="modal-close" onclick="closeModal('modal-compensation-pay')">×</div></div>
+            <div class="modal-body">
+                <div class="info-card"><div class="form-row"><div class="form-group half"><div class="info-label">应收单号</div><div class="info-value">BCAR202609090001</div></div><div class="form-group half"><div class="info-label">代储订单编码</div><div class="info-value">DC20250909001</div></div></div><div class="form-row"><div class="form-group half"><div class="info-label">应付金额</div><div class="info-value" style="font-size:22px;color:#cf1322;font-weight:700;">¥50,000.00</div></div><div class="form-group half"><div class="info-label">主体类型</div><div class="info-value">企业（其他系统判定）</div></div></div></div>
+                <div style="padding:16px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;margin-top:16px;"><strong>平安钱包余额支付</strong><div style="margin-top:8px;color:#595959;">钱包账号：****6688</div><div style="margin-top:4px;color:#52c41a;">可用余额：¥158,600.00</div></div>
+                <div class="alert-info" style="margin-top:16px;">付款进入平台在平安体系下的担保账户。通道支付成功后仍需等待实收入账和核销确认。</div>
+            </div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-compensation-pay')">取消</button><button class="btn btn-primary" onclick="confirmCompensationPay()">确认支付 ¥50,000.00</button></div>
+        </div>
+    </div>
+
+    <!-- 差价补偿金个人临时账户转账 -->
+    <div class="modal-overlay" id="modal-compensation-personal-pay" onclick="closeModalOnOverlay(event, 'modal-compensation-personal-pay')">
+        <div class="modal-content" style="max-width:680px;">
+            <div class="modal-header"><div class="modal-title">个人差价补偿金支付</div><div class="modal-close" onclick="closeModal('modal-compensation-personal-pay')">×</div></div>
+            <div class="modal-body">
+                <div class="alert-info" style="margin-bottom:16px;">个人供应商不使用钱包余额支付。请使用本人银行卡向本应收单专属临时账户转账，资金到账后自动归集至平台平安担保账户。</div>
+                <div class="info-card">
+                    <div class="form-row"><div class="form-group half"><div class="info-label">应收单号</div><div class="info-value">BCAR202609090002</div></div><div class="form-group half"><div class="info-label">代储订单</div><div class="info-value">DC20250909002</div></div></div>
+                    <div class="form-row"><div class="form-group half"><div class="info-label">付款人</div><div class="info-value">张三（个人）</div></div><div class="form-group half"><div class="info-label">应转金额</div><div class="info-value" style="font-size:22px;color:#cf1322;font-weight:700;">¥20,000.00</div></div></div>
+                </div>
+                <div style="padding:18px;background:#fafafa;border:1px solid #e8e8e8;border-radius:8px;line-height:2;">
+                    <div style="font-weight:600;margin-bottom:8px;">本单专属临时账户（一单一户）</div>
+                    <div class="info-row"><span class="info-label">收款户名</span><span class="info-value">平台平安担保账户</span></div>
+                    <div class="info-row"><span class="info-label">开户银行</span><span class="info-value">平安银行上海分行</span></div>
+                    <div class="info-row"><span class="info-label">临时账号</span><span class="info-value" style="font-family:monospace;font-size:16px;color:#1890ff;">3020 8800 0000 0902</span></div>
+                    <div class="info-row"><span class="info-label">转账附言</span><span class="info-value">BCAR202609090002</span></div>
+                    <div class="info-row"><span class="info-label">账户有效期</span><span class="info-value">以平安接口返回为准</span></div>
+                </div>
+                <div class="alert-warning" style="margin-top:16px;">请确保付款户名与供应商实名认证信息一致，并严格按照应转金额付款。提交转账后需等待银行到账确认，不能立即视为已缴清。</div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-compensation-personal-pay')">取消</button><button class="btn btn-default" onclick="copyPersonalTransferInfo()">复制转账信息</button><button class="btn btn-primary" onclick="confirmPersonalTransferred()">我已完成转账</button></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="modal-contract" onclick="closeModalOnOverlay(event, 'modal-contract')">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header">
@@ -1720,6 +1867,41 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-default" onclick="closeModal('modal-detail')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 送货码弹窗 -->
+    <div class="modal-overlay" id="modal-delivery-code" onclick="closeModalOnOverlay(event, 'modal-delivery-code')">
+        <div class="modal" style="max-width: 640px;">
+            <div class="modal-header">
+                <div class="modal-title">送货码</div>
+                <div class="modal-close" onclick="closeModal('modal-delivery-code')">×</div>
+            </div>
+            <div class="modal-body">
+                <div style="background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <div class="delivery-row">
+                        <span>申请编号</span>
+                        <span id="delivery-apply-no" style="font-weight:600;color:#262626;">SQ20250907003</span>
+                    </div>
+                    <div class="delivery-row" style="margin-bottom:0;">
+                        <span>申请状态</span>
+                        <span><span class="tag tag-success">已通过</span></span>
+                    </div>
+                </div>
+
+                <div id="deliveryCodeList">
+                    <!-- 由 JS 动态渲染 -->
+                </div>
+
+                <div style="margin-top: 16px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #595959; line-height: 1.8;">
+                    <strong style="color:#d48806;">说明：</strong>
+                    <br>• 每个SKU对应一个送货码，货物完成入库后送货码状态变为灰色
+                    <br>• 未完成入库的送货码为红色，请及时安排送货入库
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('modal-delivery-code')">关闭</button>
             </div>
         </div>
     </div>
@@ -1932,6 +2114,35 @@
             document.getElementById('page-apply-record').classList.remove('hidden');
         }
 
+        function goToCompensationBills() {
+            showToast('正在进入差价补偿金账单...', 'info');
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.getElementById('page-compensation-bills').classList.remove('hidden');
+        }
+
+        function confirmCompensationPay() {
+            if (confirm('确认使用平安钱包余额支付 ¥50,000.00 吗？')) {
+                closeModal('modal-compensation-pay');
+                showToast('支付申请已提交，等待担保账户到账确认', 'success');
+            }
+        }
+
+        function copyPersonalTransferInfo() {
+            var transferText = '收款户名：平台平安担保账户\n开户银行：平安银行上海分行\n临时账号：3020 8800 0000 0902\n转账金额：20000.00元\n转账附言：BCAR202609090002';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(transferText).then(function() { showToast('个人转账信息已复制', 'success'); }).catch(function() { showToast('请手工复制页面中的转账信息', 'info'); });
+            } else {
+                showToast('请手工复制页面中的转账信息', 'info');
+            }
+        }
+
+        function confirmPersonalTransferred() {
+            if (confirm('确认已使用本人银行卡完成 ¥20,000.00 转账吗？')) {
+                closeModal('modal-compensation-personal-pay');
+                showToast('已登记转账，当前状态：等待银行到账确认', 'success');
+            }
+        }
+
         function goToPaymentManage() {
             showToast('正在进入保证金拨付管理...', 'info');
             document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
@@ -2098,6 +2309,38 @@
             document.querySelectorAll('.page-content').forEach(function(p) { p.classList.add('hidden'); });
             document.getElementById('page-apply-record').classList.remove('hidden');
             refreshInventoryOverview();
+        }
+
+        // ====== 送货码 ======
+        var deliveryCodeData = {
+            'SQ20250907003': [
+                { product: 'iPhone 17', sku: '白色 256GB', brand: '苹果', qty: 120, code: 'SH202509070001', status: '未完成入库', statusClass: 'pending' },
+                { product: 'iPhone 17', sku: '黑色 256GB', brand: '苹果', qty: 80, code: 'SH202509070002', status: '已完成入库', statusClass: 'done' },
+            ]
+        };
+
+        function showDeliveryCodes(applyNo) {
+            document.getElementById('delivery-apply-no').textContent = applyNo;
+            var list = document.getElementById('deliveryCodeList');
+            var items = deliveryCodeData[applyNo];
+            if (!items || items.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="padding:40px 20px;"><div class="empty-icon">📦</div><div class="empty-text">暂无送货码</div></div>';
+            } else {
+                var html = '';
+                for (var i = 0; i < items.length; i++) {
+                    var c = items[i];
+                    html +=
+                        '<div class="delivery-card">' +
+                            '<div class="delivery-goods">' + c.product + ' / ' + c.sku + '</div>' +
+                            '<div class="delivery-row"><span>品牌</span><span>' + c.brand + '</span></div>' +
+                            '<div class="delivery-row"><span>数量</span><span>' + c.qty + '台</span></div>' +
+                            '<div class="delivery-row"><span>送货码</span><span class="delivery-code">' + c.code + '</span></div>' +
+                            '<div class="delivery-row" style="margin-top:6px;"><span></span><span class="delivery-status ' + c.statusClass + '">' + c.status + '</span></div>' +
+                        '</div>';
+                }
+                list.innerHTML = html;
+            }
+            showModal('modal-delivery-code');
         }
 
         // 页面加载时设置申请时间

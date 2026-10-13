@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>园聪学习 · MVP 三套原型</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;color:#20302c;background:#edf1ef;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    button{font:inherit} .workspace{min-height:100vh;display:grid;grid-template-columns:310px 1fr}.panel{padding:34px 26px;background:#fff;border-right:1px solid #dfe7e3}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}.logo{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#e8f8ef;font-size:28px}.brand h1{font-size:20px;margin:0}.brand p{margin:3px 0 0;color:#7a8984;font-size:12px}
+    .panel h2{font-size:13px;color:#7a8984;margin:24px 0 10px}.theme-btn,.page-btn{display:flex;width:100%;align-items:center;gap:10px;padding:12px 13px;margin:7px 0;border:0;border-radius:13px;background:#f4f7f5;color:#53615d;text-align:left;cursor:pointer}.theme-btn.active,.page-btn.active{background:#173f36;color:white}.dot{width:10px;height:10px;border-radius:50%}.desc{margin-top:24px;padding:15px;background:#f7f9f8;border-radius:15px;color:#687773;font-size:12px;line-height:1.7}.hint{margin-top:18px;color:#91a09c;font-size:11px;line-height:1.6}
+    .stage{display:flex;align-items:center;justify-content:center;padding:30px;overflow:hidden}.phone{position:relative;width:390px;height:844px;border:10px solid #192320;border-radius:49px;background:#fff;box-shadow:0 25px 70px #24453c2b;overflow:hidden}.notch{position:absolute;z-index:20;top:7px;left:50%;transform:translateX(-50%);width:112px;height:27px;border-radius:20px;background:#192320}.screen{height:100%;padding:44px 22px 24px;overflow:hidden;transition:.25s}.view{display:none;height:100%;flex-direction:column}.view.active{display:flex}.status{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700}.avatar{display:grid;place-items:center;width:39px;height:39px;border-radius:14px;background:#fff;box-shadow:0 4px 14px #00000010;font-size:22px}.user{display:flex;align-items:center;gap:9px}.stars{padding:8px 11px;border-radius:18px;background:#fff;box-shadow:0 4px 14px #0000000e}
+    .hero{position:relative;display:grid;place-items:center;height:245px;margin:17px 0}.bubble{position:absolute;top:0;right:7px;max-width:180px;padding:12px 15px;border-radius:17px 17px 4px 17px;background:#fff;font-size:14px;font-weight:650;box-shadow:0 7px 22px #0000000d}.rabbit{font-size:105px;filter:drop-shadow(0 10px 10px #183e2420);animation:float 2.4s ease-in-out infinite}.ground{position:absolute;bottom:17px;width:210px;height:25px;border-radius:50%;background:#3c985a22}.daily{padding:19px;border-radius:24px;background:#fff;box-shadow:0 12px 35px #263c3410}.tag{display:inline-block;padding:5px 9px;border-radius:11px;font-size:11px;font-weight:750}.daily h3{font-size:20px;margin:11px 0 5px}.daily p{margin:0;color:#7a8883;font-size:13px}.primary{width:100%;padding:15px;border:0;border-radius:17px;margin-top:16px;color:white;font-size:17px;font-weight:800;box-shadow:0 8px 20px #245d4930;cursor:pointer;transition:.15s}.primary:active{transform:scale(.98)}.islands{display:flex;justify-content:space-between;margin-top:18px}.island{text-align:center;color:#65756f;font-size:11px}.island b{display:grid;place-items:center;width:58px;height:58px;border-radius:20px;margin-bottom:5px;background:#fff;box-shadow:0 6px 18px #0000000b;font-size:25px}.bottom-nav{display:flex;justify-content:space-around;margin-top:auto;padding-top:17px;color:#6e7b77;font-size:11px}.bottom-nav span{text-align:center}.bottom-nav b{display:block;font-size:22px;margin-bottom:2px}
+    .game-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;text-align:center}.icon-btn{border:0;width:42px;height:42px;border-radius:15px;background:#ffffffbb;font-size:20px;cursor:pointer}.progress{font-weight:800;font-size:14px}.bar{height:7px;border-radius:8px;background:#ffffff9c;margin:13px 0 0;overflow:hidden}.bar i{display:block;width:20%;height:100%;border-radius:8px}.game-title{text-align:center;margin:23px 0 5px;font-size:15px}.math-stage{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:24px;height:235px;padding-bottom:30px}.plate{position:absolute;bottom:16px;width:260px;height:28px;border-radius:50%;background:#ffffffb8;border:3px solid #ffffff}.carrots{z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:100px;font-size:44px;filter:drop-shadow(0 5px 5px #0002)}.plus{z-index:2;align-self:center;font-size:30px;font-weight:900}.equation{text-align:center;font-size:29px;font-weight:900;letter-spacing:4px;margin:-5px 0 18px}.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.answer{height:77px;border:3px solid transparent;border-radius:23px;background:#fff;font-size:31px;font-weight:900;box-shadow:0 8px 19px #293d3512;cursor:pointer}.answer.wrong{animation:shake .35s}.answer.correct{border-color:#48aa6d;background:#e9fff0;color:#21824a;transform:scale(1.05)}.help{align-self:center;border:0;background:transparent;margin-top:22px;padding:10px 20px;color:#62716c;font-weight:700;cursor:pointer}.coach{min-height:42px;margin-top:10px;text-align:center;color:#5d6c67;font-size:13px;font-weight:650}.finish{align-items:center;text-align:center}.confetti{font-size:46px;margin-top:25px}.finish .rabbit{font-size:116px;margin:32px 0 5px}.finish h2{margin:8px 0;font-size:28px}.finish p{margin:3px 0;color:#66756f}.reward{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;margin:24px 0 13px;border-radius:22px;background:#fff;font-size:24px;font-weight:900;box-shadow:0 10px 28px #0000000d}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-bottom:10px}.stat{padding:17px 8px;border-radius:19px;background:#ffffffa6}.stat b{display:block;font-size:23px}.stat small{color:#71807b}.finish .primary{margin-top:auto}
+    /* A 森林绘本 */
+    .theme-a .screen{background:linear-gradient(#e5f8ef 0%,#f7f0d8 100%)}.theme-a .primary,.theme-a .bar i{background:#31975b}.theme-a .tag{background:#e3f7e9;color:#27844d}.theme-a .answer{color:#225f40}.theme-a .equation{color:#244f3c}
+    /* B 糖果积木 */
+    .theme-b .screen{background:linear-gradient(145deg,#fff1e6,#f4eaff 55%,#e5f4ff)}.theme-b .primary,.theme-b .bar i{background:#7956d8}.theme-b .tag{background:#f0e8ff;color:#6c48cc}.theme-b .daily,.theme-b .answer,.theme-b .reward{border:3px solid #382b5e;box-shadow:5px 6px 0 #382b5e}.theme-b .answer{color:#382b5e}.theme-b .bubble{border:2px solid #382b5e}.theme-b .island b{border:2px solid #382b5e}.theme-b .rabbit{filter:drop-shadow(7px 8px 0 #f2b6ce)}.theme-b .plate{border-color:#382b5e}.theme-b .equation{color:#382b5e}
+    /* C 星空探险 */
+    .theme-c .screen{color:#fff;background:radial-gradient(circle at 80% 13%,#624ea1 0 4%,transparent 20%),linear-gradient(165deg,#192756,#243b72 58%,#163f56)}.theme-c .screen:before{content:"✦  ·  ✧     ·  ✦    ·    ✧";position:absolute;top:90px;left:22px;color:#ffffff90;letter-spacing:10px}.theme-c .primary,.theme-c .bar i{background:#ffad3d;color:#33264f}.theme-c .tag{background:#fff0c5;color:#7a5216}.theme-c .daily,.theme-c .answer,.theme-c .reward,.theme-c .stat{background:#ffffff17;border:1px solid #ffffff38;backdrop-filter:blur(7px);color:#fff}.theme-c .daily p,.theme-c .finish p,.theme-c .island,.theme-c .bottom-nav,.theme-c .help,.theme-c .coach{color:#dce8ff}.theme-c .stars,.theme-c .avatar,.theme-c .bubble,.theme-c .icon-btn{background:#ffffff20;color:white}.theme-c .island b{background:#ffffff18}.theme-c .plate{background:#789bd955;border-color:#b5d8ff}.theme-c .equation{color:#fff}.theme-c .answer.correct{background:#39b978}.theme-c .answer.wrong{background:#ffffff17}
+    .toast{position:absolute;z-index:30;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);padding:10px 16px;border-radius:20px;background:#1c2b27e8;color:#fff;font-size:12px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @keyframes float{50%{transform:translateY(-8px)}}@keyframes shake{25%{transform:translateX(-7px)}50%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+    /* 儿童友好统一规范：低饱和、低刺激、大字号、弱动效 */
+    .screen{padding:48px 24px 26px}.status{font-size:14px}.avatar{width:44px;height:44px;border-radius:15px}.stars{font-size:14px}
+    .hero{height:225px;margin:15px 0}.rabbit{font-size:96px;animation:float 4.5s ease-in-out infinite}.bubble{max-width:195px;font-size:15px;line-height:1.55;padding:13px 16px;box-shadow:0 5px 15px #29473c0b}
+    .daily{padding:21px;border-radius:25px;box-shadow:0 7px 20px #29473c0d}.daily h3{font-size:22px}.daily p{font-size:14px;line-height:1.6}.tag{font-size:12px}.primary{min-height:58px;font-size:18px;box-shadow:0 5px 13px #245d491f}
+    .islands{margin-top:20px}.island{font-size:12px}.island b{width:62px;height:62px;font-size:26px;box-shadow:0 4px 12px #29473c0b}.bottom-nav{font-size:12px}
+    .game-title{font-size:16px;line-height:1.6;margin-top:25px}.math-stage{height:225px}.carrots{font-size:46px}.equation{font-size:32px;margin-bottom:21px}.answers{gap:14px}.answer{height:82px;font-size:34px;border-radius:24px;box-shadow:0 5px 14px #293d350e}.answer.wrong{animation:none;background:#f4f0e7}.coach{font-size:14px;line-height:1.6}.help{font-size:14px;min-height:46px;margin-top:15px}.finish h2{font-size:29px}.finish p{font-size:15px;line-height:1.6}
+    .theme-a .screen{background:linear-gradient(180deg,#edf7f1 0%,#f7f3e5 100%)}.theme-a .primary,.theme-a .bar i{background:#3f8b60}.theme-a .tag{background:#e2f0e6;color:#33784f}
+    .theme-b .screen{background:linear-gradient(160deg,#faf3ea,#f2edf8 55%,#edf5f6)}.theme-b .primary,.theme-b .bar i{background:#75649b}.theme-b .tag{background:#ebe5f2;color:#68558f}.theme-b .daily,.theme-b .answer,.theme-b .reward{border:1px solid #8c80a333;box-shadow:0 6px 18px #443b5710}.theme-b .answer{color:#514a62}.theme-b .bubble,.theme-b .island b{border:1px solid #8c80a324}.theme-b .rabbit{filter:drop-shadow(0 8px 8px #634f7720)}.theme-b .plate{border-color:#ffffff}.theme-b .equation{color:#514a62}
+    .theme-c .screen{color:#30495a;background:linear-gradient(165deg,#edf4f7,#e8f0f5 58%,#eef2e8)}.theme-c .screen:before{content:"✦   ·   ✧      ·    ✦";color:#7994a62b;top:105px}.theme-c .primary,.theme-c .bar i{background:#537c91;color:#fff}.theme-c .tag{background:#e5eef1;color:#496f81}.theme-c .daily,.theme-c .answer,.theme-c .reward,.theme-c .stat{background:#ffffffc7;border:1px solid #708b9b24;color:#30495a;backdrop-filter:none}.theme-c .daily p,.theme-c .finish p,.theme-c .island,.theme-c .bottom-nav,.theme-c .help,.theme-c .coach{color:#607986}.theme-c .stars,.theme-c .avatar,.theme-c .bubble,.theme-c .icon-btn{background:#ffffffb8;color:#30495a}.theme-c .island b{background:#ffffffa8}.theme-c .plate{background:#ffffffa8;border-color:#fff}.theme-c .equation{color:#30495a}.theme-c .answer.correct{background:#e2f1e6;color:#31694a}.theme-c .answer.wrong{background:#ffffffc7}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    @media(max-width:780px){.workspace{display:block}.panel{padding:18px;border:0}.brand,.desc,.hint,.panel h2:nth-of-type(2),#pageControls{display:none}.themes{display:flex;gap:6px;overflow:auto}.theme-btn{min-width:120px}.stage{padding:10px}.phone{width:min(390px,100%);height:800px;border-width:6px}.screen{padding:45px 20px 22px}.hero{height:205px}.math-stage{height:210px}}
+  </style>
+</head>
+<body>
+<main class="workspace">
+  <aside class="panel">
+    <div class="brand"><div class="logo">🌱</div><div><h1>园聪学习</h1><p>MVP 交互原型 · v0.1</p></div></div>
+    <h2>选择视觉方案</h2>
+    <div class="themes">
+      <button class="theme-btn active" data-theme="a"><i class="dot" style="background:#4eaa6e"></i>方案 A · 森林绘本</button>
+      <button class="theme-btn" data-theme="b"><i class="dot" style="background:#8877a7"></i>方案 B · 轻柔积木</button>
+      <button class="theme-btn" data-theme="c"><i class="dot" style="background:#62869a"></i>方案 C · 晴空探险</button>
+    </div>
+    <h2>快速查看页面</h2>
+    <div id="pageControls">
+      <button class="page-btn active" data-page="home">🏠 儿童首页</button>
+      <button class="page-btn" data-page="game">🥕 加法游戏</button>
+      <button class="page-btn" data-page="finish">⭐ 本局结算</button>
+    </div>
+    <div class="desc" id="themeDesc"><b>森林绘本</b><br>米白与浅绿背景减少大面积纯白刺激；信息层级简单、间距宽松，建议作为 4 岁儿童的默认方案。</div>
+    <div class="hint">可交互：点击“开始游戏”，选择答案，点击“帮帮我”，完成后返回首页。三套方案共用相同信息结构，便于儿童测试后选择视觉方向。</div>
+  </aside>
+  <section class="stage">
+    <div class="phone theme-a" id="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <section class="view active" id="home">
+          <div class="status"><div class="user"><div class="avatar">🐻</div><span>你好，小聪</span></div><div class="stars">🌿 柔和模式</div></div>
+          <div class="hero"><div class="bubble">今天来帮我准备胡萝卜吧！</div><div class="rabbit">🐰</div><div class="ground"></div></div>
+          <div class="daily"><span class="tag">今日推荐 · 萌芽岛</span><h3>🥕 喂饱小兔</h3><p>5 道题 · 大约 3 分钟 · 完成后休息眼睛</p><button class="primary" data-go="game">▶ 开始游戏</button></div>
+          <div class="islands"><div class="island"><b>🌱</b>萌芽岛</div><div class="island locked"><b>🔒</b>花朵岛</div><div class="island locked"><b>🔒</b>星星岛</div></div>
+          <div class="bottom-nav"><span><b>🗺️</b>成长</span><span><b>🏠</b>首页</span><span id="parent"><b>👨‍👩‍👧</b>家长</span></div>
+        </section>
+        <section class="view" id="game">
+          <div class="game-head"><button class="icon-btn" data-go="home">‹</button><div class="progress">第 <span id="qNum">1</span> 题 / 5<div class="bar"><i id="progressBar"></i></div></div><button class="icon-btn" id="replay">🔊</button></div>
+          <div class="game-title" id="prompt">小兔有 2 根，又送来 1 根</div>
+          <div class="math-stage"><div class="plate"></div><div class="carrots" id="leftItems">🥕🥕</div><div class="plus">＋</div><div class="carrots" id="rightItems">🥕</div></div>
+          <div class="equation" id="equation">2 ＋ 1 ＝ ?</div>
+          <div class="answers" id="answers"><button class="answer" data-value="2">2</button><button class="answer" data-value="3">3</button><button class="answer" data-value="4">4</button></div>
+          <div class="coach" id="coach">一共有几根胡萝卜呢？</div>
+          <button class="help" id="help">💡 帮帮我</button>
+        </section>
+        <section class="view finish" id="finish">
+          <div class="confetti">✨ 🎉 ✨</div><div class="rabbit">🐰</div><h2>5 道题完成啦！</h2><p>小兔吃得饱饱的，谢谢你！</p>
+          <div class="reward">⭐ 获得 1 颗星星</div>
+          <div class="stats"><div class="stat"><b>4</b><small>自己答对</small></div><div class="stat"><b>1</b><small>认真数了</small></div></div>
+          <button class="primary" id="backHome">回到首页</button><button class="help" data-go="game">再玩一局</button>
+        </section>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </section>
+</main>
+<script>
+  const phone=document.querySelector('#phone'),views=[...document.querySelectorAll('.view')],pageBtns=[...document.querySelectorAll('.page-btn')];
+  const desc={a:'<b>森林绘本</b><br>米白与浅绿背景减少大面积纯白刺激；信息层级简单、间距宽松，建议作为 4 岁儿童的默认方案。',b:'<b>轻柔积木</b><br>使用灰紫与暖米色，保留积木感但去掉粗黑边、强阴影和艳丽糖果色，画面活泼而不刺眼。',c:'<b>晴空探险</b><br>以雾蓝和浅灰绿替代深色星空，降低明暗反差；保留少量探索元素，适合喜欢冒险主题的孩子。'};
+  function showPage(id){views.forEach(v=>v.classList.toggle('active',v.id===id));pageBtns.forEach(b=>b.classList.toggle('active',b.dataset.page===id))}
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go==='game') resetGame();showPage(b.dataset.go)});
+  pageBtns.forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+  document.querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.theme-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');phone.className='phone theme-'+b.dataset.theme;document.querySelector('#themeDesc').innerHTML=desc[b.dataset.theme]});
+  document.querySelectorAll('.locked').forEach(x=>x.onclick=()=>toast('这里还在准备，先去萌芽岛吧 🌱'));
+  const questions=[{l:2,r:1,a:3,o:[2,3,4]},{l:1,r:1,a:2,o:[1,2,3]},{l:1,r:3,a:4,o:[3,4,5]},{l:2,r:2,a:4,o:[2,4,5]},{l:3,r:2,a:5,o:[3,4,5]}]; let qi=0,attempt=0,locked=false;
+  function draw(){let q=questions[qi];document.querySelector('#qNum').textContent=qi+1;document.querySelector('#progressBar').style.width=((qi+1)*20)+'%';document.querySelector('#leftItems').textContent='🥕'.repeat(q.l);document.querySelector('#rightItems').textContent='🥕'.repeat(q.r);document.querySelector('#prompt').textContent=`小兔有 ${q.l} 根，又送来 ${q.r} 根`;document.querySelector('#equation').textContent=`${q.l} ＋ ${q.r} ＝ ?`;document.querySelector('#coach').textContent='一共有几根胡萝卜呢？';document.querySelector('#answers').innerHTML=q.o.map(n=>`<button class="answer" data-value="${n}">${n}</button>`).join('');document.querySelectorAll('.answer').forEach(b=>b.onclick=answer);attempt=0;locked=false}
+  function answer(e){if(locked)return;let b=e.currentTarget,q=questions[qi];attempt++;if(+b.dataset.value===q.a){locked=true;b.classList.add('correct');document.querySelector('#equation').textContent=`${q.l} ＋ ${q.r} ＝ ${q.a}`;document.querySelector('#coach').textContent=`答对啦！一起数：${Array.from({length:q.a},(_,i)=>i+1).join('、')}`;setTimeout(()=>{if(qi<4){qi++;draw()}else showPage('finish')},1100)}else{b.classList.add('wrong');setTimeout(()=>b.classList.remove('wrong'),400);if(attempt===1)document.querySelector('#coach').textContent='差一点，我们把两边放到一起数一数';else{document.querySelector('#coach').textContent=`一起数：${Array.from({length:q.a},(_,i)=>i+1).join('、')}，答案是 ${q.a}`;document.querySelectorAll('.answer').forEach(x=>{if(+x.dataset.value===q.a)x.classList.add('correct')})}}}
+  function resetGame(){qi=0;draw()};document.querySelector('#help').onclick=()=>{let q=questions[qi];document.querySelector('#coach').textContent=`点一个数一个：${Array.from({length:q.a},(_,i)=>i+1).join('、')}`};document.querySelector('#replay').onclick=()=>toast('🔊 小兔有一些胡萝卜，又送来一些');document.querySelector('#backHome').onclick=()=>showPage('home');
+  function toast(t){let el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1800)}
+  let timer;document.querySelector('#parent').onpointerdown=()=>timer=setTimeout(()=>toast('家长验证：请按顺序点击 3、1、2'),3000);document.querySelector('#parent').onpointerup=()=>clearTimeout(timer);draw();
+</script>
+</body>
+</html>

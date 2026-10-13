@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>账单与分润 - 结算管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; user-select: none; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; display: flex; justify-content: space-between; align-items: center; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-cyan { background: #cffafe; color: #155e75; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-outline:hover { border-color: #9ca3af; background: #f9fafb; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-warning:hover { background: #d97706; }
+.btn-text { background: none; border: none; color: #2563eb; padding: 4px 8px; font-size: 12px; }
+.btn-text:hover { text-decoration: underline; }
+.btn-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
+.filter-bar .btn, .filter-bar .btn-sm { flex-shrink: 0; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: center; }
+.stat-card .num { font-size: 20px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.pagination { display: flex; justify-content: space-between; align-items: center; padding: 12px 0 0; font-size: 13px; color: #6b7280; border-top: 1px solid #f3f4f6; margin-top: 12px; }
+.pagination .page-btns { display: flex; gap: 4px; align-items: center; }
+.pagination .page-btns span { padding: 4px 10px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.pagination .page-btns span:hover { background: #f3f4f6; }
+.pagination .page-btns span.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+/* Status filter tags */
+.status-filter { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.status-tag { display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 12px; cursor: pointer; border: 1px solid #d1d5db; background: #fff; color: #4b5563; transition: all .15s; user-select: none; }
+.status-tag:hover { border-color: #93c5fd; background: #eff6ff; }
+.status-tag.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+/* Modal */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 0; width: 560px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,.2); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #e5e7eb; }
+.modal-header h3 { font-size: 16px; font-weight: 600; }
+.modal-header .close-btn { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; padding: 0 4px; line-height: 1; }
+.modal-header .close-btn:hover { color: #374151; }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 14px 24px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 8px; }
+.modal-lg { width: 780px; }
+.modal-xl { width: 940px; }
+/* PDF preview */
+.pdf-preview { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px 28px; box-shadow: 0 1px 4px rgba(0,0,0,.05); margin-bottom: 16px; }
+.pdf-preview .pdf-title { text-align: center; font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #1f2937; }
+.pdf-preview .pdf-field { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; border-bottom: 1px dashed #f3f4f6; }
+.pdf-preview .pdf-field .label { color: #6b7280; }
+.pdf-preview .pdf-field .value { font-weight: 500; color: #1f2937; }
+.pdf-preview .pdf-total { display: flex; justify-content: space-between; padding: 10px 0 0; font-size: 15px; font-weight: 700; color: #065f46; border-top: 2px solid #e5e7eb; margin-top: 8px; }
+/* Step calculation */
+.step-list { counter-reset: step; }
+.step-item { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+.step-item:last-child { border-bottom: none; }
+.step-num { width: 26px; height: 26px; background: #2563eb; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+.step-content { flex: 1; font-size: 13px; line-height: 1.7; color: #4b5563; }
+.step-content .formula { font-family: 'Courier New', monospace; background: #f3f4f6; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #1f2937; display: inline-block; margin: 2px 0; }
+.step-content strong { color: #1f2937; }
+/* Section titles */
+.section-title { font-size: 14px; font-weight: 600; color: #1f2937; padding: 14px 0 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-title:first-child { padding-top: 0; }
+.section-title .num { background: #2563eb; color: #fff; border-radius: 4px; padding: 1px 8px; font-size: 11px; }
+.section-title .sub { font-weight: 400; font-size: 12px; color: #6b7280; }
+/* Sub tables inside modals */
+.sub-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
+.sub-table th { background: #f9fafb; padding: 6px 10px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; font-size: 12px; }
+.sub-table td { padding: 6px 10px; border-bottom: 1px solid #f3f4f6; color: #4b5563; font-size: 13px; }
+.sub-table .subtotal-row td { font-weight: 600; background: #f9fafb; border-top: 1px solid #e5e7eb; }
+.sub-table .subtotal-row td:last-child { color: #1f2937; }
+/* Enterprise info */
+.enterprise-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 32px; font-size: 13px; padding: 14px 16px; background: #f9fafb; border-radius: 8px; margin-bottom: 16px; }
+.enterprise-info .ei-item { display: flex; gap: 8px; }
+.enterprise-info .ei-label { color: #6b7280; }
+.enterprise-info .ei-value { font-weight: 500; color: #1f2937; }
+/* Confirm card */
+.confirm-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin-top: 16px; }
+.confirm-card .confirm-title { font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #92400e; }
+.confirm-card .confirm-text { font-size: 13px; color: #92400e; margin-bottom: 12px; }
+/* Radio option group */
+.radio-group { margin: 4px 0; }
+.radio-option { padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.radio-option:hover { border-color: #93c5fd; background: #fafbff; }
+.radio-option.active { border-color: #2563eb; background: #eff6ff; }
+.radio-option .radio-label { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; font-weight: 500; color: #1f2937; }
+.radio-option .radio-label input[type="radio"] { margin-top: 2px; }
+.radio-option .radio-extra { margin: 8px 0 0 26px; font-size: 13px; color: #6b7280; }
+.radio-option .radio-extra select, .radio-option .radio-extra input, .radio-option .radio-extra textarea { margin-top: 6px; width: 100%; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+/* Import section */
+.import-bar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.import-stats { display: flex; gap: 24px; font-size: 13px; color: #6b7280; flex-wrap: wrap; padding: 10px 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; }
+.import-stats .stat-item strong { color: #1f2937; }
+.import-stats .stat-item .num-green { color: #10b981; font-weight: 600; }
+.import-stats .stat-item .num-yellow { color: #f59e0b; font-weight: 600; }
+.import-stats .stat-item .num-red { color: #ef4444; font-weight: 600; }
+/* Divider text */
+.divider-text { display: flex; align-items: center; gap: 12px; color: #9ca3af; font-size: 12px; margin: 12px 0; }
+.divider-text::before, .divider-text::after { content: ''; flex: 1; border-top: 1px solid #e5e7eb; }
+/* Amount highlight */
+.amount-bold { font-weight: 700; color: #1f2937; }
+.amount-total { font-weight: 700; color: #065f46; font-size: 14px; }
+/* Quality formula */
+.quality-formula { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 16px; font-size: 13px; line-height: 1.8; margin-bottom: 12px; }
+.quality-formula .ql { color: #4b5563; }
+.quality-formula .ql strong { color: #1f2937; }
+/* Text link */
+.text-link { color: #2563eb; cursor: pointer; font-size: 12px; }
+.text-link:hover { text-decoration: underline; }
+/* Warning card alternative */
+.warning-text { color: #ef4444; font-size: 12px; padding: 6px 12px; background: #fef2f2; border-radius: 6px; display: inline-block; }
+/* Utility */
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.gap-8 { gap: 8px; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item active">🧾 结算管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">账单与分润</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">结算管理 / <strong>账单与分润</strong></span></div>
+    <div class="topbar-right"><span>👤 欢迎，李财务</span><span>🔔 通知</span><span>⚙️ 设置</span><span>退出</span></div>
+  </div>
+  <div class="content">
+
+    <div class="page-title">结算管理</div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card"><div class="num" style="color:#2563eb;">¥ 2,723,000</div><div class="label">本月应收</div></div>
+      <div class="stat-card"><div class="num" style="color:#10b981;">¥ 1,883,000</div><div class="label">本月已收</div></div>
+      <div class="stat-card"><div class="num" style="color:#ef4444;">¥ 840,000</div><div class="label">逾期金额</div></div>
+      <div class="stat-card"><div class="num" style="color:#8b5cf6;">¥ 244,500</div><div class="label">待分润金额</div></div>
+      <div class="stat-card"><div class="num">69.1%</div><div class="label">本月收款率</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="bill" onclick="switchTab('bill')">账单管理</div>
+      <div class="tab" data-tab="profit" onclick="switchTab('profit')">分润结算</div>
+      <div class="tab" data-tab="recon" onclick="switchTab('recon')">收款对账</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: 账单管理 -->
+    <!-- ============================================================ -->
+    <div class="tab-content active" id="tab-bill">
+
+      <!-- Filter card -->
+      <div class="card">
+        <div class="card-title">筛选条件</div>
+        <div class="filter-bar">
+          <select style="width:180px;"><option value="">请选择客户</option><option>xx科技有限公司</option><option>yy贸易有限公司</option><option>zz电子科技</option><option>ww商贸有限公司</option><option>vv实业有限公司</option></select>
+          <input type="month" value="2026-04" style="width:156px;">
+          <span class="flex-1"></span>
+          <button class="btn btn-primary btn-sm">查询</button>
+          <button class="btn btn-outline btn-sm">重置</button>
+          <button class="btn btn-outline btn-sm" onclick="alert('导出Excel文件已生成，请下载')">导出Excel</button>
+        </div>
+        <div class="status-filter">
+          <span class="status-tag active" onclick="toggleStatusTag(this)">全部</span>
+          <span class="status-tag" onclick="toggleStatusTag(this)">待核对</span>
+          <span class="status-tag" onclick="toggleStatusTag(this)">待发送</span>
+          <span class="status-tag" onclick="toggleStatusTag(this)">已发送</span>
+          <span class="status-tag" onclick="toggleStatusTag(this)">已付款</span>
+          <span class="status-tag" onclick="toggleStatusTag(this)">逾期</span>
+          <span class="status-tag" onclick="toggleStatusTag(this)">已核销</span>
+        </div>
+      </div>
+
+      <!-- Bill table -->
+      <div class="card">
+        <div class="card-title">账单列表</div>
+        <table>
+          <thead>
+            <tr>
+              <th>账单编号</th><th>客户名称</th><th>融资金额</th><th>融资天数</th><th>服务费率</th><th>服务费金额</th><th>税额</th><th>合计金额</th><th>状态</th><th>生成时间</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row 1: 待核对 -->
+            <tr>
+              <td>BILL202604260001</td>
+              <td>xx科技有限公司</td>
+              <td>¥500,000</td>
+              <td>60</td>
+              <td>3.0%</td>
+              <td>¥2,500.00</td>
+              <td>¥150.00</td>
+              <td class="amount-bold">¥2,650.00</td>
+              <td><span class="tag tag-gray">待核对</span></td>
+              <td>2026-04-01</td>
+              <td><button class="btn-text" onclick="showBillDetail(1)">查看详情</button></td>
+            </tr>
+            <!-- Row 2: 已发送 -->
+            <tr>
+              <td>BILL202604260002</td>
+              <td>yy贸易有限公司</td>
+              <td>¥800,000</td>
+              <td>45</td>
+              <td>4.0%</td>
+              <td>¥4,000.00</td>
+              <td>¥240.00</td>
+              <td class="amount-bold">¥4,240.00</td>
+              <td><span class="tag tag-blue">已发送</span></td>
+              <td>2026-04-02</td>
+              <td class="btn-group" style="gap:4px;">
+                <button class="btn-text" onclick="showBillDetail(2)">查看详情</button>
+                <button class="btn btn-primary btn-sm" onclick="alert('账单发送确认：将向客户发送邮件+短信通知')">发送账单</button>
+                <button class="btn btn-outline btn-sm" onclick="alert('标记付款：请确认实际到账金额')">标记付款</button>
+              </td>
+            </tr>
+            <!-- Row 3: 已付款 -->
+            <tr>
+              <td>BILL202604260003</td>
+              <td>zz电子科技</td>
+              <td>¥200,000</td>
+              <td>30</td>
+              <td>5.0%</td>
+              <td>¥833.33</td>
+              <td>¥50.00</td>
+              <td class="amount-bold">¥883.33</td>
+              <td><span class="tag tag-green">已付款</span></td>
+              <td>2026-04-03</td>
+              <td><button class="btn-text" onclick="showBillDetail(3)">查看详情</button></td>
+            </tr>
+            <!-- Row 4: 逾期 -->
+            <tr>
+              <td>BILL202604250001</td>
+              <td>ww商贸有限公司</td>
+              <td>¥1,200,000</td>
+              <td>90</td>
+              <td>2.5%<span style="color:#f59e0b;font-size:10px;margin-left:2px;">(分段)</span></td>
+              <td>¥7,500.00</td>
+              <td>¥450.00</td>
+              <td class="amount-bold">¥7,950.00</td>
+              <td><span class="tag tag-red">逾期</span></td>
+              <td>2026-03-15</td>
+              <td class="btn-group" style="gap:4px;">
+                <button class="btn-text" onclick="showBillDetail(4)">查看详情</button>
+                <button class="btn btn-outline btn-sm" onclick="alert('标记付款：请确认实际到账金额')">标记付款</button>
+                <button class="btn btn-danger btn-sm" onclick="alert('催缴通知已发送（邮件+短信）')">催缴</button>
+              </td>
+            </tr>
+            <!-- Row 5: 待发送 -->
+            <tr>
+              <td>BILL202604250002</td>
+              <td>vv实业有限公司</td>
+              <td>¥600,000</td>
+              <td>20</td>
+              <td>3.5%</td>
+              <td>¥1,166.67</td>
+              <td>¥70.00</td>
+              <td class="amount-bold">¥1,236.67</td>
+              <td><span class="tag tag-blue">待发送</span></td>
+              <td>2026-04-05</td>
+              <td class="btn-group" style="gap:4px;">
+                <button class="btn-text" onclick="showBillDetail(5)">查看详情</button>
+                <button class="btn btn-primary btn-sm" onclick="alert('账单发送确认：将向客户发送邮件+短信通知')">发送账单</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div>◀ 1 / 3 ▶</div>
+          <div>共 156 条记录  每页10条</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: 分润结算 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-profit">
+
+      <!-- Period filter -->
+      <div class="card">
+        <div class="card-title">周期选择</div>
+        <div class="filter-bar">
+          <span style="font-size:13px;color:#374151;">结算周期：</span>
+          <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="period" checked> 月度结算</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;margin-right:8px;"><input type="radio" name="period"> 季度结算</label>
+          <select style="width:180px;"><option>2026年 第1季度</option><option>2025年 第4季度</option><option>2025年 第3季度</option></select>
+          <span class="flex-1"></span>
+          <button class="btn btn-primary btn-sm" onclick="alert('分润计算已触发，请稍后查看结果')">计算分润</button>
+          <button class="btn btn-outline btn-sm" onclick="alert('导出分润明细Excel')">导出明细</button>
+          <button class="btn btn-success btn-sm" onclick="alert('已批量确认所有待确认分润')">批量确认</button>
+        </div>
+      </div>
+
+      <!-- Profit sharing table -->
+      <div class="card">
+        <div class="card-title">核心企业分润列表</div>
+        <table>
+          <thead>
+            <tr>
+              <th>企业名称</th><th>推荐佣金</th><th>协同催收奖励</th><th>回购奖励</th><th>质量系数</th><th>质量奖金</th><th>合计分润</th><th>状态</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>华为技术有限公司</strong></td>
+              <td>¥15,000</td>
+              <td>¥2,400</td>
+              <td>¥80,000</td>
+              <td><span class="tag tag-purple">S=1.5</span></td>
+              <td>¥48,600</td>
+              <td class="amount-bold">¥146,000</td>
+              <td><span class="tag tag-yellow">待确认</span></td>
+              <td><button class="btn-text" onclick="showProfitDetail()">查看</button></td>
+            </tr>
+            <tr>
+              <td><strong>小米科技有限公司</strong></td>
+              <td>¥8,000</td>
+              <td>¥1,200</td>
+              <td>¥45,000</td>
+              <td><span class="tag tag-blue">A=1.2</span></td>
+              <td>¥10,840</td>
+              <td class="amount-bold">¥65,040</td>
+              <td><span class="tag tag-green">已确认</span></td>
+              <td><button class="btn-text">查看</button></td>
+            </tr>
+            <tr>
+              <td><strong>OPPO电子有限公司</strong></td>
+              <td>¥5,500</td>
+              <td>¥0</td>
+              <td>¥20,000</td>
+              <td><span class="tag tag-green">B=1.0</span></td>
+              <td>¥0</td>
+              <td class="amount-bold">¥25,500</td>
+              <td><span class="tag tag-green">已支付</span></td>
+              <td><button class="btn-text">查看</button></td>
+            </tr>
+            <tr>
+              <td><strong>vivo通信有限公司</strong></td>
+              <td>¥3,000</td>
+              <td>¥800</td>
+              <td>¥12,000</td>
+              <td><span class="tag tag-yellow">C=0.8</span></td>
+              <td style="color:#ef4444;">-¥7,840</td>
+              <td class="amount-bold">¥7,960</td>
+              <td><span class="tag tag-yellow">待确认</span></td>
+              <td><button class="btn-text">查看</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div>◀ 1 / 2 ▶</div>
+          <div>共 18 条记录  每页10条</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 3: 收款对账 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-recon">
+
+      <!-- Import section -->
+      <div class="card">
+        <div class="card-title">银行流水导入</div>
+        <div class="import-bar">
+          <button class="btn btn-primary" onclick="alert('请选择Excel/CSV文件导入银行流水')">📥 导入银行流水</button>
+          <span style="font-size:12px;color:#6b7280;">支持格式: .xlsx / .csv</span>
+          <button class="btn-text" onclick="alert('下载导入模板（含字段说明和示例数据）')">📄 下载导入模板</button>
+        </div>
+        <div class="import-stats">
+          <span class="stat-item">最近导入: <strong>2026-04-26 09:30</strong></span>
+          <span class="stat-item">导入笔数: <strong>156</strong> 笔</span>
+          <span class="stat-item">成功匹配: <strong class="num-green">142</strong> 笔</span>
+          <span class="stat-item">待确认: <strong class="num-yellow">10</strong> 笔</span>
+          <span class="stat-item">异常: <strong class="num-red">4</strong> 笔</span>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="card">
+        <div class="card-title">对账列表</div>
+        <div class="filter-bar">
+          <select style="width:110px;"><option>全部状态</option><option>已匹配</option><option>待确认</option><option>异常</option></select>
+          <span style="font-size:13px;color:#6b7280;">日期范围：</span>
+          <input type="date" value="2026-04-01" style="width:140px;">
+          <span style="color:#9ca3af;">~</span>
+          <input type="date" value="2026-04-26" style="width:140px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+          <button class="btn btn-outline btn-sm">重置</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th><th>银行流水号</th><th>金额</th><th>付款方</th><th>匹配账单</th><th>匹配状态</th><th style="min-width:140px;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-04-26</td>
+              <td>BK202604001</td>
+              <td>¥2,650.00</td>
+              <td>xx科技</td>
+              <td>BILL202604260001</td>
+              <td><span class="tag tag-green">已匹配</span></td>
+              <td><button class="btn-text">查看</button></td>
+            </tr>
+            <tr>
+              <td>2026-04-25</td>
+              <td>BK202604002</td>
+              <td>¥4,240.00</td>
+              <td>yy贸易</td>
+              <td>BILL202604260002</td>
+              <td><span class="tag tag-green">已匹配</span></td>
+              <td><button class="btn-text">查看</button></td>
+            </tr>
+            <tr>
+              <td>2026-04-25</td>
+              <td>BK202604003</td>
+              <td>¥4,240.00</td>
+              <td>yy贸易(代付)</td>
+              <td>BILL202604260002</td>
+              <td><span class="tag tag-yellow">待确认</span></td>
+              <td class="btn-group" style="gap:4px;">
+                <button class="btn btn-primary btn-sm" onclick="alert('已确认匹配账单 BILL202604260002')">确认</button>
+                <button class="btn btn-outline btn-sm">手动匹配</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2026-04-24</td>
+              <td>BK202604004</td>
+              <td>¥10,000.00</td>
+              <td>zz电子</td>
+              <td>--</td>
+              <td><span class="tag tag-red">异常</span></td>
+              <td class="btn-group" style="gap:4px;">
+                <button class="btn btn-outline btn-sm" onclick="showExceptionModal()">手动匹配</button>
+                <button class="btn btn-outline btn-sm" onclick="showExceptionModal()">标记</button>
+              </td>
+            </tr>
+            <tr>
+              <td>2026-04-24</td>
+              <td>BK202604005</td>
+              <td>¥4,500.00</td>
+              <td>ww商贸</td>
+              <td>BILL202604250001</td>
+              <td><span class="tag tag-yellow">待确认</span></td>
+              <td class="btn-group" style="gap:4px;">
+                <button class="btn btn-primary btn-sm" onclick="alert('已确认匹配')">确认</button>
+                <button class="btn btn-outline btn-sm" onclick="showExceptionModal()">标记差异</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div>◀ 1 / 8 ▶</div>
+          <div>共 156 条记录  每页10条</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.content -->
+</div><!-- /.main -->
+
+<!-- ============================================================ -->
+<!-- MODAL 1: 账单详情 -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="billDetailModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>账单详情 — BILL202604260001</h3>
+      <button class="close-btn" onclick="hideBillDetail()">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- PDF Preview -->
+      <div class="section-title"><span class="num">预览</span> PDF预览区</div>
+      <div class="pdf-preview">
+        <div class="pdf-title">📄 供应链金融-货押平台 服务费账单</div>
+        <div class="pdf-field"><span class="label">账单编号</span><span class="value">BILL202604260001</span></div>
+        <div class="pdf-field"><span class="label">客户名称</span><span class="value">xx科技有限公司</span></div>
+        <div class="pdf-field"><span class="label">融资金额</span><span class="value">¥500,000.00</span></div>
+        <div class="pdf-field"><span class="label">融资期限</span><span class="value">60天</span></div>
+        <div class="pdf-field"><span class="label">服务费率</span><span class="value">3.0% (A级客户)</span></div>
+        <div class="pdf-field"><span class="label">服务费</span><span class="value">¥2,500.00</span></div>
+        <div class="pdf-field"><span class="label">增值税 (6%)</span><span class="value">¥150.00</span></div>
+        <div class="pdf-total"><span>合计金额</span><span>¥2,650.00</span></div>
+      </div>
+
+      <!-- Calculation steps -->
+      <div class="section-title"><span class="num">明细</span> 计算过程明细 <span class="sub">规则版本: V1.2</span></div>
+      <div class="step-list">
+
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>基础费率计算</strong><br>
+            客户等级: A级 → 基础费率 = <strong>3.0%</strong>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>分段调整</strong><br>
+            融资金额: ¥500,000 ≤ ¥1,000,000 → 不满足分段降费率条件<br>
+            分段调整后费率: <strong>3.0%</strong> (无调整)
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>期限调整</strong><br>
+            融资天数: 60天 (&gt;30天且≤90天) → 无期限调整<br>
+            期限调整后费率: <strong>3.0%</strong> (无调整)
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <strong>服务费计算</strong><br>
+            服务费 = 本金 × 调整后费率 × 天数 / 360<br>
+            <span class="formula">¥500,000 × 3.0% × 60 / 360 = ¥2,500.00</span>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <strong>税额计算</strong><br>
+            增值税 = 服务费 × 6%<br>
+            <span class="formula">¥2,500.00 × 6% = ¥150.00</span>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-content">
+            <strong>合计金额</strong><br>
+            合计 = 服务费 + 税额<br>
+            <span class="formula" style="background:#d1fae5;font-weight:700;">¥2,500.00 + ¥150.00 = ¥2,650.00</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Send records -->
+      <div class="section-title"><span class="num">记录</span> 发送记录</div>
+      <table class="sub-table">
+        <thead><tr><th>发送时间</th><th>发送方式</th><th>接收人</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td>2026-04-02 10:30</td><td>邮件</td><td>张财务</td><td><span class="tag tag-green">已送达</span></td></tr>
+          <tr><td>2026-04-02 10:31</td><td>短信</td><td>138****8888</td><td><span class="tag tag-green">已发送</span></td></tr>
+        </tbody>
+      </table>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="alert('PDF账单正在下载')">📄 下载PDF</button>
+      <button class="btn btn-primary" onclick="alert('发送账单确认：请选择发送方式（邮件/短信/全部）')">📨 发送账单</button>
+      <button class="btn btn-outline" onclick="hideBillDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL 2: 分润明细 -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="profitDetailModal">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h3>分润明细 — 华为（2026年Q1）</h3>
+      <button class="close-btn" onclick="hideProfitDetail()">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Enterprise info -->
+      <div class="enterprise-info">
+        <div class="ei-item"><span class="ei-label">核心企业:</span><span class="ei-value">华为技术有限公司</span></div>
+        <div class="ei-item"><span class="ei-label">企业等级:</span><span class="ei-value">S级</span></div>
+        <div class="ei-item"><span class="ei-label">质量系数:</span><span class="ei-value">1.5</span></div>
+        <div class="ei-item"><span class="ei-label">结算周期:</span><span class="ei-value">2026年第1季度</span></div>
+        <div class="ei-item"><span class="ei-label">结算状态:</span><span class="ei-value"><span class="tag tag-yellow">待确认</span></span></div>
+      </div>
+
+      <!-- Profit calc detail -->
+      <div class="section-title">分润计算明细</div>
+
+      <!-- 一、推荐佣金 -->
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;font-size:13px;color:#1f2937;margin-bottom:8px;">一、推荐佣金</div>
+        <table class="sub-table">
+          <thead><tr><th>经销商</th><th>业务编号</th><th>融资金额</th><th>是否首笔</th><th>佣金金额</th></tr></thead>
+          <tbody>
+            <tr><td>xx科技</td><td>F001</td><td>¥500,000</td><td>是</td><td>¥500 <span style="color:#6b7280;font-size:11px;">(首笔0.1%)</span></td></tr>
+            <tr><td>yy贸易</td><td>F002</td><td>¥800,000</td><td>否</td><td>¥400 <span style="color:#6b7280;font-size:11px;">(后续0.05%)</span></td></tr>
+            <tr><td>zz电子</td><td>F003</td><td>¥200,000</td><td>是</td><td>¥200 <span style="color:#6b7280;font-size:11px;">(首笔0.1%)</span></td></tr>
+            <tr><td>ww商贸</td><td>F004</td><td>¥600,000</td><td>否</td><td>¥300 <span style="color:#6b7280;font-size:11px;">(后续0.05%)</span></td></tr>
+            <tr><td>vv实业</td><td>F005</td><td>¥400,000</td><td>是</td><td>¥400 <span style="color:#6b7280;font-size:11px;">(首笔0.1%)</span></td></tr>
+            <tr class="subtotal-row"><td colspan="4" style="text-align:right;">小计</td><td>¥15,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 二、协同催收奖励 -->
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;font-size:13px;color:#1f2937;margin-bottom:8px;">二、协同催收奖励</div>
+        <table class="sub-table">
+          <thead><tr><th>业务编号</th><th>催收成功金额</th><th>奖励率</th><th>奖励金额</th></tr></thead>
+          <tbody>
+            <tr><td>C202601001</td><td>¥1,200,000</td><td>0.2%</td><td>¥2,400</td></tr>
+            <tr class="subtotal-row"><td colspan="3" style="text-align:right;">小计</td><td>¥2,400</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 三、回购合作奖励 -->
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;font-size:13px;color:#1f2937;margin-bottom:8px;">三、回购合作奖励</div>
+        <table class="sub-table">
+          <thead><tr><th>处置编号</th><th>回购货值</th><th>奖励率</th><th>奖励金额</th></tr></thead>
+          <tbody>
+            <tr><td>D202601001</td><td>¥8,000,000</td><td>1.0%</td><td>¥80,000</td></tr>
+            <tr class="subtotal-row"><td colspan="3" style="text-align:right;">小计</td><td>¥80,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 四、质量奖金 -->
+      <div style="margin-bottom:8px;">
+        <div style="font-weight:600;font-size:13px;color:#1f2937;margin-bottom:8px;">四、质量奖金</div>
+        <div class="quality-formula">
+          <div class="ql">质量奖金 = (推荐佣金 + 协同奖励 + 回购奖励) × (质量系数 − 1.0)</div>
+          <div class="ql">= (¥15,000 + ¥2,400 + ¥80,000) × (1.5 − 1.0)</div>
+          <div class="ql">= <strong>¥97,400 × 0.5 = ¥48,600</strong></div>
+          <div class="ql" style="font-size:12px;color:#9ca3af;margin-top:4px;">（实际按系统精度计算为 ¥48,600）</div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div style="border-top:2px solid #e5e7eb;padding:12px 0 4px;margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#065f46;">
+          <span>总分润金额</span>
+          <span>¥15,000 + ¥2,400 + ¥80,000 + ¥48,600 = <span style="font-size:17px;">¥146,000</span></span>
+        </div>
+      </div>
+
+      <!-- Confirmation -->
+      <div class="confirm-card">
+        <div class="confirm-title">✅ 核心企业确认</div>
+        <div class="confirm-text">企业确认状态：待确认（明细已推送，等待企业端确认）</div>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="alert('已确认: 分润计算无误')">确认无误</button>
+          <button class="btn btn-outline" onclick="alert('提出异议: 请填写异议原因和证据')">提出异议</button>
+          <button class="btn btn-danger" onclick="alert('强制确认并进入支付 (需财务主管权限，二次确认)')">强制确认并进入支付</button>
+        </div>
+        <div class="divider-text">支付操作（财务专员）</div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="alert('生成支付指令: 金额¥146,000 > ¥100,000，需财务总监审批')">生成支付指令</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="hideProfitDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL 3: 异常处理 -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="exceptionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>异常处理 — 银行流水 BK202604004</h3>
+      <button class="close-btn" onclick="hideExceptionModal()">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div style="background:#f9fafb;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:13px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;">
+          <div><span style="color:#6b7280;">日期:</span> 2026-04-24</div>
+          <div><span style="color:#6b7280;">流水号:</span> BK202604004</div>
+          <div><span style="color:#6b7280;">金额:</span> <strong>¥10,000.00</strong></div>
+          <div><span style="color:#6b7280;">付款方:</span> zz电子</div>
+          <div style="grid-column:span 2;"><span style="color:#6b7280;">摘要:</span> 货款</div>
+        </div>
+        <div class="warning-text mt-8" style="display:block;">系统检测: 金额与任何待付款账单不匹配（最近账单金额: ¥883 / ¥7,950）</div>
+      </div>
+
+      <div class="section-title" style="padding-top:0;margin-bottom:8px;">处理方式</div>
+      <div class="radio-group">
+
+        <div class="radio-option active" onclick="selectRadioOption(this)">
+          <div class="radio-label">
+            <input type="radio" name="exceptionType" checked> 手动匹配账单
+          </div>
+          <div class="radio-extra">
+            选择账单: <select style="width:100%;margin-top:6px;"><option>请选择待付款账单</option><option>BILL202604260003 - ¥883 (zz电子)</option><option>BILL202604250001 - ¥7,950 (ww商贸)</option></select>
+          </div>
+        </div>
+
+        <div class="radio-option" onclick="selectRadioOption(this)">
+          <div class="radio-label">
+            <input type="radio" name="exceptionType"> 标记为多付款/预付款
+          </div>
+          <div class="radio-extra" style="display:none;">
+            差额 <strong style="color:#f59e0b;">¥9,117</strong> 将作为预付款挂账，可用于抵扣未来账单
+          </div>
+        </div>
+
+        <div class="radio-option" onclick="selectRadioOption(this)">
+          <div class="radio-label">
+            <input type="radio" name="exceptionType"> 标记为付款方不一致
+          </div>
+          <div class="radio-extra" style="display:none;">
+            <textarea rows="2" placeholder="备注说明: 请说明实际付款方与企业的关系等" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;margin-top:6px;"></textarea>
+          </div>
+        </div>
+
+        <div class="radio-option" onclick="selectRadioOption(this)">
+          <div class="radio-label">
+            <input type="radio" name="exceptionType"> 标记为重复付款
+          </div>
+        </div>
+
+        <div class="radio-option" onclick="selectRadioOption(this)">
+          <div class="radio-label">
+            <input type="radio" name="exceptionType"> 其他差异
+          </div>
+          <div class="radio-extra" style="display:none;">
+            <textarea rows="2" placeholder="差异说明: 请详细描述差异原因和情况" style="width:100%;padding:6px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;margin-top:6px;"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="hideExceptionModal()">取消</button>
+      <button class="btn btn-primary" onclick="alert('异常处理已提交，操作日志已记录')">确认处理</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- JavaScript -->
+<!-- ============================================================ -->
+<script>
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelector('.tab[data-tab="'+t+'"]').classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+function toggleStatusTag(el) {
+  // If clicking "全部", deactivate all others, activate 全部
+  if (el.textContent.trim() === '全部') {
+    document.querySelectorAll('.status-tag').forEach(function(t) {
+      t.classList.remove('active');
+    });
+    el.classList.add('active');
+    return;
+  }
+  // If clicking a specific status
+  el.classList.toggle('active');
+  // If all specific statuses are now inactive, activate "全部"
+  var allTag = document.querySelector('.status-tag:first-child');
+  var anyActive = false;
+  document.querySelectorAll('.status-tag').forEach(function(t) {
+    if (t.textContent.trim() !== '全部' && t.classList.contains('active')) {
+      anyActive = true;
+    }
+  });
+  if (anyActive) {
+    allTag.classList.remove('active');
+  } else {
+    allTag.classList.add('active');
+  }
+}
+
+function showBillDetail(id) {
+  document.getElementById('billDetailModal').classList.add('show');
+}
+
+function hideBillDetail() {
+  document.getElementById('billDetailModal').classList.remove('show');
+}
+
+function showProfitDetail() {
+  document.getElementById('profitDetailModal').classList.add('show');
+}
+
+function hideProfitDetail() {
+  document.getElementById('profitDetailModal').classList.remove('show');
+}
+
+function showExceptionModal() {
+  document.getElementById('exceptionModal').classList.add('show');
+}
+
+function hideExceptionModal() {
+  document.getElementById('exceptionModal').classList.remove('show');
+}
+
+// Radio option selection for exception modal
+function selectRadioOption(el) {
+  document.querySelectorAll('.radio-option').forEach(function(o) {
+    o.classList.remove('active');
+    var extra = o.querySelector('.radio-extra');
+    if (extra) extra.style.display = 'none';
+  });
+  el.classList.add('active');
+  var radio = el.querySelector('input[type="radio"]');
+  if (radio) radio.checked = true;
+  var extra = el.querySelector('.radio-extra');
+  if (extra) extra.style.display = 'block';
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      overlay.classList.remove('show');
+    }
+  });
+});
+
+// ESC key to close modals
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.show').forEach(function(m) {
+      m.classList.remove('show');
+    });
+  }
+});
+</script>
+</body>
+</html>

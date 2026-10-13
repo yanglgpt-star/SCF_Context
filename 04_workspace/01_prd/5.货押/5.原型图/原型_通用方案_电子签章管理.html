@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>电子签章管理 - 系统管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; }
+.stat-card .num { font-size: 20px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.progress-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.step { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9ca3af; }
+.step.done { color: #10b981; }
+.step.current { color: #2563eb; font-weight: 600; }
+.step .dot { width: 16px; height: 16px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+.step.done .dot { background: #10b981; color: #fff; }
+.step.current .dot { background: #2563eb; color: #fff; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item">🧾 结算管理</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item active">⚙️ 系统管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">费率参数配置</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">电子签章管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">系统管理 / <strong>电子签章管理</strong></span></div>
+    <div class="topbar-right"><span>👤 系统管理员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">电子签章管理</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="provider" onclick="switchTab('provider')">供应商配置</div>
+      <div class="tab" data-tab="scene" onclick="switchTab('scene')">签署场景</div>
+      <div class="tab" data-tab="track" onclick="switchTab('track')">签署流程跟踪</div>
+      <div class="tab" data-tab="exception" onclick="switchTab('exception')">异常处理</div>
+    </div>
+
+    <!-- Tab1: 供应商配置 -->
+    <div class="tab-content active" id="tab-provider">
+      <div class="info-card">💡 自动切换策略：首选故障时自动切换至备选供应商，业务方无感知</div>
+      <div class="card">
+        <div class="card-title">签章供应商列表</div>
+        <table>
+          <thead><tr><th>供应商编码</th><th>供应商名称</th><th>优先级</th><th>角色</th><th>状态</th><th>AppID</th><th>最后健康检查</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>FADADA</td><td><strong>法大大</strong></td><td>1</td><td><span class="tag tag-green">首选</span></td><td><span class="tag tag-green">启用</span></td><td>app_fdd_****</td><td>2026-04-26 10:00 ✅</td><td><button class="btn btn-outline btn-sm">配置</button> <button class="btn btn-outline btn-sm">测试</button></td></tr>
+            <tr><td>ESIGN</td><td><strong>e签宝</strong></td><td>2</td><td><span class="tag tag-blue">备选</span></td><td><span class="tag tag-green">启用</span></td><td>app_esign_****</td><td>2026-04-26 10:00 ✅</td><td><button class="btn btn-outline btn-sm">配置</button> <button class="btn btn-outline btn-sm">测试</button></td></tr>
+            <tr><td>CFCA</td><td><strong>CFCA</strong></td><td>3</td><td><span class="tag tag-gray">合规备选</span></td><td><span class="tag tag-yellow">停用</span></td><td>app_cfca_****</td><td>2026-04-25 10:00 ⚠️</td><td><button class="btn btn-outline btn-sm">配置</button> <button class="btn btn-outline btn-sm">启用</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab2: 签署场景 -->
+    <div class="tab-content" id="tab-scene">
+      <div class="card">
+        <div class="card-title">签署场景定义（6个场景）</div>
+        <table>
+          <thead><tr><th>场景</th><th>文件类型</th><th>签署方（按顺序）</th><th>有效期</th><th>区块链存证</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>📄 融资合同签署</td><td>融资服务协议</td><td>平台 → 经销商</td><td>7天</td><td><span class="tag tag-green">✅ 是</span></td><td><button class="btn btn-outline btn-sm">配置</button></td></tr>
+            <tr><td>📄 仓单开立</td><td>电子仓单</td><td>平台 → 仓储方 → 经销商</td><td>7天</td><td><span class="tag tag-green">✅ 是</span></td><td><button class="btn btn-outline btn-sm">配置</button></td></tr>
+            <tr><td>📄 仓单质押登记</td><td>质押合同</td><td>平台 → 经销商 → 银行</td><td>7天</td><td><span class="tag tag-green">✅ 是</span></td><td><button class="btn btn-outline btn-sm">配置</button></td></tr>
+            <tr><td>📄 回购协议</td><td>货物回购协议</td><td>平台 → 核心企业</td><td>7天</td><td><span class="tag tag-green">✅ 是</span></td><td><button class="btn btn-outline btn-sm">配置</button></td></tr>
+            <tr><td>📄 核心企业合作协议</td><td>战略合作框架协议</td><td>平台 → 核心企业</td><td>7天</td><td><span class="tag tag-green">✅ 是</span></td><td><button class="btn btn-outline btn-sm">配置</button></td></tr>
+            <tr><td>📄 对账单确认</td><td>月度对账单</td><td>平台 → 经销商/核心企业</td><td>7天</td><td><span class="tag tag-green">✅ 是</span></td><td><button class="btn btn-outline btn-sm">配置</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab3: 签署流程跟踪 -->
+    <div class="tab-content" id="tab-track">
+      <div class="card">
+        <div class="filter-bar">
+          <input placeholder="业务编号" style="width:160px;">
+          <select><option>全部场景</option><option>融资合同签署</option><option>仓单开立</option><option>仓单质押登记</option><option>回购协议</option></select>
+          <select><option>全部状态</option><option>签署中</option><option>已完成</option><option>已拒绝</option><option>已过期</option></select>
+          <button class="btn btn-primary btn-sm">查询</button>
+        </div>
+        <table>
+          <thead><tr><th>流程ID</th><th>业务编号</th><th>场景</th><th>发起时间</th><th>当前状态</th><th>签署方进度</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>FLOW_20260426_001</td><td>FIN-20260426-001</td><td>融资合同签署</td><td>2026-04-26 10:30</td><td><span class="tag tag-blue">签署中</span></td>
+              <td><div class="progress-steps"><div class="step done"><span class="dot">✓</span>平台</div><div class="step current"><span class="dot">●</span>经销商</div></div></td>
+              <td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">催签</button></td></tr>
+            <tr><td>FLOW_20260425_005</td><td>FIN-20260425-003</td><td>仓单开立</td><td>2026-04-25 14:00</td><td><span class="tag tag-green">已完成</span></td>
+              <td><div class="progress-steps"><div class="step done"><span class="dot">✓</span>平台</div><div class="step done"><span class="dot">✓</span>仓储方</div><div class="step done"><span class="dot">✓</span>经销商</div></div></td>
+              <td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">下载</button></td></tr>
+            <tr><td>FLOW_20260424_003</td><td>FIN-20260424-002</td><td>仓单质押登记</td><td>2026-04-24 09:00</td><td><span class="tag tag-red">已拒绝</span></td>
+              <td>平台通过，经销商拒绝</td>
+              <td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">重新发起</button></td></tr>
+            <tr><td>FLOW_20260420_001</td><td>FIN-20260420-001</td><td>回购协议</td><td>2026-04-20 11:00</td><td><span class="tag tag-gray">已过期</span></td>
+              <td>平台已签，核心企业超时</td>
+              <td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">重新发起</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">签署详情示例（FLOW_20260426_001）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
+          <div><strong>流程ID：</strong>FLOW_20260426_001</div>
+          <div><strong>业务编号：</strong>FIN-20260426-001</div>
+          <div><strong>场景：</strong>融资合同签署</div>
+          <div><strong>合同模板：</strong>融资服务协议_v3</div>
+          <div><strong>签署链接：</strong><span style="color:#2563eb;">https://sign.fadada.com/flow/xxx</span></div>
+          <div><strong>过期时间：</strong>2026-05-03 10:30</div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#f8fafc;border-radius:8px;">
+          <div style="font-size:12px;color:#6b7280;">🔗 区块链存证信息</div>
+          <div style="font-size:13px;margin-top:4px;">交易哈希：0x7a3b...c9f2 | 区块高度：#19283746 | 时间戳：TS-20260426-001</div>
+          <div style="margin-top:8px;"><button class="btn btn-outline btn-sm">下载签署PDF</button> <button class="btn btn-outline btn-sm">查看存证</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab4: 异常处理 -->
+    <div class="tab-content" id="tab-exception">
+      <div class="card">
+        <div class="card-title">签署异常场景处理策略</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+            <div style="font-weight:600;color:#ef4444;">❌ 签署方拒绝</div>
+            <div style="font-size:13px;color:#6b7280;margin:8px 0;">记录拒绝原因（如"对利率条款有异议"），通知业务方，可重新发起签署流程</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+            <div style="font-weight:600;color:#f59e0b;">⏰ 签署超时（7天）</div>
+            <div style="font-size:13px;color:#6b7280;margin:8px 0;">自动过期，业务单显示"签署已过期"，可点击"重新发起"创建新流程</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+            <div style="font-weight:600;color:#f59e0b;">🔐 实名认证失败</div>
+            <div style="font-size:13px;color:#6b7280;margin:8px 0;">3次失败后提示"认证失败次数超限，请联系客户经理"，自动转人工处理</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+            <div style="font-weight:600;color:#2563eb;">🔄 服务商故障</div>
+            <div style="font-size:13px;color:#6b7280;margin:8px 0;">自动切换至备选供应商（e签宝），新流程无感切换，旧流程自动转接</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+            <div style="font-weight:600;color:#8b5cf6;">📋 合同内容争议</div>
+            <div style="font-size:13px;color:#6b7280;margin:8px 0;">调取区块链存证，比对哈希值确认文件完整性，生成司法鉴定报告</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+</script>
+</body>
+</html>

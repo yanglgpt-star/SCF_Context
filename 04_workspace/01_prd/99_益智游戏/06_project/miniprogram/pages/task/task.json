@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "text2audio": "plugin://text2audio/text2audio"
+  },
+  "navigationBarTitleText": "今日任务"
+}

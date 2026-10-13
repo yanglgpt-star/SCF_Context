@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>经销商准入申请 - 客户管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 24px 28px; margin-bottom: 16px; }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #374151; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group label .required { color: #ef4444; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.form-hint { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.btn { padding: 8px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-lg { padding: 10px 32px; font-size: 15px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.warn-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+
+/* Wizard Steps */
+.wizard-steps { display: flex; align-items: center; justify-content: center; margin-bottom: 32px; }
+.wizard-steps .ws { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.wizard-steps .ws .num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; background: #e5e7eb; color: #9ca3af; }
+.wizard-steps .ws.active .num { background: #2563eb; color: #fff; }
+.wizard-steps .ws.done .num { background: #10b981; color: #fff; }
+.wizard-steps .ws .label { font-size: 12px; color: #9ca3af; }
+.wizard-steps .ws.active .label { color: #2563eb; font-weight: 600; }
+.wizard-steps .ws.done .label { color: #10b981; }
+.wizard-steps .ws-line { width: 60px; height: 2px; background: #e5e7eb; margin: 0 12px; margin-bottom: 24px; }
+.wizard-steps .ws-line.done { background: #10b981; }
+
+.step-content { display: none; }
+.step-content.active { display: block; }
+
+.doc-upload-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.doc-upload-item { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all .2s; }
+.doc-upload-item:hover { border-color: #2563eb; background: #f8faff; }
+.doc-upload-item.uploaded { border-color: #10b981; border-style: solid; background: #f0fdf4; }
+.doc-upload-item .doc-icon { font-size: 32px; margin-bottom: 8px; }
+.doc-upload-item .doc-name { font-size: 13px; font-weight: 500; color: #374151; }
+.doc-upload-item .doc-required { font-size: 11px; color: #ef4444; margin-top: 4px; }
+.doc-upload-item .doc-status { font-size: 11px; margin-top: 4px; }
+
+/* Referral code section */
+.referral-verify { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-top: 12px; }
+.referral-verify.success { background: #f0fdf4; border-color: #bbf7d0; }
+.referral-verify .ce-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
+
+/* Summary section */
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.summary-block { background: #f9fafb; border-radius: 8px; padding: 16px; }
+.summary-block h4 { font-size: 13px; color: #6b7280; margin-bottom: 8px; }
+.summary-block .info-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+.summary-block .info-row .val { color: #374151; font-weight: 500; }
+
+.progress-bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 999px; }
+.check-list { list-style: none; }
+.check-list li { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+.check-list li.pass { color: #10b981; }
+.check-list li.fail { color: #ef4444; }
+.check-list li.pending { color: #f59e0b; }
+
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item active">👥 客户管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">经销商准入申请</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">客户管理 / <strong>经销商准入申请</strong></span></div>
+    <div class="topbar-right"><span>👤 XX商贸有限公司</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">经销商准入申请</div>
+
+    <div class="info-card">💡 请按步骤填写信息并上传资料，标 <span style="color:#ef4444;">*</span> 为必填项。提交后平台将在 3 个工作日内完成审核。</div>
+
+    <!-- Wizard Steps -->
+    <div class="wizard-steps">
+      <div class="ws active" id="ws-1" onclick="goStep(1)">
+        <div class="num">1</div>
+        <div class="label">基本信息</div>
+      </div>
+      <div class="ws-line" id="line-1"></div>
+      <div class="ws" id="ws-2" onclick="goStep(2)">
+        <div class="num">2</div>
+        <div class="label">推荐码验证</div>
+      </div>
+      <div class="ws-line" id="line-2"></div>
+      <div class="ws" id="ws-3" onclick="goStep(3)">
+        <div class="num">3</div>
+        <div class="label">资料上传</div>
+      </div>
+      <div class="ws-line" id="line-3"></div>
+      <div class="ws" id="ws-4" onclick="goStep(4)">
+        <div class="num">4</div>
+        <div class="label">确认提交</div>
+      </div>
+    </div>
+
+    <!-- Step 1: 基本信息 -->
+    <div class="step-content active" id="step-1">
+      <div class="card">
+        <div class="card-title">📋 企业基本信息</div>
+        <div class="form-row">
+          <div class="form-group"><label><span class="required">*</span> 企业全称</label><input placeholder="请输入营业执照上的企业全称"></div>
+          <div class="form-group"><label><span class="required">*</span> 统一社会信用代码</label><input placeholder="18位统一社会信用代码"><div class="form-hint">系统将自动校验工商信息</div></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label><span class="required">*</span> 法定代表人</label><input placeholder="请输入法定代表人姓名"></div>
+          <div class="form-group"><label><span class="required">*</span> 法定代表人身份证号</label><input placeholder="请输入18位身份证号"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label><span class="required">*</span> 联系电话</label><input placeholder="请输入企业联系电话"></div>
+          <div class="form-group"><label>邮箱</label><input placeholder="请输入企业邮箱"></div>
+        </div>
+        <div class="form-group"><label><span class="required">*</span> 注册地址</label><input placeholder="请输入营业执照上的注册地址"></div>
+        <div class="form-row">
+          <div class="form-group"><label><span class="required">*</span> 注册资本（万元）</label><input type="number" placeholder="请输入注册资本"></div>
+          <div class="form-group"><label><span class="required">*</span> 成立日期</label><input type="date"></div>
+        </div>
+        <div class="form-group"><label><span class="required">*</span> 经营范围</label><textarea placeholder="请按营业执照填写经营范围"></textarea></div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-lg" onclick="goStep(2)">下一步：推荐码验证</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: 推荐码验证 -->
+    <div class="step-content" id="step-2">
+      <div class="card">
+        <div class="card-title">🔗 核心企业推荐码验证</div>
+        <div class="form-group">
+          <label><span class="required">*</span> 推荐码</label>
+          <div style="display:flex;gap:12px;">
+            <input placeholder="请输入核心企业提供的推荐码（如：REF-2026-XXXX）" style="flex:1;" id="referralCode">
+            <button class="btn btn-primary" onclick="verifyReferral()">验证</button>
+          </div>
+          <div class="form-hint">如无推荐码，可选择"无推荐方"跳过此步骤</div>
+        </div>
+        <div class="referral-verify success" id="referralResult" style="display:none;">
+          <div style="font-weight:600;color:#065f46;margin-bottom:8px;">✅ 推荐码验证成功</div>
+          <div class="ce-info">
+            <div><strong>推荐企业：</strong><span id="ceName">XX科技有限公司</span></div>
+            <div><strong>推荐等级：</strong><span style="color:#10b981;font-weight:600;">S级</span></div>
+            <div><strong>合作年限：</strong>5年</div>
+            <div><strong>推荐编号：</strong><span id="ceRefNo">REF-2026-0427-001</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;font-size:13px;color:#6b7280;">没有推荐码？<span style="color:#2563eb;cursor:pointer;" onclick="skipReferral()">跳过此步骤</span></div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="goStep(1)">上一步</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(3)">下一步：资料上传</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: 资料上传 -->
+    <div class="step-content" id="step-3">
+      <div class="card">
+        <div class="card-title">📄 资料上传</div>
+        <div class="info-card">请上传以下 7 项材料，支持 PDF/JPG/PNG/Excel 格式</div>
+        <div class="doc-upload-grid">
+          <div class="doc-upload-item uploaded" onclick="simulateUpload(this)">
+            <div class="doc-icon">📄</div>
+            <div class="doc-name">① 营业执照</div>
+            <div class="doc-required">* 必传 | PDF/JPG/PNG ≤10MB</div>
+            <div class="doc-status"><span class="tag tag-green">✅ 已上传 2.3MB</span></div>
+          </div>
+          <div class="doc-upload-item uploaded" onclick="simulateUpload(this)">
+            <div class="doc-icon">🪪</div>
+            <div class="doc-name">② 法人身份证正反面</div>
+            <div class="doc-required">* 必传 | JPG/PNG ≤5MB/张</div>
+            <div class="doc-status"><span class="tag tag-yellow">⚠ 临期预警 有效期至2026-05-15</span></div>
+          </div>
+          <div class="doc-upload-item" onclick="simulateUpload(this)">
+            <div class="doc-icon">📘</div>
+            <div class="doc-name">③ 公司章程</div>
+            <div class="doc-required">* 必传 | PDF ≤20MB</div>
+            <div class="doc-status"><span class="tag tag-red">待上传</span></div>
+          </div>
+          <div class="doc-upload-item" onclick="simulateUpload(this)">
+            <div class="doc-icon">📊</div>
+            <div class="doc-name">④ 近一年度审计报告</div>
+            <div class="doc-required">* 必传 | PDF ≤30MB</div>
+            <div class="doc-status"><span class="tag tag-red">待上传</span></div>
+          </div>
+          <div class="doc-upload-item" onclick="simulateUpload(this)">
+            <div class="doc-icon">💰</div>
+            <div class="doc-name">⑤ 近6个月银行流水</div>
+            <div class="doc-required">* 必传 | PDF/Excel ≤20MB</div>
+            <div class="doc-status"><span class="tag tag-red">待上传</span></div>
+          </div>
+          <div class="doc-upload-item" onclick="simulateUpload(this)">
+            <div class="doc-icon">🤝</div>
+            <div class="doc-name">⑥ 与核心企业合作协议</div>
+            <div class="doc-required">* 必传 | PDF ≤20MB</div>
+            <div class="doc-status"><span class="tag tag-red">待上传</span></div>
+          </div>
+          <div class="doc-upload-item" onclick="simulateUpload(this)">
+            <div class="doc-icon">📋</div>
+            <div class="doc-name">⑦ 近一年向核心企业采购记录</div>
+            <div class="doc-required">* 必传 | Excel/PDF ≤10MB</div>
+            <div class="doc-status"><span class="tag tag-red">待上传</span></div>
+          </div>
+        </div>
+
+        <!-- 校验提示区 -->
+        <div class="warn-card" style="margin-top:16px;">
+          <div style="font-weight:600;margin-bottom:8px;">⚠️ 校验提示</div>
+          <div style="font-size:13px;line-height:1.8;">
+            <span style="color:#10b981;">✓</span> 营业执照 — 已上传<br>
+            <span style="color:#10b981;">✓</span> 法人身份证正反面 — 已上传<br>
+            <span style="color:#ef4444;">✗</span> 公司章程 — 必填项未上传<br>
+            <span style="color:#ef4444;">✗</span> 审计报告 — 必填项未上传<br>
+            <span style="color:#ef4444;">✗</span> 银行流水 — 必填项未上传<br>
+            <span style="color:#ef4444;">✗</span> 合作协议 — 必填项未上传<br>
+            <span style="color:#ef4444;">✗</span> 采购记录 — 必填项未上传<br>
+            <span style="color:#f59e0b;">⚠</span> 法人身份证：临期预警，距到期日19天
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">上传进度</div>
+          <div class="progress-bar" style="height:10px;"><div class="fill" style="width:29%;background:#2563eb;"></div></div>
+          <div style="font-size:12px;color:#6b7280;margin-top:4px;">已完成 2/7</div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="goStep(2)">上一步</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(4)">下一步：确认提交</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: 确认提交 -->
+    <div class="step-content" id="step-4">
+      <div class="card">
+        <div class="card-title">✅ 确认提交</div>
+        <div class="info-card">请仔细核对以下信息，确认无误后提交。提交后不可修改。</div>
+
+        <div class="summary-grid">
+          <div class="summary-block">
+            <h4>📋 申请信息汇总</h4>
+            <div class="info-row"><span>企业名称</span><span class="val">XX商贸有限公司</span></div>
+            <div class="info-row"><span>统一信用代码</span><span class="val">91350100M0001XXXX1X</span></div>
+            <div class="info-row"><span>法定代表人</span><span class="val">张三</span></div>
+            <div class="info-row"><span>联系电话</span><span class="val">138****8888</span></div>
+            <div class="info-row"><span>注册地址</span><span class="val">福建省厦门市XX区XX路XX号</span></div>
+            <div class="info-row"><span>推荐码</span><span class="val">REF-S-A8F2D（核心企业：XX科技有限公司）</span></div>
+          </div>
+          <div class="summary-block">
+            <h4>📄 已上传资料</h4>
+            <div class="info-row"><span>✓ 营业执照.pdf</span><span class="val" style="color:#10b981;">2.3MB</span></div>
+            <div class="info-row"><span>✓ 法人身份证正反面.jpg</span><span class="val" style="color:#10b981;">1.1MB</span></div>
+            <div class="info-row"><span>✗ 公司章程.pdf</span><span class="val" style="color:#ef4444;">未上传</span></div>
+            <div class="info-row"><span>✗ 审计报告.pdf</span><span class="val" style="color:#ef4444;">未上传</span></div>
+            <div class="info-row"><span>✗ 银行流水.xlsx</span><span class="val" style="color:#ef4444;">未上传</span></div>
+            <div class="info-row"><span>✗ 合作协议.pdf</span><span class="val" style="color:#ef4444;">未上传</span></div>
+            <div class="info-row"><span>✗ 采购记录.xlsx</span><span class="val" style="color:#ef4444;">未上传</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div style="font-weight:600;font-size:13px;margin-bottom:8px;">📋 系统校验结果</div>
+          <ul class="check-list">
+            <li class="fail">❌ 资料完整性：5 项必传资料未上传</li>
+            <li class="pass">✅ 格式校验：全部已上传文件格式符合要求</li>
+            <li class="pending">⚠️ 证照有效期：法人身份证临期预警（不影响提交）</li>
+            <li class="pass">✅ 黑名单校验：未命中</li>
+            <li class="pass">✅ 征信校验：通过</li>
+          </ul>
+        </div>
+
+        <div class="warn-card" style="margin-top:16px;">⚠️ 还有 5 项必传材料未上传。请返回上一步完成上传后再提交。</div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="agree">
+            <span>我已阅读并同意 <span style="color:#2563eb;">《平台服务协议》</span> 和 <span style="color:#2563eb;">《数据授权书》</span></span>
+          </label>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="goStep(3)">上一步</button>
+          <button class="btn btn-outline">保存草稿</button>
+          <button class="btn btn-primary btn-lg" onclick="submitApplication()">提交申请</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 提交成功弹窗 -->
+<div class="modal-overlay" id="successModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:32px;width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+    <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+    <div style="font-size:18px;font-weight:600;color:#065f46;margin-bottom:8px;">申请提交成功！</div>
+    <div style="font-size:14px;color:#6b7280;margin-bottom:16px;">您的申请编号：<strong id="appIdDisplay">APP-20260427-003</strong></div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:20px;">预计 3 个工作日内完成审核，请留意通知。</div>
+    <button class="btn btn-primary" onclick="document.getElementById('successModal').style.display='none'">返回首页</button>
+  </div>
+</div>
+
+<script>
+var currentStep = 1;
+
+function goStep(n) {
+  if (n > currentStep + 1 && n !== currentStep) return;
+  // Update wizard
+  for (var i = 1; i <= 4; i++) {
+    var ws = document.getElementById('ws-' + i);
+    ws.classList.remove('active', 'done');
+    if (i < n) ws.classList.add('done');
+    if (i === n) ws.classList.add('active');
+  }
+  for (var i = 1; i <= 3; i++) {
+    var line = document.getElementById('line-' + i);
+    if (i < n) line.classList.add('done'); else line.classList.remove('done');
+  }
+  // Show step content
+  document.querySelectorAll('.step-content').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('step-' + n).classList.add('active');
+  currentStep = n;
+}
+
+function verifyReferral() {
+  var code = document.getElementById('referralCode').value;
+  if (!code) { alert('请输入推荐码'); return; }
+  document.getElementById('referralResult').style.display = 'block';
+  document.getElementById('ceName').textContent = 'XX科技有限公司';
+  document.getElementById('ceRefNo').textContent = code;
+}
+
+function skipReferral() {
+  document.getElementById('referralCode').value = '';
+  document.getElementById('referralResult').style.display = 'none';
+  goStep(3);
+}
+
+function simulateUpload(el) {
+  if (el.classList.contains('uploaded')) return;
+  el.classList.add('uploaded');
+  el.querySelector('.doc-status').innerHTML = '<span class="tag tag-green">✅ 已上传</span>';
+  // Update progress
+  var uploaded = document.querySelectorAll('.doc-upload-item.uploaded').length;
+  var pct = Math.round(uploaded / 7 * 100);
+  document.querySelector('#step-3 .fill').style.width = pct + '%';
+  document.querySelector('#step-3 .progress-bar + div').textContent = '已完成 ' + uploaded + '/7';
+}
+
+function submitApplication() {
+  if (!document.getElementById('agree').checked) {
+    alert('请先阅读并同意平台服务协议');
+    return;
+  }
+  document.getElementById('successModal').style.display = 'flex';
+  document.getElementById('appIdDisplay').textContent = 'APP-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + String(Math.floor(Math.random()*900+100));
+}
+</script>
+</body>
+</html>

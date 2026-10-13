@@ -1,0 +1,135 @@
+.page-container {
+  min-height: 100vh;
+  padding: 40rpx;
+}
+
+.stats-card {
+  margin-bottom: 24rpx;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-number {
+  font-size: 48rpx;
+  font-weight: 800;
+  color: #FF6B6B;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.tree-card {
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.tree-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.tree-title {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.tree-level {
+  font-size: 24rpx;
+  color: #FF9A76;
+  background: #FFF3E0;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.tree-visual {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.tree-emoji {
+  display: block;
+  animation: treeBounce 2s ease-in-out infinite;
+}
+
+@keyframes treeBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+.tree-hint {
+  font-size: 20rpx;
+  color: #ccc;
+  margin-top: 12rpx;
+  display: block;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2D3436;
+  margin: 32rpx 0 20rpx;
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24rpx 16rpx;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.badge-item.locked {
+  opacity: 0.5;
+}
+
+.badge-circle {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #FFF8E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8rpx;
+}
+
+.badge-circle.owned {
+  background: linear-gradient(135deg, #FFE082, #FFD54F);
+  box-shadow: 0 4rpx 16rpx rgba(255, 193, 7, 0.3);
+}
+
+.badge-emoji {
+  font-size: 44rpx;
+}
+
+.badge-name {
+  font-size: 22rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 4rpx;
+}
+
+.badge-desc {
+  font-size: 18rpx;
+  color: #999;
+  line-height: 1.3;
+}

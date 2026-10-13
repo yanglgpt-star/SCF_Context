@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>供应链金融平台 - 总看板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        /* 顶部KPI区域 */
+        .kpi-section {
+            margin-bottom: 20px;
+        }
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+        .kpi-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.2s;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .kpi-title {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        .kpi-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #262626;
+            margin-bottom: 8px;
+            font-family: 'DIN Alternate', 'Helvetica Neue', Arial, sans-serif;
+        }
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .trend-up {
+            color: #52c41a;
+        }
+        .trend-down {
+            color: #ff4d4f;
+        }
+        .trend-arrow {
+            font-size: 10px;
+        }
+        .kpi-sub {
+            color: #bfbfbf;
+            font-size: 11px;
+        }
+        
+        /* 主体内容区域 - 三栏布局 */
+        .main-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        /* 卡片通用样式 */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+        .card-subtitle {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 2px;
+        }
+        .card-extra {
+            font-size: 12px;
+            color: #1890ff;
+            cursor: pointer;
+        }
+        .card-body {
+            padding: 16px;
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            height: 220px;
+            position: relative;
+        }
+        .chart-container-large {
+            height: 280px;
+        }
+        
+        /* 柱状图+折线图模拟 */
+        .mixed-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 180px;
+            padding: 0 10px;
+            border-bottom: 1px solid #e8e8e8;
+            position: relative;
+        }
+        .mixed-chart::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            border-top: 1px dashed #e8e8e8;
+        }
+        .mixed-chart::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 25%;
+            border-top: 1px dashed #e8e8e8;
+        }
+        .bar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            max-width: 60px;
+        }
+        .bar-wrapper {
+            width: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 150px;
+        }
+        .bar {
+            width: 16px;
+            background: linear-gradient(180deg, #1890ff 0%, #69c0ff 100%);
+            border-radius: 2px 2px 0 0;
+            transition: all 0.3s;
+        }
+        .bar:hover {
+            opacity: 0.8;
+        }
+        .bar-secondary {
+            background: linear-gradient(180deg, #52c41a 0%, #95de64 100%);
+        }
+        .bar-label {
+            font-size: 11px;
+            color: #8c8c8c;
+            margin-top: 8px;
+        }
+        
+        /* 折线覆盖层 */
+        .line-overlay {
+            position: absolute;
+            top: 0;
+            left: 30px;
+            right: 30px;
+            height: 150px;
+            pointer-events: none;
+        }
+        .line-path {
+            stroke: #faad14;
+            stroke-width: 2;
+            fill: none;
+        }
+        .line-point {
+            fill: #faad14;
+            stroke: #fff;
+            stroke-width: 2;
+        }
+        
+        /* 饼图模拟 */
+        .pie-chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+        .pie-chart {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #1890ff 0deg 120deg,
+                #52c41a 120deg 220deg,
+                #faad14 220deg 300deg,
+                #ff4d4f 300deg 360deg
+            );
+            position: relative;
+        }
+        .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .pie-label {
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+        .pie-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #262626;
+        }
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #595959;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+        
+        /* 堆叠柱状图 */
+        .stacked-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .stacked-item {
+            display: flex;
+            align-items: center;
+        }
+        .stacked-label {
+            width: 60px;
+            font-size: 11px;
+            color: #8c8c8c;
+            text-align: right;
+            padding-right: 10px;
+        }
+        .stacked-bar-wrapper {
+            flex: 1;
+            height: 24px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+        }
+        .stacked-bar {
+            height: 100%;
+            transition: all 0.3s;
+        }
+        .stacked-bar:hover {
+            opacity: 0.8;
+        }
+        .stacked-value {
+            width: 50px;
+            font-size: 11px;
+            color: #595959;
+            padding-left: 8px;
+        }
+        
+        /* 漏斗图 */
+        .funnel-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 0;
+        }
+        .funnel-level {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .funnel-level:hover {
+            transform: scale(1.02);
+        }
+        .funnel-level span {
+            z-index: 1;
+        }
+        .funnel-conversion {
+            position: absolute;
+            right: -50px;
+            font-size: 10px;
+            color: #8c8c8c;
+        }
+        
+        /* 底部明细区域 */
+        .bottom-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .data-table th {
+            background: #fafafa;
+            padding: 10px;
+            text-align: left;
+            color: #8c8c8c;
+            font-weight: 500;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #595959;
+        }
+        .data-table tr:hover {
+            background: #fafafa;
+        }
+        .tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .tag-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .tag-warning {
+            background: #fffbe6;
+            color: #faad14;
+            border: 1px solid #ffe58f;
+        }
+        .tag-error {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+        .tag-processing {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        
+        /* 预警卡片 */
+        .alert-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .alert-icon {
+            width: 36px;
+            height: 36px;
+            background: #faad14;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .alert-content {
+            flex: 1;
+        }
+        .alert-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 2px;
+        }
+        .alert-desc {
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+        .alert-time {
+            font-size: 11px;
+            color: #bfbfbf;
+        }
+        
+        /* 任务列表 */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .task-item:hover {
+            background: #f0ffe6;
+            transform: translateX(4px);
+        }
+        .task-icon {
+            width: 32px;
+            height: 32px;
+            background: #52c41a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+        }
+        .task-content {
+            flex: 1;
+        }
+        .task-title {
+            font-size: 13px;
+            color: #262626;
+            margin-bottom: 2px;
+        }
+        .task-meta {
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+        .task-count {
+            background: #ff4d4f;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        /* 分割线 */
+        .divider {
+            height: 1px;
+            background: #f0f0f0;
+            margin: 12px 0;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 1440px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .main-section {
+                grid-template-columns: 1fr;
+            }
+            .bottom-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 时间选择器模拟 */
+        .time-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .time-btn {
+            padding: 4px 12px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-btn:hover, .time-btn.active {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>供应链金融平台 - 总看板</h1>
+        
+        <!-- 顶部：核心指标栏（KPI Summary） -->
+        <div class="kpi-section">
+            <div class="kpi-grid">
+                <!-- KPI 1: 累计融资额 -->
+                <div class="kpi-card">
+                    <div class="kpi-title">累计融资额</div>
+                    <div class="kpi-value">¥58.68亿</div>
+                    <div class="kpi-trend">
+                        <span class="trend-up">
+                            <span class="trend-arrow">▲</span> 35.2%
+                        </span>
+                        <span class="kpi-sub">同比</span>
+                        <span class="trend-up" style="margin-left: 8px;">
+                            <span class="trend-arrow">▲</span> 8.6%
+                        </span>
+                        <span class="kpi-sub">环比</span>
+                    </div>
+                </div>
+                
+                <!-- KPI 2: 融资总余额 -->
+                <div class="kpi-card">
+                    <div class="kpi-title">融资总余额</div>
+                    <div class="kpi-value">¥12.58亿</div>
+                    <div class="kpi-trend">
+                        <span class="trend-up">
+                            <span class="trend-arrow">▲</span> 12.5%
+                        </span>
+                        <span class="kpi-sub">同比</span>
+                        <span class="trend-up" style="margin-left: 8px;">
+                            <span class="trend-arrow">▲</span> 3.2%
+                        </span>
+                        <span class="kpi-sub">环比</span>
+                    </div>
+                </div>
+                
+                <!-- KPI 3: 日均余额 -->
+                <div class="kpi-card">
+                    <div class="kpi-title">日均余额</div>
+                    <div class="kpi-value">¥86.5万</div>
+                    <div class="kpi-trend">
+                        <span class="trend-up">
+                            <span class="trend-arrow">▲</span> 5.8%
+                        </span>
+                        <span class="kpi-sub">同比</span>
+                        <span class="trend-down" style="margin-left: 8px;">
+                            <span class="trend-arrow">▼</span> 1.2%
+                        </span>
+                        <span class="kpi-sub">环比</span>
+                    </div>
+                </div>
+                
+                <!-- KPI 4: 累计还款额 -->
+                <div class="kpi-card">
+                    <div class="kpi-title">累计还款额</div>
+                    <div class="kpi-value">¥46.10亿</div>
+                    <div class="kpi-trend">
+                        <span class="trend-up">
+                            <span class="trend-arrow">▲</span> 42.6%
+                        </span>
+                        <span class="kpi-sub">同比</span>
+                        <span class="trend-up" style="margin-left: 8px;">
+                            <span class="trend-arrow">▲</span> 6.8%
+                        </span>
+                        <span class="kpi-sub">环比</span>
+                    </div>
+                </div>
+                
+                <!-- KPI 5: 当年融资额 -->
+                <div class="kpi-card">
+                    <div class="kpi-title">当年融资额</div>
+                    <div class="kpi-value">¥15.26亿</div>
+                    <div class="kpi-trend">
+                        <span class="trend-up">
+                            <span class="trend-arrow">▲</span> 28.4%
+                        </span>
+                        <span class="kpi-sub">同比</span>
+                        <span class="trend-up" style="margin-left: 8px;">
+                            <span class="trend-arrow">▲</span> 5.3%
+                        </span>
+                        <span class="kpi-sub">环比</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 中部：主体内容区域 -->
+        <div class="main-section">
+            <!-- 左侧：业务趋势与构成 -->
+            <div class="left-column">
+                <!-- 融资规模走势 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">融资规模走势</div>
+                            <div class="card-subtitle">近12个月放款金额与余额变化趋势</div>
+                        </div>
+                        <div class="time-selector">
+                            <button class="time-btn active">近12月</button>
+                            <button class="time-btn">近6月</button>
+                            <button class="time-btn">近30天</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container chart-container-large">
+                            <div class="mixed-chart">
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 60%;"></div>
+                                    </div>
+                                    <div class="bar-label">1月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 75%;"></div>
+                                    </div>
+                                    <div class="bar-label">2月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 65%;"></div>
+                                    </div>
+                                    <div class="bar-label">3月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 80%;"></div>
+                                    </div>
+                                    <div class="bar-label">4月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 85%;"></div>
+                                    </div>
+                                    <div class="bar-label">5月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 90%;"></div>
+                                    </div>
+                                    <div class="bar-label">6月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 88%;"></div>
+                                    </div>
+                                    <div class="bar-label">7月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 95%;"></div>
+                                    </div>
+                                    <div class="bar-label">8月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 100%;"></div>
+                                    </div>
+                                    <div class="bar-label">9月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 92%;"></div>
+                                    </div>
+                                    <div class="bar-label">10月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 98%;"></div>
+                                    </div>
+                                    <div class="bar-label">11月</div>
+                                </div>
+                                <div class="bar-item">
+                                    <div class="bar-wrapper">
+                                        <div class="bar" style="height: 105%;"></div>
+                                    </div>
+                                    <div class="bar-label">12月</div>
+                                </div>
+                            </div>
+                            <!-- 模拟折线 -->
+                            <svg class="line-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <polyline class="line-path" points="5,40 12,35 21,38 30,32 38,30 46,28 55,29 63,26 71,24 80,27 88,25 96,23"/>
+                                <circle class="line-point" cx="5" cy="40" r="1.5"/>
+                                <circle class="line-point" cx="12" cy="35" r="1.5"/>
+                                <circle class="line-point" cx="21" cy="38" r="1.5"/>
+                                <circle class="line-point" cx="30" cy="32" r="1.5"/>
+                                <circle class="line-point" cx="38" cy="30" r="1.5"/>
+                                <circle class="line-point" cx="46" cy="28" r="1.5"/>
+                                <circle class="line-point" cx="55" cy="29" r="1.5"/>
+                                <circle class="line-point" cx="63" cy="26" r="1.5"/>
+                                <circle class="line-point" cx="71" cy="24" r="1.5"/>
+                                <circle class="line-point" cx="80" cy="27" r="1.5"/>
+                                <circle class="line-point" cx="88" cy="25" r="1.5"/>
+                                <circle class="line-point" cx="96" cy="23" r="1.5"/>
+                            </svg>
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 24px; margin-top: 10px;">
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: #1890ff;"></div>
+                                <span>月放款金额（柱状）</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: #faad14;"></div>
+                                <span>融资余额（折线）</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 资产分布 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">资产分布 - 按品类</div>
+                                <div class="card-subtitle">各品类融资余额占比</div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="pie-chart-container">
+                                <div class="pie-chart" style="background: conic-gradient(#1890ff 0deg 165deg, #52c41a 165deg 285deg, #faad14 285deg 360deg);">
+                                    <div class="pie-center">
+                                        <div class="pie-label">总余额</div>
+                                        <div class="pie-value">12.58亿</div>
+                                    </div>
+                                </div>
+                                <div class="pie-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #1890ff;"></div>
+                                        <span>手机 45%</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #52c41a;"></div>
+                                        <span>家电 33%</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #faad14;"></div>
+                                        <span>其他 22%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">资产分布 - 按业务类型</div>
+                                <div class="card-subtitle">各业务类型融资余额占比</div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="pie-chart-container">
+                                <div class="pie-chart" style="background: conic-gradient(#1890ff 0deg 100deg, #52c41a 100deg 200deg, #faad14 200deg 290deg, #ff4d4f 290deg 360deg);">
+                                    <div class="pie-center">
+                                        <div class="pie-label">业务数</div>
+                                        <div class="pie-value">4类</div>
+                                    </div>
+                                </div>
+                                <div class="pie-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #1890ff;"></div>
+                                        <span>代储代销 28%</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #52c41a;"></div>
+                                        <span>先货后款 31%</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #faad14;"></div>
+                                        <span>先款后货 25%</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-dot" style="background: #ff4d4f;"></div>
+                                        <span>撮合业务 16%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 库存监管 -->
+                <div class="card" style="margin-top: 16px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">库存监管总览</div>
+                            <div class="card-subtitle">实时库存监控与预警</div>
+                        </div>
+                        <div class="card-extra">查看详情 →</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- 库存关键指标 -->
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+                            <div style="background: #f6ffed; padding: 12px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #8c8c8c; margin-bottom: 4px;">监管库存总数</div>
+                                <div style="font-size: 18px; font-weight: bold; color: #52c41a;">28,560台</div>
+                            </div>
+                            <div style="background: #e6f7ff; padding: 12px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #8c8c8c; margin-bottom: 4px;">监管货值</div>
+                                <div style="font-size: 18px; font-weight: bold; color: #1890ff;">¥4.26亿</div>
+                            </div>
+                            <div style="background: #fff7e6; padding: 12px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #8c8c8c; margin-bottom: 4px;">在库周转天数</div>
+                                <div style="font-size: 18px; font-weight: bold; color: #faad14;">18.5天</div>
+                            </div>
+                            <div style="background: #f9f0ff; padding: 12px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #8c8c8c; margin-bottom: 4px;">预警SKU数</div>
+                                <div style="font-size: 18px; font-weight: bold; color: #722ed1;">23个</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 库存状态分布 -->
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 8px;">库存状态分布</div>
+                            <div style="display: flex; height: 32px; border-radius: 4px; overflow: hidden;">
+                                <div style="flex: 3; background: #52c41a; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px;">正常 65%</div>
+                                <div style="flex: 2; background: #faad14; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px;">周转慢 20%</div>
+                                <div style="flex: 1; background: #ff4d4f; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px;">预警 10%</div>
+                                <div style="flex: 0.5; background: #d9d9d9; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px;">冻结 5%</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 库存预警列表 -->
+                        <div>
+                            <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 8px;">库存预警 TOP3</div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 4px;">
+                                    <span style="background: #ff4d4f; color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 10px;">紧急</span>
+                                    <span style="flex: 1; font-size: 12px;">iPhone 15 Pro 256GB 黑色</span>
+                                    <span style="font-size: 11px; color: #8c8c8c;">积压 45天</span>
+                                    <span style="font-size: 12px; font-weight: bold; color: #ff4d4f;">1,250台</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff7e6; border: 1px solid #ffd591; border-radius: 4px;">
+                                    <span style="background: #faad14; color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 10px;">注意</span>
+                                    <span style="flex: 1; font-size: 12px;">华为 Mate 60 512GB 白色</span>
+                                    <span style="font-size: 11px; color: #8c8c8c;">积压 32天</span>
+                                    <span style="font-size: 12px; font-weight: bold; color: #faad14;">860台</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #fff7e6; border: 1px solid #ffd591; border-radius: 4px;">
+                                    <span style="background: #faad14; color: #fff; padding: 2px 6px; border-radius: 2px; font-size: 10px;">注意</span>
+                                    <span style="flex: 1; font-size: 12px;">小米14 256GB 绿色</span>
+                                    <span style="font-size: 11px; color: #8c8c8c;">积压 28天</span>
+                                    <span style="font-size: 12px; font-weight: bold; color: #faad14;">620台</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：风险预警与漏斗 -->
+            <div class="right-column">
+                <!-- 逾期账龄分布 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">逾期账龄分布</div>
+                            <div class="card-subtitle">各账期逾期金额占比</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stacked-chart">
+                            <div class="stacked-item">
+                                <div class="stacked-label">M1</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 45%; background: #faad14;"></div>
+                                </div>
+                                <div class="stacked-value">1,915万</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label">M2</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 28%; background: #fa8c16;"></div>
+                                </div>
+                                <div class="stacked-value">1,192万</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label">M3</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 18%; background: #ff7a45;"></div>
+                                </div>
+                                <div class="stacked-value">766万</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label">M3+</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 9%; background: #ff4d4f;"></div>
+                                </div>
+                                <div class="stacked-value">383万</div>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div style="font-size: 12px; color: #8c8c8c;">
+                            <span style="color: #ff4d4f; font-weight: bold;">M3+占比 9%</span>，较上月上升 1.2%，需重点关注
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 放款审批漏斗 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">放款审批漏斗</div>
+                            <div class="card-subtitle">本月申请到放款转化情况</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="funnel-chart">
+                            <div class="funnel-level" style="width: 100%; background: linear-gradient(90deg, #1890ff, #69c0ff);">
+                                <span>申请提交 1,256笔</span>
+                                <span class="funnel-conversion">100%</span>
+                            </div>
+                            <div style="text-align: center; color: #52c41a; font-size: 11px;">▼ 通过 88%</div>
+                            <div class="funnel-level" style="width: 88%; background: linear-gradient(90deg, #52c41a, #95de64);">
+                                <span>资料审核通过 1,105笔</span>
+                                <span class="funnel-conversion">88%</span>
+                            </div>
+                            <div style="text-align: center; color: #52c41a; font-size: 11px;">▼ 通过 92%</div>
+                            <div class="funnel-level" style="width: 81%; background: linear-gradient(90deg, #52c41a, #95de64);">
+                                <span>风控审批通过 1,017笔</span>
+                                <span class="funnel-conversion">92%</span>
+                            </div>
+                            <div style="text-align: center; color: #faad14; font-size: 11px;">▼ 通过 85%</div>
+                            <div class="funnel-level" style="width: 69%; background: linear-gradient(90deg, #faad14, #ffc53d);">
+                                <span>合同签署完成 864笔</span>
+                                <span class="funnel-conversion">85%</span>
+                            </div>
+                            <div style="text-align: center; color: #52c41a; font-size: 11px;">▼ 放款 96%</div>
+                            <div class="funnel-level" style="width: 66%; background: linear-gradient(90deg, #1890ff, #69c0ff);">
+                                <span>成功放款 830笔</span>
+                                <span class="funnel-conversion">66%</span>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span style="color: #8c8c8c;">整体转化率</span>
+                            <span style="color: #1890ff; font-weight: bold; font-size: 16px;">66.1%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 核心企业集中度 -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">核心企业集中度</div>
+                            <div class="card-subtitle">TOP5核心企业融资占比</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stacked-chart">
+                            <div class="stacked-item">
+                                <div class="stacked-label" style="width: 80px;">华为技术</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 32%; background: #1890ff;"></div>
+                                </div>
+                                <div class="stacked-value">32%</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label" style="width: 80px;">比亚迪</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 24%; background: #52c41a;"></div>
+                                </div>
+                                <div class="stacked-value">24%</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label" style="width: 80px;">宁德时代</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 18%; background: #faad14;"></div>
+                                </div>
+                                <div class="stacked-value">18%</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label" style="width: 80px;">美的集团</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 12%; background: #ff7a45;"></div>
+                                </div>
+                                <div class="stacked-value">12%</div>
+                            </div>
+                            <div class="stacked-item">
+                                <div class="stacked-label" style="width: 80px;">其他</div>
+                                <div class="stacked-bar-wrapper">
+                                    <div class="stacked-bar" style="width: 14%; background: #d9d9d9;"></div>
+                                </div>
+                                <div class="stacked-value">14%</div>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div style="font-size: 12px; color: #8c8c8c;">
+                            <span style="color: #faad14; font-weight: bold;">CR3 = 74%</span>，集中度较高，建议分散风险
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部：明细穿透与动态 -->
+        <div class="bottom-section">
+            <!-- 最近放款记录 -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">最近放款记录</div>
+                        <div class="card-subtitle">实时更新的放款动态</div>
+                    </div>
+                    <div class="card-extra">查看全部 →</div>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>放款编号</th>
+                                <th>供应商</th>
+                                <th>金额</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>FK20241201001</td>
+                                <td>深圳市能良科技</td>
+                                <td style="font-weight: 600; color: #1890ff;">¥280万</td>
+                                <td><span class="tag tag-success">放款成功</span></td>
+                                <td style="color: #8c8c8c;">10:23</td>
+                            </tr>
+                            <tr>
+                                <td>FK20241201002</td>
+                                <td>无锡科创电子</td>
+                                <td style="font-weight: 600; color: #1890ff;">¥156万</td>
+                                <td><span class="tag tag-success">放款成功</span></td>
+                                <td style="color: #8c8c8c;">09:58</td>
+                            </tr>
+                            <tr>
+                                <td>FK20241201003</td>
+                                <td>华东供应链</td>
+                                <td style="font-weight: 600; color: #1890ff;">¥420万</td>
+                                <td><span class="tag tag-processing">放款中</span></td>
+                                <td style="color: #8c8c8c;">09:45</td>
+                            </tr>
+                            <tr>
+                                <td>FK20241201004</td>
+                                <td>广州智能科技</td>
+                                <td style="font-weight: 600; color: #1890ff;">¥89万</td>
+                                <td><span class="tag tag-success">放款成功</span></td>
+                                <td style="color: #8c8c8c;">09:32</td>
+                            </tr>
+                            <tr>
+                                <td>FK20241201005</td>
+                                <td>上海贸易集团</td>
+                                <td style="font-weight: 600; color: #1890ff;">¥320万</td>
+                                <td><span class="tag tag-success">放款成功</span></td>
+                                <td style="color: #8c8c8c;">09:18</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 高风险预警名单 -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title" style="color: #ff4d4f;">⚠️ 高风险预警名单</div>
+                        <div class="card-subtitle">需立即关注的风险事件</div>
+                    </div>
+                    <div class="card-extra" style="color: #ff4d4f;">查看全部 →</div>
+                </div>
+                <div class="card-body">
+                    <div class="alert-card" style="background: #fff2f0; border-color: #ffccc7;">
+                        <div class="alert-icon" style="background: #ff4d4f;">!</div>
+                        <div class="alert-content">
+                            <div class="alert-title">逾期超90天 - 深圳某电子</div>
+                            <div class="alert-desc">本金¥385万，已逾期96天，催收无果</div>
+                        </div>
+                        <div class="alert-time">2小时前</div>
+                    </div>
+                    <div class="alert-card">
+                        <div class="alert-icon">⚠</div>
+                        <div class="alert-content">
+                            <div class="alert-title">征信异常 - 江苏某制造</div>
+                            <div class="alert-desc">新增被执行记录，涉及金额¥520万</div>
+                        </div>
+                        <div class="alert-time">4小时前</div>
+                    </div>
+                    <div class="alert-card">
+                        <div class="alert-icon">⚠</div>
+                        <div class="alert-content">
+                            <div class="alert-title">核心企业评级下调 - 某汽车</div>
+                            <div class="alert-desc">AAA→AA，建议重新评估授信额度</div>
+                        </div>
+                        <div class="alert-time">昨天</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 待办任务 -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">待办任务</div>
+                        <div class="card-subtitle">需要您处理的事项</div>
+                    </div>
+                    <div class="card-extra">全部标记已读</div>
+                </div>
+                <div class="card-body">
+                    <div class="task-list">
+                        <div class="task-item">
+                            <div class="task-icon">审</div>
+                            <div class="task-content">
+                                <div class="task-title">待审批融资申请</div>
+                                <div class="task-meta">今日新增 23 笔</div>
+                            </div>
+                            <div class="task-count">23</div>
+                        </div>
+                        <div class="task-item" style="background: #fff7e6; border-color: #ffd591;">
+                            <div class="task-icon" style="background: #faad14;">核</div>
+                            <div class="task-content">
+                                <div class="task-title">待核对放款信息</div>
+                                <div class="task-meta">即将超时 5 笔</div>
+                            </div>
+                            <div class="task-count" style="background: #faad14;">8</div>
+                        </div>
+                        <div class="task-item" style="background: #fff2f0; border-color: #ffccc7;">
+                            <div class="task-icon" style="background: #ff4d4f;">催</div>
+                            <div class="task-content">
+                                <div class="task-title">逾期催收跟进</div>
+                                <div class="task-meta">M2+逾期 12 笔</div>
+                            </div>
+                            <div class="task-count">12</div>
+                        </div>
+                        <div class="task-item">
+                            <div class="task-icon">验</div>
+                            <div class="task-content">
+                                <div class="task-title">待验收入库单</div>
+                                <div class="task-meta">代储代销业务 6 笔</div>
+                            </div>
+                            <div class="task-count">6</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页面说明 -->
+        <div style="background: #fff; border-radius: 8px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <h3 style="color: #333; margin-bottom: 15px; font-size: 14px;">看板说明</h3>
+            <div style="font-size: 12px; color: #666; line-height: 2;">
+                <p><strong>数据更新频率：</strong>KPI指标每5分钟自动刷新，图表数据每小时更新，明细列表实时推送</p>
+                <p><strong>交互操作：</strong>点击KPI卡片可下钻查看明细；点击图表元素可筛选对应数据；点击待办任务可直接跳转处理</p>
+                <p><strong>预警规则：</strong>逾期M3+标红提醒；核心企业CR3>70%标黄提醒；放款转化率<60%标黄提醒</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

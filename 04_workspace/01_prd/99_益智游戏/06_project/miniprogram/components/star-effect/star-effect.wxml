@@ -1,0 +1,10 @@
+<view class="star-container">
+  <view
+    wx:for="{{stars}}"
+    wx:key="id"
+    class="star-particle"
+    style="left: {{item.left}}%; width: {{item.size}}rpx; height: {{item.size}}rpx; animation-delay: {{item.delay}}s;"
+  >
+    ⭐
+  </view>
+</view>

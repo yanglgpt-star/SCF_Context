@@ -1,0 +1,53 @@
+
+UPDATE `xswc_finance_assistant`.`fa_storage_order` SET `allocate_time` = '2026-03-30 00:00:00' WHERE `receipt_no` = 'DC202606040436';
+UPDATE `xswc_finance_assistant`.`fa_storage_order` SET `allocate_time` = '2026-03-30 00:00:00' WHERE `receipt_no` = 'DC202606040371';
+UPDATE `xswc_finance_assistant`.`fa_storage_order` SET `allocate_time` = '2026-03-30 00:00:00' WHERE `receipt_no` = 'DC202606040348';
+UPDATE `xswc_finance_assistant`.`fa_storage_order` SET `allocate_time` = '2026-03-31 00:00:00' WHERE `receipt_no` = 'DC202606040293';
+UPDATE `xswc_finance_assistant`.`fa_storage_order` SET `allocate_time` = '2026-04-01 00:00:00' WHERE `receipt_no` = 'DC202606040180';
+
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-05-28 00:00:00'		where  order_code = '9205384004401c5';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-05-28 00:00:00'		where  order_code = '9205384004401c4';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-05-25 00:00:00'		where  order_code = '910ad148040a02f';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-22 00:00:00'		where  order_code = '9026549803e6003';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-17 00:00:00'		where  order_code = '8fd1bf0803d741b';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f4daac803c1894';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f48faa803c104f';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f4daac803c1893';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f4e3ed003c1de7';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f48faa803c104d';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f48faa803c104c';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f4e3ed003c1ddd';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-04-03 00:00:00'		where  order_code = '8f48faa803c1039';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1ab91003b903a';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1c1af003ba19e';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b955f';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b9560';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b9561';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b9563';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1ab91003b903c';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b9565';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b9566';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b956a';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1ab91003b903e';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1ab91003b903f';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1c1af003ba1ac';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1c1af003ba1af';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1ab91003b9040';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1ab91003b9041';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1c1af003ba1b0';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1c1af003ba1b1';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-27 00:00:00'		where  order_code = '8f1abb0803b957d';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-24 00:00:00'		where  order_code = '8ef920f003b0935';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-24 00:00:00'		where  order_code = '8ef920f003b0936';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-23 00:00:00'		where  order_code = '8ebef77803abc28';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-03-23 00:00:00'		where  order_code = '8ec237d003ac8ca';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-02-03 00:00:00'		where  order_code = '8cf6b068037cdac';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-02-03 00:00:00'		where  order_code = '8cf6b068037cdaa';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-02-03 00:00:00'		where  order_code = '8cf6ae58037c9ab';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-02-03 00:00:00'		where  order_code = '8cf6ae58037c9ac';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-02-03 00:00:00'		where  order_code = '8cf6ae58037c9ad';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2026-02-03 00:00:00'		where  order_code = '8cf6ae68037c826';
+UPDATE `xswc_finance_assistant`.`fa_purchase_agreement_order` SET `payment_time` =	'2025-12-31 00:00:00'		where  order_code = '8b53b8400358c2e';
+
+
+UPDATE `xswc_finance_assistant`.`fa_sales_order` SET `activity_id` = NULL, `activity_no` = NULL, `agreement_no` = 'DCXY202606040016', `order_code` = '8ed47aa003af8a0', `subscribe_type` = 1, `sales_demand_code` = NULL, `sales_order_code` = '9025785800bb023-1', `category` = '手机', `brand` = '华为', `common_name` = '华为 Mate 70 Pro', `common_sku` = '曜石黑-12GB+512GB', `common_code` = 'N99801080E03000105', `sku_code` = 'N99801080E03000105', `purchase_price` = 3113.49, `quantity` = 18, `sales_price` = 3113.49, `sales_quantity` = 18, `pay_company_id` = 4019, `pay_company_name` = '上海荡石电子商务有限公司', `client_id` = 1002, `client_name` = '河南壹零肆壹通讯科技有限公司', `stock_out_completed` = 1, `deleted` = 0, `create_by` = 386864, `create_time` = '2026-06-04 00:00:00', `update_by` = 386864, `update_time` = '2026-06-18 14:43:59', `order_date` = '2026-04-24 00:00:00', `payment_date` = '2026-04-24 00:00:00', `is_replenishment` = 1, `paid` = NULL, `send_good_time` = NULL, `signed_time` = NULL, `status` = NULL WHERE `id` = 200;

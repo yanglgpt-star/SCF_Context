@@ -1,0 +1,163 @@
+.page-container {
+  min-height: 100vh;
+  padding: 40rpx;
+}
+
+.add-btn-section {
+  margin-bottom: 32rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.task-item {
+  margin-bottom: 16rpx;
+}
+
+.task-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.task-item-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2D3436;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 16rpx;
+}
+
+.task-item-diff {
+  font-size: 22rpx;
+  color: #F39C12;
+  flex-shrink: 0;
+}
+
+.task-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.task-item-category {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.task-item-voice-status {
+  font-size: 20rpx;
+  color: #bbb;
+}
+
+.task-item-voice-status.has-voice {
+  color: #27AE60;
+}
+
+.task-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.voice-btn {
+  font-size: 22rpx;
+  background: #f8f8f8;
+  border: 2rpx solid #eee;
+  border-radius: 8rpx;
+  padding: 6rpx 16rpx;
+  height: auto;
+  line-height: 1.4;
+  color: #666;
+  min-width: 0;
+}
+
+.voice-btn.recording {
+  border-color: #FF6B6B;
+  color: #FF6B6B;
+  background: #FFF0F0;
+  animation: pulse 0.8s ease infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+.toggle-btn {
+  font-size: 22rpx;
+  background: none;
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 6rpx 18rpx;
+  height: auto;
+  line-height: 1.4;
+  color: #FF9A76;
+  min-width: 0;
+}
+
+.toggle-btn.active {
+  border-color: #ddd;
+  color: #999;
+}
+
+.toggle-btn.inactive {
+  border-color: #FF9A76;
+  color: #FF9A76;
+}
+
+.form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+}
+
+.form-card {
+  width: 100%;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx;
+}
+
+.form-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.form-input {
+  height: 80rpx;
+  border: 2rpx solid #eee;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  margin-bottom: 20rpx;
+}
+
+.form-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.form-actions button {
+  flex: 1;
+}

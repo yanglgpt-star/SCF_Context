@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金融助手 - 电子仓单管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; line-height: 1.6; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        
+        /* 侧边栏 */
+        .sidebar { width: 256px; background: #001529; color: #fff; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-brand { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .sidebar-brand::before { content: '⚡'; font-size: 20px; }
+        .sidebar-menu { flex: 1; padding: 12px 0; overflow-y: auto; }
+        .sidebar-item { padding: 14px 24px; color: rgba(255,255,255,0.65); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; border-left: 3px solid transparent; }
+        .sidebar-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-item.active { color: #fff; background: #1890ff; border-left-color: #fff; }
+        
+        /* 主内容区 */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header { background: #fff; height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8e8e8; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .breadcrumb { font-size: 14px; color: #8c8c8c; }
+        .breadcrumb span:last-child { color: #262626; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #8c8c8c; }
+        .header-icon:hover { background: #f5f5f5; color: #262626; }
+        .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+        .content-wrapper { flex: 1; padding: 24px; overflow-y: auto; }
+        
+        /* 页面头部 */
+        
+        /* 卡片 */
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 600; color: #262626; }
+        
+        /* 搜索区域 */
+        .search-area { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; background: #fafafa; }
+        .search-item { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { display: block; font-size: 13px; color: #262626; margin-bottom: 6px; }
+        .form-input { padding: 9px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; transition: all 0.3s; min-width: 180px; }
+        .form-input:focus { outline: none; border-color: #1890ff; box-shadow: 0 0 0 3px rgba(24,144,255,0.1); }
+        select.form-input { cursor: pointer; }
+        
+        /* 按钮 */
+        .btn { padding: 9px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #595959; }
+        .btn-default:hover { border-color: #1890ff; color: #1890ff; }
+        
+        /* 表格 */
+        .table-wrapper { padding: 0 24px 24px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .data-table th { background: #fafafa; padding: 14px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; font-weight: 600; color: #262626; white-space: nowrap; }
+        .data-table td { padding: 16px; border-bottom: 1px solid #f0f0f0; color: #595959; }
+        .data-table tr:hover { background: #fafafa; }
+        .data-table tr:last-child td { border-bottom: none; }
+        
+        /* 链接样式 */
+        .link { color: #1890ff; cursor: pointer; }
+        .link:hover { text-decoration: underline; }
+        
+        /* 状态标签 - 按Spec要求 */
+        .status-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        /* 待生效：灰色背景，虚线边框 */
+        .status-pending { 
+            background: #f5f5f5; 
+            color: #8c8c8c; 
+            border: 1px dashed #d9d9d9;
+        }
+        /* 普通存单：绿色背景，绿色文字 */
+        .status-normal { 
+            background: #f6ffed; 
+            color: #52c41a; 
+            border: 1px solid #b7eb8f;
+        }
+        /* 已质押：红色背景，红色文字，加粗 */
+        .status-pledged { 
+            background: #fff2f0; 
+            color: #cf1322; 
+            border: 1px solid #ffccc7;
+            font-weight: bold;
+        }
+        /* 部分释放：橙色背景，橙色文字 */
+        .status-partial { 
+            background: #fff7e6; 
+            color: #d46b08; 
+            border: 1px solid #ffd591;
+        }
+        /* 已核销：灰色背景，灰色文字，实线边框 */
+        .status-cancelled { 
+            background: #f5f5f5; 
+            color: #8c8c8c; 
+            border: 1px solid #d9d9d9;
+        }
+        
+        /* 操作按钮 */
+        .action-links { display: flex; gap: 12px; }
+        .action-link { color: #1890ff; cursor: pointer; font-size: 14px; }
+        .action-link:hover { text-decoration: underline; }
+        
+        /* 分页 */
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #f0f0f0; }
+        .pagination-total { font-size: 13px; color: #8c8c8c; margin-right: 12px; }
+        .pagination-page { display: flex; gap: 4px; }
+        .pagination-item { min-width: 32px; height: 32px; padding: 0 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; color: #595959; cursor: pointer; transition: all 0.3s; background: #fff; }
+        .pagination-item:hover { border-color: #1890ff; color: #1890ff; }
+        .pagination-item.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .pagination-item.disabled { color: #d9d9d9; cursor: not-allowed; border-color: #d9d9d9; }
+        
+        /* 弹窗 - 宽度800px */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.5); 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000; 
+        }
+        .modal-overlay.active { display: flex; }
+        .modal { 
+            background: #fff; 
+            border-radius: 8px; 
+            width: 800px; 
+            max-height: 90vh; 
+            overflow: auto; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .modal-header { 
+            padding: 20px 24px; 
+            border-bottom: 1px solid #f0f0f0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #fafafa;
+        }
+        .modal-title { font-size: 18px; font-weight: 600; color: #262626; }
+        .modal-close { font-size: 24px; color: #8c8c8c; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: #262626; }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 12px; background: #fafafa; }
+        
+        /* 信息展示 */
+        .section-title { 
+            font-size: 15px; 
+            font-weight: 600; 
+            color: #262626; 
+            margin-bottom: 16px; 
+            padding-left: 12px;
+            border-left: 3px solid #1890ff;
+        }
+        .info-section { margin-bottom: 24px; }
+        .info-section:last-child { margin-bottom: 0; }
+        .info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 16px 24px;
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .info-item { display: flex; flex-direction: column; gap: 4px; }
+        .info-label { font-size: 13px; color: #8c8c8c; }
+        .info-value { font-size: 14px; color: #262626; font-weight: 500; }
+        .info-value.highlight { color: #1890ff; font-weight: 600; }
+        .info-value.amount { color: #cf1322; font-weight: 600; }
+        .amount-positive { color: #52c41a; font-weight: 600; }
+        .amount-negative { color: #cf1322; font-weight: 600; }
+        .amount-primary { color: #1890ff; font-weight: 600; }
+        
+        /* 货物明细表格 */
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+        .detail-table th { 
+            background: #f0f5ff; 
+            padding: 12px 16px; 
+            text-align: left; 
+            border-bottom: 1px solid #d6e4ff; 
+            font-weight: 600; 
+            color: #262626; 
+        }
+        .detail-table td { 
+            padding: 14px 16px; 
+            border-bottom: 1px solid #f0f0f0; 
+            color: #595959; 
+        }
+        .detail-table tr:hover { background: #fafafa; }
+        .detail-table tr:last-child td { border-bottom: none; }
+        
+        /* 评估汇总 */
+        .summary-box { 
+            background: #e6f7ff; 
+            border: 1px solid #91d5ff; 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-top: 16px;
+        }
+        .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 16px;
+        }
+        .summary-item { text-align: center; }
+        .summary-label { font-size: 13px; color: #1890ff; margin-bottom: 8px; }
+        .summary-value { font-size: 20px; font-weight: 600; color: #1890ff; }
+        .summary-divider { width: 1px; background: #91d5ff; }
+        
+        /* 空状态 */
+        .empty-state { padding: 60px 0; text-align: center; display: none; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-text { font-size: 14px; color: #8c8c8c; }
+        
+        /* 信息卡 - 用于弹窗 */
+        .info-card { background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .info-card.blue { background: #e6f7ff; border-color: #91d5ff; }
+        .info-card-title { font-weight: 600; color: #52c41a; margin-bottom: 16px; font-size: 15px; }
+        .info-card.blue .info-card-title { color: #1890ff; }
+        .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
+        .form-group { flex: 1; }
+        .form-group .info-label { width: auto; margin-bottom: 4px; }
+        .form-group .info-value { flex: none; }
+        .tag-success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">金融助手</div>
+            </div>
+            <nav class="sidebar-menu">
+                <div class="sidebar-item" data-menu="audit" onclick="switchMenu('audit')">代储代销审核</div>
+                <div class="sidebar-item active" data-menu="warehouse" onclick="switchMenu('warehouse')">电子仓单管理</div>
+                <div class="sidebar-item" data-menu="margin" onclick="switchMenu('margin')">保证金拨付</div>
+                <div class="sidebar-item" data-menu="order" onclick="switchMenu('order')">代储订单管理</div>
+                <div class="sidebar-item" data-menu="sale" onclick="switchMenu('sale')">销售订单管理</div>
+                <div class="sidebar-item" data-menu="outbound" onclick="switchMenu('outbound')">出库指令管理</div>
+                <div class="sidebar-item" data-menu="settlement" onclick="switchMenu('settlement')">清结算中心</div>
+                <div class="sidebar-item" data-menu="invoice" onclick="switchMenu('invoice')">票据中心</div>
+                <div class="sidebar-item" data-menu="receipt" onclick="switchMenu('receipt')">提货凭证管理</div>
+            </nav>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="breadcrumb">
+                    <span>首页</span> / <span id="current-menu">电子仓单管理</span>
+                </div>
+                <div class="header-right">
+                    <div class="header-icon">🔔</div>
+                    <div class="header-icon">⚙️</div>
+                    <div class="header-user">👤 管理员</div>
+                </div>
+            </header>
+            
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+
+                
+                <!-- 列表卡片 -->
+                <div class="card">
+                    <!-- 搜索区域 -->
+                    <div class="search-area">
+                        <div class="search-item">
+                            <label class="form-label">仓单编号</label>
+                            <input type="text" class="form-input" placeholder="请输入仓单编号" id="searchNo">
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">供应商</label>
+                            <input type="text" class="form-input" placeholder="请输入供应商名称" id="searchSupplier">
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">仓单状态</label>
+                            <select class="form-input" id="searchStatus">
+                                <option value="">全部</option>
+                                <option value="pending">待生效</option>
+                                <option value="normal">普通存单</option>
+                                <option value="pledged">已质押</option>
+                                <option value="partial">部分释放</option>
+                                <option value="cancelled">已核销</option>
+                            </select>
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">批次编号</label>
+                            <input type="text" class="form-input" placeholder="请输入批次编号" id="searchBatch">
+                        </div>
+                        <button class="btn btn-primary" onclick="handleSearch()">查询</button>
+                        <button class="btn btn-default" onclick="handleReset()">重置</button>
+                    </div>
+                    
+                    <!-- 表格区域 -->
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>仓单编号</th>
+                                    <th>批次编号</th>
+                                    <th>代储订单编码</th>
+                                    <th>入库清单编号</th>
+                                    <th>供应商</th>
+                                    <th>货物信息</th>
+                                    <th style="text-align: right;">货物数量</th>
+                                    <th>入库日期</th>
+                                    <th style="text-align: right;">评估价值</th>
+                                    <th>仓单状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr>
+                                    <td>CD20250909001</td>
+                                    <td>DCPC202609090001</td>
+                                    <td>DC20250909001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250909001')">RK20250909001</span></td>
+                                    <td>能良科技</td>
+                                    <td>iPhone 15 Pro</td>
+                                    <td style="text-align: right;">100</td>
+                                    <td>2026-09-09</td>
+                                    <td style="text-align: right;">¥880,000.00</td>
+                                    <td><span class="status-tag status-normal">普通存单</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250909001')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250908002</td>
+                                    <td>DCPC202609080002</td>
+                                    <td>DC20250908001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250908001')">RK20250908001</span></td>
+                                    <td>华为技术有限公司</td>
+                                    <td>Mate 60 Pro</td>
+                                    <td style="text-align: right;">200</td>
+                                    <td>2026-09-08</td>
+                                    <td style="text-align: right;">¥1,200,000.00</td>
+                                    <td><span class="status-tag status-pledged">已质押</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250908002')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250907003</td>
+                                    <td>DCPC202609070003</td>
+                                    <td>DC20250907001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250907001')">RK20250907001</span></td>
+                                    <td>小米科技</td>
+                                    <td>小米14 Ultra</td>
+                                    <td style="text-align: right;">150</td>
+                                    <td>2026-09-07</td>
+                                    <td style="text-align: right;">¥750,000.00</td>
+                                    <td><span class="status-tag status-partial">部分释放</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250907003')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250906004</td>
+                                    <td>DCPC202609060004</td>
+                                    <td>DC20250906001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250906001')">RK20250906001</span></td>
+                                    <td>OPPO广东移动通信</td>
+                                    <td>OPPO Find X7</td>
+                                    <td style="text-align: right;">80</td>
+                                    <td>2026-09-06</td>
+                                    <td style="text-align: right;">¥480,000.00</td>
+                                    <td><span class="status-tag status-pending">待生效</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250906004')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250905005</td>
+                                    <td>DCPC202609050005</td>
+                                    <td>DC20250905001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250905001')">RK20250905001</span></td>
+                                    <td>vivo移动通信</td>
+                                    <td>vivo X100 Pro</td>
+                                    <td style="text-align: right;">120</td>
+                                    <td>2026-09-05</td>
+                                    <td style="text-align: right;">¥600,000.00</td>
+                                    <td><span class="status-tag status-cancelled">已核销</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250905005')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250904006</td>
+                                    <td>DCPC202609040006</td>
+                                    <td>DC20250904001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250904001')">RK20250904001</span></td>
+                                    <td>荣耀终端有限公司</td>
+                                    <td>荣耀Magic6 Pro</td>
+                                    <td style="text-align: right;">90</td>
+                                    <td>2026-09-04</td>
+                                    <td style="text-align: right;">¥450,000.00</td>
+                                    <td><span class="status-tag status-pledged">已质押</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250904006')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250903007</td>
+                                    <td>DCPC202609030007</td>
+                                    <td>DC20250903001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250903001')">RK20250903001</span></td>
+                                    <td>三星电子</td>
+                                    <td>Galaxy S24 Ultra</td>
+                                    <td style="text-align: right;">60</td>
+                                    <td>2026-09-03</td>
+                                    <td style="text-align: right;">¥540,000.00</td>
+                                    <td><span class="status-tag status-normal">普通存单</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250903007')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CD20250902008</td>
+                                    <td>DCPC202609020008</td>
+                                    <td>DC20250902001</td>
+                                    <td><span class="link" onclick="viewInbound('RK20250902001')">RK20250902001</span></td>
+                                    <td>联想集团</td>
+                                    <td>联想拯救者Y9000P</td>
+                                    <td style="text-align: right;">50</td>
+                                    <td>2026-09-02</td>
+                                    <td style="text-align: right;">¥400,000.00</td>
+                                    <td><span class="status-tag status-partial">部分释放</span></td>
+                                    <td>
+                                        <div class="action-links">
+                                            <span class="action-link" onclick="openDetailModal('CD20250902008')">详情</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- 空状态 -->
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-icon">📋</div>
+                            <div class="empty-text">暂无仓单记录</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <span class="pagination-total">共 128 条</span>
+                        <div class="pagination-page">
+                            <span class="pagination-item disabled">&lt;</span>
+                            <span class="pagination-item active">1</span>
+                            <span class="pagination-item">2</span>
+                            <span class="pagination-item">3</span>
+                            <span class="pagination-item">4</span>
+                            <span class="pagination-item">5</span>
+                            <span class="pagination-item">&gt;</span>
+                        </div>
+                    </div>
+                    <div class="alert-info" style="margin: 0 12px 12px; background: #e6f7ff;  color: #1890ff;">
+                        <strong>说明：</strong>
+                        <br>1. 仓单状态说明：
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 待生效：仓单已创建但尚未生效，可能正在审核中。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 普通存单：仓单已生效，处于正常状态，未被质押或释放。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 已质押：仓单已被质押，货物处于质押状态，无法进行释放操作。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 部分释放：仓单部分货物已被释放，剩余部分仍处于锁定状态。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 已核销：仓单已完成核销，货物已出库或订单已完成，仓单不再具有流通性。
+                        <br>2. 状态流转
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 仓单初始状态为“待生效”，货物入库后变为“普通存单”。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 在“普通存单”状态下，仓单可以被质押，质押后状态变为“已质押”。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 已质押的仓单可以被部分释放，释放后状态变为“部分释放”。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 仓单完成核销后状态变为“已核销”。
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 待生效 → 普通存单 → 已质押 → 部分释放 → 已核销
+                        <br>3. 编码规则
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 仓单编号（CD+年月日+4位流水号，例如：CD20250909001）
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 入库清单编号（RK+年月日+4位流水号，例如：RK20250909001）
+                        <br>4. 接口，仓配同步入库信息
+                        <br>&nbsp;&nbsp;&nbsp;&nbsp;• 仓配系统通过接口将入库信息同步到金融助手系统，金融助手系统根据入库信息补充对应的仓单记录。
+                    </div>  
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetailModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">仓单详情</div>
+                <span class="modal-close" onclick="closeDetailModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- 仓单基本信息 -->
+                <div class="info-section">
+                    <div class="section-title">仓单基本信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">仓单编号</span>
+                            <span class="info-value highlight" id="modalNo">CD20250909001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">批次编号</span>
+                            <span class="info-value" id="modalBatch">DCPC202609090001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">代储订单编码</span>
+                            <span class="info-value" id="modalOrder">DC20250909001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">入库清单编号</span>
+                            <span class="info-value link" id="modalInbound">RK20250909001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">供应商</span>
+                            <span class="info-value" id="modalSupplier">能良科技</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">入库日期</span>
+                            <span class="info-value" id="modalDate">2026-09-09</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">仓单状态</span>
+                            <span class="info-value" id="modalStatus"><span class="status-tag status-normal">普通存单</span></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">签发日期</span>
+                            <span class="info-value">2026-09-10</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">有效期至</span>
+                            <span class="info-value">2026-09-09</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">仓库地址</span>
+                            <span class="info-value">上海市浦东新区张江高科技园区</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">原始数量</span>
+                            <span class="info-value" style="color: #262626; font-weight: 600;">100</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">已释放</span>
+                            <span class="info-value" style="color: #1890ff; font-weight: 600;">30</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">锁定中</span>
+                            <span class="info-value" style="color: #52c41a; font-weight: 600;">70</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 货物明细表格 -->
+                <div class="info-section">
+                    <div class="section-title">货物明细</div>
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>货物名称</th>
+                                <th>规格型号</th>
+                                <th>品牌</th>
+                                <th style="text-align: right;">数量</th>
+                                <th>单位</th>
+                                <th style="text-align: right;">单价</th>
+                                <th style="text-align: right;">金额</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>iPhone 15 Pro</td>
+                                <td>256GB 钛金属</td>
+                                <td>Apple</td>
+                                <td style="text-align: right;">100</td>
+                                <td>台</td>
+                                <td style="text-align: right;">¥8,800.00</td>
+                                <td style="text-align: right;">¥880,000.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 评估汇总 -->
+                <div class="info-section">
+                    <div class="section-title">评估汇总</div>
+                    <div class="summary-box">
+                        <div class="summary-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="summary-item">
+                                <div class="summary-label">货物总评估价</div>
+                                <div class="summary-value">¥880,000.00</div>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-item">
+                                <div class="summary-label">保证金比例</div>
+                                <div class="summary-value">70%</div>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-item">
+                                <div class="summary-label">保证金金额</div>
+                                <div class="summary-value" style="color: #52c41a;">¥616,000.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeDetailModal()">关闭</button>
+                <button class="btn btn-primary">下载仓单</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 入库信息详情弹窗 -->
+    <div class="modal-overlay" id="inboundModal" onclick="if(event.target===this)closeInboundModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">入库信息详情</div>
+                <span class="modal-close" onclick="closeInboundModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="info-card blue">
+                    <div class="info-card-title">入库基本信息</div>
+                    <div class="form-row" style="margin-bottom: 0;">
+                        <div class="form-group">
+                            <div class="info-label">入库清单编号</div>
+                            <div class="info-value highlight" id="inboundNo">RK20250909001</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="info-label">代储订单编码</div>
+                            <div class="info-value" id="inboundOrder">DC20250909001</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="info-label">供应商</div>
+                            <div class="info-value" id="inboundSupplier">能良科技</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="info-label">入库日期</div>
+                            <div class="info-value">2026-09-09 14:30</div>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-bottom: 0; margin-top: 16px;">
+                        <div class="form-group">
+                            <div class="info-label">仓库</div>
+                            <div class="info-value">醒市仓储-上海仓</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="info-label">入库类型</div>
+                            <div class="info-value">代储代销入库</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="info-label">入库状态</div>
+                            <div class="info-value"><span class="tag-success">已完成</span></div>
+                        </div>
+                        <div class="form-group">
+                            <div class="info-label">操作员</div>
+                            <div class="info-value">张三</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-title">入库货物明细</div>
+                <table class="detail-table">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>品牌</th>
+                            <th>商品名称</th>
+                            <th>SKU</th>
+                            <th>SKU编码</th>
+                            <th style="text-align: right;">入库数量</th>
+                            <th>单位</th>
+                            <th>批次号</th>
+                            <th>存放位置</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>苹果</td>
+                            <td>iPhone 15 Pro</td>
+                            <td>128GB 黑色</td>
+                            <td>SKU001</td>
+                            <td style="text-align: right;">100</td>
+                            <td>台</td>
+                            <td>BT20250909001</td>
+                            <td>A-01-02</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeInboundModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function switchMenu(menu) {
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            document.querySelector('.sidebar-item[data-menu="' + menu + '"]').classList.add('active');
+            var menuNames = {'audit': '代储代销审核', 'warehouse': '电子仓单管理', 'margin': '保证金拨付', 'order': '代储订单管理', 'sale': '销售订单管理', 'outbound': '出库指令管理', 'settlement': '清结算中心', 'invoice': '票据中心', 'receipt': '提货凭证管理'};
+            document.getElementById('current-menu').textContent = menuNames[menu];
+        }
+        
+        // 批次编号映射
+        var batchNoMap = {
+            'CD20250909001': 'DCPC202609090001',
+            'CD20250908002': 'DCPC202609080002',
+            'CD20250907003': 'DCPC202609070003',
+            'CD20250906004': 'DCPC202609060004',
+            'CD20250905005': 'DCPC202609050005',
+            'CD20250904006': 'DCPC202609040006',
+            'CD20250903007': 'DCPC202609030007',
+            'CD20250902008': 'DCPC202609020008'
+        };
+
+        // 打开详情弹窗
+        function openDetailModal(warehouseNo) {
+            document.getElementById('detailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // 根据仓单号更新弹窗内容（示例）
+            if (warehouseNo) {
+                document.getElementById('modalNo').textContent = warehouseNo;
+                document.getElementById('modalBatch').textContent = batchNoMap[warehouseNo] || '-';
+            }
+        }
+        
+        // 关闭详情弹窗
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 点击弹窗外部关闭
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDetailModal();
+            }
+        });
+        
+        // 查看入库清单
+        function viewInbound(inboundNo) {
+            document.getElementById('inboundNo').textContent = inboundNo;
+            document.getElementById('inboundModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // 关闭入库弹窗
+        function closeInboundModal() {
+            document.getElementById('inboundModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // 搜索功能
+        function handleSearch() {
+            const no = document.getElementById('searchNo').value;
+            const supplier = document.getElementById('searchSupplier').value;
+            const status = document.getElementById('searchStatus').value;
+            console.log('搜索条件:', { no, supplier, status });
+            // 实际项目中这里会调用API进行搜索
+            showToast('查询成功', 'success');
+        }
+        
+        // 重置功能
+        function handleReset() {
+            document.getElementById('searchNo').value = '';
+            document.getElementById('searchSupplier').value = '';
+            document.getElementById('searchStatus').value = '';
+            showToast('已重置', 'info');
+        }
+        
+        // Toast提示
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                color: #fff;
+                z-index: 9999;
+                animation: slideDown 0.3s ease;
+                background: ${type === 'success' ? '#52c41a' : type === 'error' ? '#ff4d4f' : '#1890ff'};
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 回车键搜索
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

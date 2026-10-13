@@ -1,0 +1,23 @@
+{
+  "_fixture": {
+    "what": "「AI 给了坏数据」的第一种：JSON 是好的，但多边形是 2:1 的缓坡、掩码干脆没给。两条路都走不通。",
+    "why": "2:1 的边是 26.57°，离最近的族方向 45° 差 18.43°，要掰正得把顶点挪 1.69 格 —— 超过 1.0 格的位移预算。这是 extract.js 会诚实拒绝的形状，不是它解不出来的形状。故意不给 mask，是为了让失败原因只指向多边形（给了 mask 的话页面会兜过去成功，就演示不到失败这条了）。",
+    "honest": "手写的，不是真实调用抓下来的。方舟的模型还没开通，抓不到。",
+    "shape": "小山坡，被拒 EDGE_NOT_SNAPPABLE"
+  },
+  "id": "mock-vision-0003",
+  "model": "doubao-seed-2-1-pro-260915",
+  "object": "chat.completion",
+  "created": 1789000002,
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"polygon\": [[3.0, 3.0], [9.0, 3.0], [9.1, 4.0], [3.0, 7.0]],\n  \"note\": \"一个小山坡，左边是缓坡\"\n}\n```"
+      }
+    }
+  ],
+  "usage": { "prompt_tokens": 1181, "completion_tokens": 96, "total_tokens": 1277 }
+}

@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>市场助手 - 服务</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .mobile-container {
+            max-width: 414px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* 状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px 4px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        .status-right { display: flex; align-items: center; gap: 4px; }
+        .signal-icon { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+        .signal-bar { width: 3px; background: #333; border-radius: 1px; }
+        .signal-bar:nth-child(1) { height: 4px; }
+        .signal-bar:nth-child(2) { height: 6px; }
+        .signal-bar:nth-child(3) { height: 8px; }
+        .signal-bar:nth-child(4) { height: 10px; }
+        .battery-wrap {
+            display: flex;
+            align-items: center;
+            background: #333;
+            color: #fff;
+            border-radius: 4px;
+            padding: 1px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        
+        /* 顶部导航 */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px 12px;
+        }
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .logo-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .capsule-btn {
+            width: 88px;
+            height: 32px;
+            border: 1px solid #e0e0e0;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            background: #fff;
+        }
+        .capsule-dots {
+            display: flex;
+            gap: 3px;
+        }
+        .capsule-dots span {
+            width: 5px;
+            height: 5px;
+            background: #333;
+            border-radius: 50%;
+        }
+        .capsule-circle {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #333;
+            border-radius: 50%;
+        }
+        
+        /* 顶部 Tab */
+        .top-tabs {
+            display: flex;
+            padding: 0 16px 16px;
+            gap: 12px;
+        }
+        .top-tab {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #666;
+            background: #f5f5f5;
+        }
+        .top-tab.active {
+            background: linear-gradient(90deg, #ff7a45 0%, #ff6b35 100%);
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        /* 供应链服务入口 */
+        .service-entry {
+            padding: 0 16px 16px;
+        }
+        .service-btn {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .service-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #ff7a45 0%, #ff6b35 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);
+        }
+        .service-text {
+            font-size: 13px;
+            color: #ff6b35;
+            font-weight: 500;
+        }
+        
+        /* 页面切换 */
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+        
+        /* ===== 选择服务类型页面 ===== */
+        .select-body {
+            background: #f8f9fa;
+            min-height: calc(100vh - 220px);
+            padding-bottom: 100px;
+        }
+        
+        .section-title-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            padding: 16px 16px 12px;
+        }
+        .section-title-bar::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        
+        .type-list {
+            padding: 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .type-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+        .type-card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .type-card.disabled {
+            opacity: 0.6;
+            background: #f9fafb;
+        }
+        .type-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .type-card.selected .type-icon {
+            background: #dbeafe;
+        }
+        .type-card:not(.selected) .type-icon {
+            background: #f3f4f6;
+        }
+        .type-info {
+            flex: 1;
+        }
+        .type-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .type-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .type-badge {
+            display: inline-block;
+            background: #52c41a;
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 6px;
+        }
+        .type-card.disabled .type-badge {
+            background: #999;
+        }
+        .type-check {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .type-card.selected .type-check {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        
+        .agreement-box {
+            padding: 8px 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .agreement-box input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 1px;
+            accent-color: #3b82f6;
+        }
+        .agreement-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .agreement-text a {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+        
+        .bottom-actions {
+            padding: 0 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            flex: 1;
+            height: 44px;
+            border-radius: 22px;
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+        }
+        .btn-default {
+            background: #fff;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .btn-primary:disabled {
+            background: #bfdbfe;
+        }
+        .tips-text {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            padding-bottom: 16px;
+        }
+        
+        /* ===== 数据填写页面 ===== */
+        .page-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            position: relative;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .page-nav .back-btn {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #333;
+        }
+        .page-nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .sub-header {
+            background: #fff;
+            padding: 16px;
+            border-bottom: 8px solid #f5f5f5;
+        }
+        .sub-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .sub-desc {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .form-section {
+            background: #fff;
+            margin-bottom: 8px;
+        }
+        .form-group {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .form-group:last-child {
+            border-bottom: none;
+        }
+        .form-label {
+            width: 100px;
+            font-size: 14px;
+            color: #333;
+        }
+        .form-label .required {
+            color: #ff4d4f;
+            margin-left: 2px;
+        }
+        .form-value {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+            text-align: right;
+        }
+        .form-value.readonly {
+            color: #999;
+        }
+        .form-input {
+            flex: 1;
+            border: none;
+            font-size: 14px;
+            color: #333;
+            text-align: right;
+            outline: none;
+            background: transparent;
+        }
+        .form-input::placeholder {
+            color: #ccc;
+        }
+        
+        .goods-section {
+            padding: 0 16px 16px;
+        }
+        .add-goods-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #3b82f6;
+            color: #fff;
+            font-size: 13px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            margin: 12px 0;
+            border: none;
+        }
+        
+        .goods-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .goods-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .goods-row:last-child {
+            margin-bottom: 0;
+            padding-top: 8px;
+            border-top: 1px dashed #eee;
+        }
+        .goods-label { color: #999; }
+        .goods-value { color: #333; font-weight: 500; }
+        .goods-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .goods-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 10px;
+            border-top: 1px solid #f5f5f5;
+            margin-top: 10px;
+        }
+        .goods-actions span {
+            font-size: 13px;
+            color: #3b82f6;
+        }
+        .goods-actions span.delete {
+            color: #ff4d4f;
+        }
+        
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: #fff;
+            padding: 12px 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+        
+        /* ===== 添加货物页面 ===== */
+        .add-goods-body {
+            background: #f8f9fa;
+            min-height: calc(100vh - 44px);
+            padding-bottom: 90px;
+        }
+        .form-block {
+            background: #fff;
+            margin-bottom: 8px;
+            padding: 8px 16px 16px;
+        }
+        .form-row {
+            margin-bottom: 14px;
+        }
+        .form-row:last-child {
+            margin-bottom: 0;
+        }
+        .form-row-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        .form-row-label .required {
+            color: #ff4d4f;
+            margin-left: 2px;
+        }
+        .form-select, .form-text-input {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0 12px;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+        .form-select:disabled, .form-text-input:disabled {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+        .form-text-input {
+            background-image: none;
+            padding-right: 12px;
+        }
+        .total-display {
+            width: 100%;
+            height: 42px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 15px;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .form-row-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+        
+        /* 底部 TabBar */
+        .tabbar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            height: 84px;
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 8px;
+            padding-bottom: 20px;
+            z-index: 100;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #999;
+            font-size: 11px;
+            padding-top: 2px;
+            cursor: pointer;
+        }
+        .tab-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .tab-item.active { color: #ff6b35; }
+        .tab-item.active .tab-icon { font-weight: 600; }
+        .tab-center {
+            position: relative;
+            top: -18px;
+        }
+        .tab-center-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff7a45 0%, #ff6b35 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+            border: 3px solid #fff;
+        }
+        .tab-badge {
+            position: relative;
+        }
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -10px;
+            background: #ff4d4f;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 5px;
+            border-radius: 8px;
+            min-width: 16px;
+            text-align: center;
+            border: 1px solid #fff;
+        }
+        
+        /* 点击交互 */
+        .service-btn:active { transform: scale(0.96); }
+        .type-card:active:not(.disabled) { background: #eff6ff; }
+        .btn:active { opacity: 0.9; }
+        .add-goods-btn:active { opacity: 0.9; }
+        .tab-item:active { opacity: 0.7; }
+        .form-select:active, .form-text-input:focus {
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span>15:17</span>
+            <div class="status-right">
+                <div class="signal-icon">
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                </div>
+                <div class="battery-wrap">100</div>
+            </div>
+        </div>
+        
+        <!-- ==================== 页面1：选择服务类型（保留上下框架） ==================== -->
+        <div id="page-select-type" class="page-section active">
+            <!-- App Header -->
+            <div class="app-header">
+                <div class="logo-wrap">
+                    <div class="logo-icon">市</div>
+                    <div class="logo-text">市场助手</div>
+                </div>
+                <div class="capsule-btn">
+                    <div class="capsule-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="capsule-circle"></div>
+                </div>
+            </div>
+            
+            <!-- 顶部 Tab -->
+            <div class="top-tabs">
+                <div class="top-tab">求购</div>
+                <div class="top-tab">出货</div>
+                <div class="top-tab active">服务</div>
+            </div>
+            
+            <!-- 供应链服务入口 -->
+            <div class="service-entry">
+                <div class="service-btn">
+                    <div class="service-icon">☰</div>
+                    <div class="service-text">供应链服务</div>
+                </div>
+            </div>
+            
+            <!-- 中间内容：选择服务类型 -->
+            <div class="select-body">
+                <div class="section-title-bar">请选择服务类型</div>
+                
+                <div class="type-list">
+                    <div class="type-card selected" onclick="selectType(this)">
+                        <div class="type-icon">📦</div>
+                        <div class="type-info">
+                            <div class="type-name">代储代销</div>
+                            <div class="type-desc">先入库后销售，提前回笼资金，最高可获得货值70%的保证金</div>
+                            <div class="type-badge">✓ 已选择</div>
+                        </div>
+                        <div class="type-check">✓</div>
+                    </div>
+                    
+                    <div class="type-card disabled" onclick="showToast('即将上线，敬请期待')">
+                        <div class="type-icon">💰</div>
+                        <div class="type-info">
+                            <div class="type-name">仓储回购通</div>
+                            <div class="type-desc">平台代采货物并仓储，降低库存压力，敬请期待</div>
+                            <div class="type-badge">即将上线</div>
+                        </div>
+                        <div class="type-check"></div>
+                    </div>
+                </div>
+                
+                <div class="agreement-box">
+                    <input type="checkbox" id="agreeProtocol" onchange="toggleNextBtn()">
+                    <label for="agreeProtocol" class="agreement-text">
+                        我已阅读并同意<a href="javascript:void(0)" onclick="showToast('查看代储代销服务协议')">《代储代销服务协议》</a>
+                    </label>
+                </div>
+                
+                <div class="bottom-actions">
+                    <button class="btn btn-primary" id="nextBtn" disabled onclick="goFillForm()">下一步：填写申请</button>
+                </div>
+                
+                <div class="tips-text" id="tipsText">请先勾选同意《代储代销服务协议》后才能进行下一步</div>
+            </div>
+            
+            <!-- 底部 TabBar -->
+            <div class="tabbar">
+                <div class="tab-item">
+                    <div class="tab-icon">⌂</div>
+                    <span>首页</span>
+                </div>
+                <div class="tab-item">
+                    <div class="tab-icon">☰</div>
+                    <span>聊天</span>
+                </div>
+                <div class="tab-item tab-center">
+                    <div class="tab-center-btn">报价</div>
+                </div>
+                <div class="tab-item tab-badge">
+                    <div class="tab-icon">📝</div>
+                    <span class="badge">88</span>
+                    <span>订单</span>
+                </div>
+                <div class="tab-item">
+                    <div class="tab-icon">○</div>
+                    <span>我的</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ==================== 页面2：数据填写 ==================== -->
+        <div id="page-fill-form" class="page-section">
+            <div class="page-nav">
+                <div class="back-btn" onclick="goBackSelect()">‹</div>
+                <div class="page-nav-title">代储代销申请</div>
+            </div>
+            
+            <div class="sub-header">
+                <div class="sub-title">代储代销申请</div>
+                <div class="sub-desc">填写您的货物信息并提交审核</div>
+            </div>
+            
+            <div class="section-title-bar">基本信息</div>
+            <div class="form-section">
+                <div class="form-group">
+                    <div class="form-label">供应商名称</div>
+                    <div class="form-value readonly">能良科技</div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">申请时间<span class="required">*</span></div>
+                    <input type="text" class="form-input" value="2026/04/16 13:05" readonly>
+                </div>
+            </div>
+            
+            <div class="section-title-bar">货物信息</div>
+            <div class="goods-section">
+                <button class="add-goods-btn" onclick="goAddGoods()">+ 添加货物</button>
+                
+                <div id="goodsList">
+                    <div class="goods-card">
+                        <div class="goods-name">iPhone 15 Pro / 128GB 黑色</div>
+                        <div class="goods-row">
+                            <span><span class="goods-label">品牌：</span>苹果</span>
+                            <span><span class="goods-label">SKU编码：</span>SKU001</span>
+                        </div>
+                        <div class="goods-row">
+                            <span><span class="goods-label">数量：</span>100</span>
+                            <span><span class="goods-label">单价：</span>8,999.00 元</span>
+                        </div>
+                        <div class="goods-row">
+                            <span class="goods-label">总价(元)</span>
+                            <span class="goods-value" style="color:#ff6b35; font-size:15px;">899,900.00</span>
+                        </div>
+                        <div class="goods-actions">
+                            <span onclick="showToast('查看货物详情')">查看</span>
+                            <span onclick="showToast('编辑货物信息')">编辑</span>
+                            <span class="delete" onclick="deleteGoods(this)">删除</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 占位，避免底部固定按钮遮挡内容 -->
+            <div style="height: 80px;"></div>
+            
+            <div class="fixed-bottom">
+                <button class="btn btn-default" onclick="goBackSelect()">取消</button>
+                <button class="btn btn-primary" onclick="showToast('提交审核成功')">提交审核</button>
+            </div>
+        </div>
+        
+        <!-- ==================== 页面3：添加货物 ==================== -->
+        <div id="page-add-goods" class="page-section">
+            <div class="page-nav">
+                <div class="back-btn" onclick="goBackForm()">‹</div>
+                <div class="page-nav-title">添加货物</div>
+            </div>
+            
+            <div class="add-goods-body">
+                <div class="form-block">
+                    <div class="form-row">
+                        <div class="form-row-label">品牌<span class="required">*</span></div>
+                        <select class="form-select" id="brandSelect" onchange="onBrandChange()">
+                            <option value="">请选择品牌</option>
+                            <option value="苹果">苹果</option>
+                            <option value="华为">华为</option>
+                            <option value="小米">小米</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-row-label">商品<span class="required">*</span></div>
+                        <select class="form-select" id="productSelect" onchange="onProductChange()" disabled>
+                            <option value="">请选择商品</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-block">
+                    <div class="form-row">
+                        <div class="form-row-label">SKU<span class="required">*</span></div>
+                        <select class="form-select" id="skuSelect" onchange="onSkuChange()" disabled>
+                            <option value="">请选择SKU</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-row-label">SKU编码</div>
+                        <input type="text" class="form-text-input" id="skuCodeInput" value="" disabled placeholder="自动填充">
+                    </div>
+                </div>
+                
+                <div class="form-block">
+                    <div class="form-row">
+                        <div class="form-row-label">数量<span class="required">*</span></div>
+                        <input type="number" class="form-text-input" id="quantityInput" placeholder="请输入数量" oninput="calcTotal()">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-row-label">单价（元）<span class="required">*</span></div>
+                        <input type="number" class="form-text-input" id="priceInput" placeholder="请输入单价" oninput="calcTotal()">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-row-label">总价（元）</div>
+                        <div class="total-display" id="totalDisplay">0.00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fixed-bottom">
+                <button class="btn btn-default" onclick="goBackForm()">取消</button>
+                <button class="btn btn-primary" onclick="saveGoods()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        var productData = {
+            '苹果': {
+                'iPhone 15 Pro': {
+                    '128GB 黑色': 'SKU001',
+                    '256GB 白色': 'SKU002'
+                },
+                'iPhone 15': {
+                    '128GB 蓝色': 'SKU003'
+                }
+            },
+            '华为': {
+                'Mate 60 Pro': {
+                    '256GB 雅丹黑': 'SKU004',
+                    '512GB 南糯紫': 'SKU005'
+                }
+            },
+            '小米': {
+                '小米14': {
+                    '256GB 黑色': 'SKU006'
+                }
+            }
+        };
+        
+        function showToast(msg) {
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:40%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 18px;border-radius:6px;font-size:14px;z-index:9999;white-space:nowrap;';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function(){ toast.remove(); }, 2000);
+        }
+        
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+        
+        function goFillForm() {
+            var agree = document.getElementById('agreeProtocol').checked;
+            if (!agree) {
+                showToast('请先勾选同意《代储代销服务协议》');
+                return;
+            }
+            switchPage('page-fill-form');
+        }
+        
+        function goBackSelect() {
+            switchPage('page-select-type');
+        }
+        
+        function goAddGoods() {
+            resetGoodsForm();
+            switchPage('page-add-goods');
+        }
+        
+        function goBackForm() {
+            switchPage('page-fill-form');
+        }
+        
+        function selectType(el) {
+            if (el.classList.contains('disabled')) return;
+            document.querySelectorAll('.type-card').forEach(function(card) {
+                if (!card.classList.contains('disabled')) {
+                    card.classList.remove('selected');
+                    card.querySelector('.type-check').textContent = '';
+                    var badge = card.querySelector('.type-badge');
+                    if (badge) badge.textContent = '';
+                }
+            });
+            el.classList.add('selected');
+            el.querySelector('.type-check').textContent = '✓';
+            el.querySelector('.type-badge').textContent = '✓ 已选择';
+        }
+        
+        function toggleNextBtn() {
+            var agree = document.getElementById('agreeProtocol').checked;
+            document.getElementById('nextBtn').disabled = !agree;
+            document.getElementById('tipsText').style.display = agree ? 'none' : 'block';
+        }
+        
+        function onBrandChange() {
+            var brand = document.getElementById('brandSelect').value;
+            var productSelect = document.getElementById('productSelect');
+            var skuSelect = document.getElementById('skuSelect');
+            var skuCodeInput = document.getElementById('skuCodeInput');
+            
+            productSelect.innerHTML = '<option value="">请选择商品</option>';
+            skuSelect.innerHTML = '<option value="">请选择SKU</option>';
+            skuCodeInput.value = '';
+            
+            if (brand && productData[brand]) {
+                productSelect.disabled = false;
+                for (var product in productData[brand]) {
+                    var option = document.createElement('option');
+                    option.value = product;
+                    option.textContent = product;
+                    productSelect.appendChild(option);
+                }
+            } else {
+                productSelect.disabled = true;
+                skuSelect.disabled = true;
+                skuCodeInput.value = '';
+            }
+        }
+        
+        function onProductChange() {
+            var brand = document.getElementById('brandSelect').value;
+            var product = document.getElementById('productSelect').value;
+            var skuSelect = document.getElementById('skuSelect');
+            var skuCodeInput = document.getElementById('skuCodeInput');
+            
+            skuSelect.innerHTML = '<option value="">请选择SKU</option>';
+            skuCodeInput.value = '';
+            
+            if (brand && product && productData[brand][product]) {
+                skuSelect.disabled = false;
+                for (var sku in productData[brand][product]) {
+                    var option = document.createElement('option');
+                    option.value = sku;
+                    option.textContent = sku;
+                    skuSelect.appendChild(option);
+                }
+            } else {
+                skuSelect.disabled = true;
+            }
+        }
+        
+        function onSkuChange() {
+            var brand = document.getElementById('brandSelect').value;
+            var product = document.getElementById('productSelect').value;
+            var sku = document.getElementById('skuSelect').value;
+            var skuCodeInput = document.getElementById('skuCodeInput');
+            
+            if (brand && product && sku && productData[brand][product][sku]) {
+                skuCodeInput.value = productData[brand][product][sku];
+            } else {
+                skuCodeInput.value = '';
+            }
+        }
+        
+        function calcTotal() {
+            var quantity = parseFloat(document.getElementById('quantityInput').value) || 0;
+            var price = parseFloat(document.getElementById('priceInput').value) || 0;
+            var total = quantity * price;
+            document.getElementById('totalDisplay').textContent = total.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+        
+        function resetGoodsForm() {
+            document.getElementById('brandSelect').value = '';
+            document.getElementById('productSelect').innerHTML = '<option value="">请选择商品</option>';
+            document.getElementById('productSelect').disabled = true;
+            document.getElementById('skuSelect').innerHTML = '<option value="">请选择SKU</option>';
+            document.getElementById('skuSelect').disabled = true;
+            document.getElementById('skuCodeInput').value = '';
+            document.getElementById('quantityInput').value = '';
+            document.getElementById('priceInput').value = '';
+            document.getElementById('totalDisplay').textContent = '0.00';
+        }
+        
+        function saveGoods() {
+            var brand = document.getElementById('brandSelect').value;
+            var product = document.getElementById('productSelect').value;
+            var sku = document.getElementById('skuSelect').value;
+            var skuCode = document.getElementById('skuCodeInput').value;
+            var quantity = document.getElementById('quantityInput').value;
+            var price = document.getElementById('priceInput').value;
+            var total = document.getElementById('totalDisplay').textContent;
+            
+            if (!brand || !product || !sku || !quantity || !price) {
+                showToast('请填写完整信息');
+                return;
+            }
+            
+            var goodsCard = document.createElement('div');
+            goodsCard.className = 'goods-card';
+            goodsCard.innerHTML = 
+                '<div class="goods-name">' + product + ' / ' + sku + '</div>' +
+                '<div class="goods-row">' +
+                    '<span><span class="goods-label">品牌：</span>' + brand + '</span>' +
+                    '<span><span class="goods-label">SKU编码：</span>' + skuCode + '</span>' +
+                '</div>' +
+                '<div class="goods-row">' +
+                    '<span><span class="goods-label">数量：</span>' + quantity + '</span>' +
+                    '<span><span class="goods-label">单价：</span>' + parseFloat(price).toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' 元</span>' +
+                '</div>' +
+                '<div class="goods-row">' +
+                    '<span class="goods-label">总价(元)</span>' +
+                    '<span class="goods-value" style="color:#ff6b35; font-size:15px;">' + total + '</span>' +
+                '</div>' +
+                '<div class="goods-actions">' +
+                    '<span onclick="showToast(\'查看货物详情\')">查看</span>' +
+                    '<span onclick="showToast(\'编辑货物信息\')">编辑</span>' +
+                    '<span class="delete" onclick="deleteGoods(this)">删除</span>' +
+                '</div>';
+            
+            document.getElementById('goodsList').appendChild(goodsCard);
+            showToast('添加成功');
+            goBackForm();
+        }
+        
+        function deleteGoods(el) {
+            el.closest('.goods-card').remove();
+            showToast('删除成功');
+        }
+    </script>
+</body>
+</html>

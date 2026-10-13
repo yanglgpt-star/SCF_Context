@@ -1,0 +1,29 @@
+<view class="page-container">
+  <!-- 星星特效 -->
+  <star-effect wx:if="{{showAnimation}}"></star-effect>
+
+  <!-- 庆祝内容 -->
+  <view class="celebration-section fade-in">
+    <view class="big-icon">🎉</view>
+    <view class="congrats-text">太棒了！</view>
+    <view class="congrats-sub">你完成了任务！</view>
+  </view>
+
+  <!-- 奖励展示 -->
+  <view class="card reward-card fade-in">
+    <view class="reward-label">获得奖励</view>
+    <view class="stars-row">
+      <text class="star-icon">⭐</text>
+      <text class="star-count">+{{rewardStars}}</text>
+    </view>
+    <view class="total-stars">
+      共有 {{totalStars}} 颗星星
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section fade-in">
+    <button class="btn-primary" bindtap="goHome">回到首页</button>
+    <button class="btn-secondary" bindtap="continueAdventure">再来一个</button>
+  </view>
+</view>

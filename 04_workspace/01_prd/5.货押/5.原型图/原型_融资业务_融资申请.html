@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>融资申请 - 融资业务</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; min-height: 100vh; }
+/* ===== Top Nav (Enterprise) ===== */
+.top-nav { height: 56px; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.top-nav .logo { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.top-nav .logo span { color: #60a5fa; }
+.top-nav .nav-links { display: flex; align-items: center; gap: 24px; font-size: 13px; }
+.top-nav .nav-links a { color: #94a3b8; text-decoration: none; cursor: pointer; }
+.top-nav .nav-links a:hover, .top-nav .nav-links a.active { color: #fff; }
+.top-nav .nav-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #94a3b8; }
+/* ===== Main ===== */
+.main { width: 100%; }
+.sub-nav { height: 44px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; padding: 0 24px; font-size: 13px; gap: 24px; }
+.sub-nav a { color: #6b7280; text-decoration: none; cursor: pointer; }
+.sub-nav a.active { color: #2563eb; font-weight: 600; }
+.content { max-width: 960px; margin: 0 auto; padding: 20px 24px; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 24px 28px; margin-bottom: 16px; }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #374151; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group label .required { color: #ef4444; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.form-hint { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.form-error { font-size: 11px; color: #ef4444; margin-top: 2px; display: none; }
+.form-group.error input { border-color: #ef4444; }
+.form-group.error .form-error { display: block; }
+.btn { padding: 8px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-success:disabled { background: #6ee7b7; cursor: not-allowed; }
+.btn-lg { padding: 10px 32px; font-size: 15px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.warn-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; }
+.credit-bar { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 32px; font-size: 14px; }
+.credit-bar .item { display: flex; align-items: baseline; gap: 4px; }
+.credit-bar .item .num { font-size: 20px; font-weight: 700; color: #065f46; }
+.credit-bar .item .num.warning { color: #d97706; }
+.credit-bar .item .label { color: #6b7280; font-size: 13px; }
+.credit-bar .divider { width: 1px; height: 28px; background: #d1d5db; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+/* Wizard */
+.wizard-steps { display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+.wizard-steps .ws { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: default; }
+.wizard-steps .ws .num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; background: #e5e7eb; color: #9ca3af; }
+.wizard-steps .ws.active .num { background: #2563eb; color: #fff; }
+.wizard-steps .ws.done .num { background: #10b981; color: #fff; }
+.wizard-steps .ws .label { font-size: 12px; color: #9ca3af; white-space: nowrap; }
+.wizard-steps .ws.active .label { color: #2563eb; font-weight: 600; }
+.wizard-steps .ws.done .label { color: #10b981; }
+.wizard-steps .ws-line { width: 60px; height: 2px; background: #e5e7eb; margin: 0 12px; margin-bottom: 24px; }
+.wizard-steps .ws-line.done { background: #10b981; }
+.step-content { display: none; }
+.step-content.active { display: block; }
+/* Upload zone */
+.upload-zone { border: 2px dashed #d1d5db; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: all .2s; }
+.upload-zone:hover { border-color: #93c5fd; background: #f9fafb; }
+.upload-zone.uploaded { border-style: solid; border-color: #10b981; background: #f0fdf4; }
+.upload-zone .uz-icon { font-size: 24px; margin-bottom: 4px; }
+.upload-zone .uz-title { font-weight: 500; font-size: 13px; }
+.upload-zone .uz-hint { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.upload-zone .uz-status { margin-top: 6px; }
+/* Check list in step 2 */
+.check-list { list-style: none; }
+.check-list li { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; }
+.check-list li.pass { color: #10b981; }
+.check-list li.fail { color: #ef4444; }
+.check-list li .calc { font-size: 11px; color: #6b7280; margin-left: 4px; }
+/* Summary blocks in step 4 */
+.summary-section { margin-bottom: 20px; }
+.summary-section:last-child { margin-bottom: 0; }
+.summary-section .sec-title { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+.summary-section .sec-body { padding-left: 4px; }
+.summary-section .row { display: flex; padding: 3px 0; font-size: 13px; }
+.summary-section .row .label { color: #6b7280; width: 130px; flex-shrink: 0; }
+.summary-section .row .value { color: #1f2937; font-weight: 500; }
+.summary-section .row .value.green { color: #065f46; }
+/* Check result in step 4 */
+.check-result { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+.check-result.pass { color: #10b981; }
+.check-result.fail { color: #ef4444; }
+.eval-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #065f46; font-weight: 500; margin-top: 12px; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+/* Modal */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 36px 40px; width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal .icon { font-size: 48px; margin-bottom: 12px; }
+.modal .title { font-size: 18px; font-weight: 600; color: #065f46; margin-bottom: 16px; }
+.modal .info-row { font-size: 14px; color: #6b7280; margin-bottom: 6px; }
+.modal .info-row strong { color: #1f2937; }
+.modal .status-badge { display: inline-block; background: #dbeafe; color: #1e40af; padding: 2px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; margin-bottom: 20px; }
+/* Associated pledge area */
+.assoc-group { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.assoc-group .radio-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; cursor: pointer; }
+.assoc-group .radio-row input[type="radio"] { width: auto; margin: 0; }
+.assoc-detail { margin-left: 24px; padding: 6px 0; font-size: 12px; color: #6b7280; }
+.assoc-detail select { font-size: 12px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ===== Top Navigation (Enterprise) ===== -->
+<div class="top-nav">
+  <div class="logo"><span>◈</span> 供应链金融·货押平台</div>
+  <div class="nav-links">
+    <a>首页</a>
+    <a>融资中心</a>
+    <a class="active">融资申请</a>
+    <a>货权管理</a>
+    <a>贷后管理</a>
+  </div>
+  <div class="nav-right">
+    <span>🔔</span>
+    <span>👤 XX商贸有限公司</span>
+    <span>退出</span>
+  </div>
+</div>
+
+<!-- ===== Sub Navigation ===== -->
+<div class="sub-nav">
+  <a>产品介绍</a>
+  <a class="active">融资申请</a>
+  <a>申请记录</a>
+  <a>帮助中心</a>
+</div>
+
+<!-- ===== Content ===== -->
+<div class="content">
+
+  <div class="page-title">融资申请</div>
+
+  <!-- 额度提示条 -->
+  <div class="credit-bar">
+    <div class="item"><span class="label">可用授信额度</span><span class="num" id="availCredit">50.00</span><span class="label">万元</span></div>
+    <div class="divider"></div>
+    <div class="item"><span class="label">已占用</span><span class="num warning" id="usedCredit">30.00</span><span class="label">万元</span></div>
+    <div class="divider"></div>
+    <div class="item"><span class="label">总额度</span><span class="num" id="totalCredit">80.00</span><span class="label">万元</span></div>
+  </div>
+
+  <!-- Wizard Steps -->
+  <div class="wizard-steps">
+    <div class="ws active" id="ws-1"><div class="num">1</div><div class="label">基本信息</div></div>
+    <div class="ws-line" id="line-1"></div>
+    <div class="ws" id="ws-2"><div class="num">2</div><div class="label">质押物信息</div></div>
+    <div class="ws-line" id="line-2"></div>
+    <div class="ws" id="ws-3"><div class="num">3</div><div class="label">资料上传</div></div>
+    <div class="ws-line" id="line-3"></div>
+    <div class="ws" id="ws-4"><div class="num">4</div><div class="label">确认提交</div></div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- STEP 1: 基本信息                                                   -->
+  <!-- ================================================================= -->
+  <div class="step-content active" id="step-1">
+    <div class="card">
+      <div class="card-title">步骤①：基本信息</div>
+
+      <div class="form-row">
+        <div class="form-group" id="fgAmount">
+          <label><span class="required">*</span> 申请金额（万元）</label>
+          <input type="number" id="applyAmount" value="40" min="0" step="0.01" oninput="onAmountChange()">
+          <div class="form-hint">可用额度 <span id="hintAvail">50.00</span> 万元，建议 ≤ 45.00 万元</div>
+          <div class="form-error" id="errAmount"></div>
+        </div>
+        <div class="form-group" id="fgTerm">
+          <label><span class="required">*</span> 融资期限（天）</label>
+          <select id="financeTerm">
+            <option value="7">7 天</option>
+            <option value="30">30 天</option>
+            <option value="60" selected>60 天</option>
+            <option value="90">90 天</option>
+            <option value="180">180 天</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" id="fgPurpose">
+          <label><span class="required">*</span> 资金用途</label>
+          <textarea id="fundPurpose" placeholder="请输入资金用途" oninput="onFieldChange()">采购XX品牌电子产品用于二季度销售</textarea>
+        </div>
+        <div class="form-group" id="fgRepay">
+          <label><span class="required">*</span> 还款来源</label>
+          <textarea id="repaySource" placeholder="请输入还款来源" oninput="onFieldChange()">销售收入回款</textarea>
+        </div>
+      </div>
+
+      <!-- 关联仓单/质押物 -->
+      <div style="margin-top:4px;">
+        <label style="font-size:13px;font-weight:500;margin-bottom:8px;display:block;">▼ 关联已有仓单/质押物（可选）</label>
+        <div class="assoc-group">
+          <label class="radio-row"><input type="radio" name="assocType" value="none" checked onchange="onAssocChange()"> 不关联，新建质押物</label>
+          <label class="radio-row"><input type="radio" name="assocType" value="warehouse" onchange="onAssocChange()"> 关联已有仓单</label>
+          <div class="assoc-detail" id="assocWarehouse" style="display:none;">
+            <select style="width:100%;max-width:320px;" onchange="onAssocChange()">
+              <option value="">请选择仓单</option>
+              <option value="WH-20260401-001">WH-20260401-001（3C电子 / 货值60万）</option>
+              <option value="WH-20260402-003">WH-20260402-003（家电 / 货值35万）</option>
+            </select>
+            <div style="margin-top:4px;color:#6b7280;">仓单编号：WH-20260401-001 &nbsp; 品类：3C电子 &nbsp; 货值：60万</div>
+          </div>
+          <label class="radio-row"><input type="radio" name="assocType" value="pledge" onchange="onAssocChange()"> 关联已预报质押物</label>
+          <div class="assoc-detail" id="assocPledge" style="display:none;">
+            <select style="width:100%;max-width:320px;" onchange="onAssocChange()">
+              <option value="">请选择质押物</option>
+              <option value="PRE-001">PRE-001（格力空调 / 货值35万）</option>
+              <option value="PRE-002">PRE-002（坚果礼盒 / 货值12万）</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 实时校验 -->
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-top:12px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">实时校验提示</div>
+        <ul class="check-list">
+          <li class="pass" id="chkStatus">✓ 客户状态正常</li>
+          <li class="pass" id="chkLicense">✓ 证照在有效期内</li>
+          <li class="pass" id="chkOverdue">✓ 无未结清逾期业务</li>
+          <li class="pass" id="chkLimit">✓ 申请金额 ≤ 单笔融资上限（A级客户限额100万）</li>
+        </ul>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline">保存草稿</button>
+        <button class="btn btn-primary btn-lg" onclick="goStep(2)">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- STEP 2: 质押物信息                                                 -->
+  <!-- ================================================================= -->
+  <div class="step-content" id="step-2">
+    <div class="card">
+      <div class="card-title">步骤②：质押物信息</div>
+
+      <div class="form-row">
+        <div class="form-group" id="fgCategory">
+          <label><span class="required">*</span> 质押物品类</label>
+          <select id="pledgeCategory" onchange="onPledgeChange()">
+            <option value="">请选择品类</option>
+            <option value="3C电子" selected>3C电子</option>
+            <option value="家电">家电</option>
+            <option value="建材">建材</option>
+            <option value="食品">食品</option>
+            <option value="日化">日化</option>
+          </select>
+          <div class="form-hint">3C电子 / 家电 / 建材</div>
+        </div>
+        <div class="form-group">
+          <label><span class="required">*</span> 质押物品牌</label>
+          <input type="text" id="pledgeBrand" value="XX科技" placeholder="请输入品牌">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label><span class="required">*</span> 质押物型号</label>
+          <input type="text" id="pledgeModel" value="Pro-Max-2026" placeholder="请输入型号">
+        </div>
+        <div class="form-group" id="fgQty">
+          <label><span class="required">*</span> 质押物数量</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="pledgeQty" value="100" min="1" style="flex:1;" oninput="onPledgeChange()">
+            <span id="pledgeUnit" style="font-size:13px;color:#6b7280;white-space:nowrap;">台</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" id="fgValue">
+          <label><span class="required">*</span> 质押物货值（万元）</label>
+          <input type="number" id="pledgeValue" value="60" min="0" step="0.01" oninput="onPledgeChange()">
+          <div class="form-hint">💡 系统估值参考：60.00 万元</div>
+        </div>
+        <div class="form-group" id="fgDate">
+          <label><span class="required">*</span> 预计入库日期</label>
+          <input type="date" id="pledgeDate" value="2026-05-03">
+          <div class="form-hint">需在申请日期 + 7 天内</div>
+        </div>
+      </div>
+
+      <!-- 自动校验提示 -->
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin-top:8px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px;">自动校验提示（实时）</div>
+        <ul class="check-list">
+          <li class="pass" id="chkCategory">✓ 品类一致性：与已入库/预报品类一致</li>
+          <li class="pass" id="chkPledgeRate">
+            ✓ 质押率校验：当前质押率 <span id="pledgeRateVal">66.7</span>% ≤ 品类上限70%
+            <span class="calc">（申请金额<span id="calcAmt">40</span>万 ÷ 货值<span id="calcVal">60</span>万 = <span id="calcRate">66.7</span>%）</span>
+          </li>
+          <li class="pass" id="chkCredit">✓ 可用额度校验：申请金额 <span id="chkAmt">40</span>万 ≤ 可用额度 <span id="chkAvail">50</span>万</li>
+          <li class="pass" id="chkSufficient">✓ 货值充足：质押物货值×质押率上限 <span id="chkMaxFinance">42</span>万 ≥ 申请金额 <span id="chkAmt2">40</span>万</li>
+        </ul>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goStep(1)">上一步</button>
+        <button class="btn btn-primary btn-lg" onclick="goStep(3)">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- STEP 3: 资料上传                                                   -->
+  <!-- ================================================================= -->
+  <div class="step-content" id="step-3">
+    <div class="card">
+      <div class="card-title">步骤③：资料上传</div>
+
+      <!-- ① 融资申请表 -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">
+          ① 融资申请表（系统自动生成）<span class="required">*</span>
+        </label>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">📄</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;">融资申请表-自动填充.pdf</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px;"><span class="tag tag-green">已生成</span></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-outline" style="font-size:12px;padding:4px 12px;" onclick="previewPdf()">预览</button>
+            <button class="btn btn-outline" style="font-size:12px;padding:4px 12px;" onclick="regeneratePdf()">重新生成</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② 质押物清单 -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">
+          ② 质押物清单及权属证明 <span class="required">*</span>
+        </label>
+        <div class="upload-zone" id="uzPledge" onclick="uploadClick('uzPledge')">
+          <div class="uz-icon">📋</div>
+          <div class="uz-title">点击上传或拖拽至此</div>
+          <div class="uz-hint">支持 PDF/JPG/PNG，≤20MB</div>
+          <div class="uz-status"><span class="tag tag-red" id="uzPledgeStatus">尚未上传</span></div>
+        </div>
+      </div>
+
+      <!-- ③ 购销合同 -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">
+          ③ 购销合同/订单 <span class="required">*</span>
+        </label>
+        <div class="upload-zone" id="uzContract" onclick="uploadClick('uzContract')">
+          <div class="uz-icon">📑</div>
+          <div class="uz-title">点击上传或拖拽至此</div>
+          <div class="uz-hint">支持 PDF，≤20MB</div>
+          <div class="uz-status"><span class="tag tag-red" id="uzContractStatus">尚未上传</span></div>
+        </div>
+      </div>
+
+      <!-- ④ 其他补充资料 -->
+      <div>
+        <label style="font-size:13px;font-weight:600;margin-bottom:8px;display:block;">
+          ④ 其他补充资料（可选）
+        </label>
+        <div class="upload-zone" id="uzOther" onclick="uploadClick('uzOther')" style="border-style:dashed;">
+          <div class="uz-icon">📎</div>
+          <div class="uz-title">点击上传</div>
+          <div class="uz-hint">支持 PDF/JPG/PNG/Excel，≤30MB</div>
+          <div class="uz-status"><span class="tag tag-gray" id="uzOtherStatus">可选</span></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goStep(2)">上一步</button>
+        <button class="btn btn-primary btn-lg" onclick="goStep(4)">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- STEP 4: 确认提交                                                   -->
+  <!-- ================================================================= -->
+  <div class="step-content" id="step-4">
+    <div class="card">
+      <div class="card-title">步骤④：确认提交</div>
+
+      <!-- 一、基本信息 -->
+      <div class="summary-section">
+        <div class="sec-title">一、基本信息</div>
+        <div class="sec-body">
+          <div class="row"><span class="label">申请金额</span><span class="value green" id="s4Amount">40.00 万元</span></div>
+          <div class="row"><span class="label">融资期限</span><span class="value" id="s4Term">60 天</span></div>
+          <div class="row"><span class="label">资金用途</span><span class="value" id="s4Purpose">采购XX品牌电子产品用于二季度销售</span></div>
+          <div class="row"><span class="label">还款来源</span><span class="value" id="s4Repay">销售收入回款</span></div>
+        </div>
+      </div>
+
+      <!-- 二、质押物信息 -->
+      <div class="summary-section">
+        <div class="sec-title">二、质押物信息</div>
+        <div class="sec-body">
+          <div class="row"><span class="label">品类</span><span class="value" id="s4Category">3C电子</span></div>
+          <div class="row"><span class="label">品牌</span><span class="value" id="s4Brand">XX科技</span></div>
+          <div class="row"><span class="label">型号</span><span class="value" id="s4Model">Pro-Max-2026</span></div>
+          <div class="row"><span class="label">数量</span><span class="value" id="s4Qty">100 台</span></div>
+          <div class="row"><span class="label">货值</span><span class="value green" id="s4Value">60.00 万元（系统估值）</span></div>
+          <div class="row"><span class="label">预计入库日期</span><span class="value" id="s4Date">2026-05-03</span></div>
+        </div>
+      </div>
+
+      <!-- 三、关联信息 -->
+      <div class="summary-section">
+        <div class="sec-title">三、关联信息</div>
+        <div class="sec-body">
+          <div class="row"><span class="label">关联仓单</span><span class="value" id="s4Assoc">无（新建质押物）</span></div>
+        </div>
+      </div>
+
+      <!-- 四、上传资料 -->
+      <div class="summary-section">
+        <div class="sec-title">四、上传资料</div>
+        <div class="sec-body">
+          <div class="check-result pass">✓ 融资申请表.pdf</div>
+          <div class="check-result pass">✓ 质押物清单.pdf</div>
+          <div class="check-result pass">✓ 购销合同.pdf</div>
+        </div>
+      </div>
+
+      <!-- 五、自动校验结果 -->
+      <div class="summary-section">
+        <div class="sec-title">五、自动校验结果</div>
+        <div class="sec-body">
+          <div class="check-result pass">✓ 申请金额 ≤ 可用授信额度：<span id="s4c1">40</span>万 ≤ <span id="s4c1b">50</span>万</div>
+          <div class="check-result pass">✓ 质押率 ≤ 上限：<span id="s4c2">66.7</span>% ≤ 70%</div>
+          <div class="check-result pass">✓ 品类一致性：3C电子 = 主营品类</div>
+          <div class="check-result pass">✓ 客户状态：正常</div>
+          <div class="check-result pass">✓ 证照有效期：正常</div>
+          <div class="check-result pass">✓ 无逾期业务</div>
+          <div class="check-result pass">✓ 单笔限额：<span id="s4c7">40</span>万 ≤ A级限额100万</div>
+          <div class="check-result pass">✓ 未重复提交</div>
+        </div>
+      </div>
+
+      <!-- 综合评估 -->
+      <div class="eval-box">综合评估：✓ 全部校验通过，可提交申请</div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="goStep(3)">上一步</button>
+        <button class="btn btn-outline">保存草稿</button>
+        <button class="btn btn-success btn-lg" onclick="submitApp()">提交申请</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Success Modal ===== -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="icon">✅</div>
+    <div class="title">申请提交成功</div>
+    <div class="info-row">业务编号：<strong id="finIdDisplay">FIN-20260426-001</strong></div>
+    <div class="info-row" style="margin-bottom:10px;">当前状态：<span class="status-badge">待校验</span></div>
+    <button class="btn btn-primary btn-lg" onclick="viewProgress()">查看进度</button>
+  </div>
+</div>
+
+<script>
+var currentStep = 1;
+var isPledgeUploaded = false;
+var isContractUploaded = false;
+
+function goStep(n) {
+  if (n > currentStep + 1) return;
+  // Update wizard steps
+  for (var i = 1; i <= 4; i++) {
+    var el = document.getElementById('ws-' + i);
+    el.className = 'ws';
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  }
+  for (var i = 1; i <= 3; i++) {
+    var line = document.getElementById('line-' + i);
+    line.className = 'ws-line';
+    if (i < n) line.classList.add('done');
+  }
+  // Show step content
+  document.querySelectorAll('.step-content').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('step-' + n).classList.add('active');
+  currentStep = n;
+
+  // Sync summary on step 4
+  if (n === 4) syncSummary();
+}
+
+function syncSummary() {
+  var amt = document.getElementById('applyAmount').value || 0;
+  var term = document.getElementById('financeTerm').value || 60;
+  var purpose = document.getElementById('fundPurpose').value || '-';
+  var repay = document.getElementById('repaySource').value || '-';
+  var cat = document.getElementById('pledgeCategory').value || '-';
+  var brand = document.getElementById('pledgeBrand').value || '-';
+  var model = document.getElementById('pledgeModel').value || '-';
+  var qty = document.getElementById('pledgeQty').value || 0;
+  var val = document.getElementById('pledgeValue').value || 0;
+  var date = document.getElementById('pledgeDate').value || '-';
+  var unit = document.getElementById('pledgeUnit').textContent;
+
+  document.getElementById('s4Amount').textContent = parseFloat(amt).toFixed(2) + ' 万元';
+  document.getElementById('s4Term').textContent = term + ' 天';
+  document.getElementById('s4Purpose').textContent = purpose;
+  document.getElementById('s4Repay').textContent = repay;
+  document.getElementById('s4Category').textContent = cat;
+  document.getElementById('s4Brand').textContent = brand;
+  document.getElementById('s4Model').textContent = model;
+  document.getElementById('s4Qty').textContent = qty + ' ' + unit;
+  document.getElementById('s4Date').textContent = date;
+  document.getElementById('s4Value').textContent = parseFloat(val).toFixed(2) + ' 万元（系统估值）';
+
+  // Check association type
+  var assoc = document.querySelector('input[name="assocType"]:checked');
+  if (assoc && assoc.value === 'none') {
+    document.getElementById('s4Assoc').textContent = '无（新建质押物）';
+  } else if (assoc && assoc.value === 'warehouse') {
+    document.getElementById('s4Assoc').textContent = '关联仓单：' + (document.querySelector('#assocWarehouse select').value || '已选');
+  } else if (assoc && assoc.value === 'pledge') {
+    document.getElementById('s4Assoc').textContent = '关联已预报质押物：' + (document.querySelector('#assocPledge select').value || '已选');
+  }
+
+  // Verification items
+  document.getElementById('s4c1').textContent = amt;
+  document.getElementById('s4c1b').textContent = '50';
+  var rate = (val > 0) ? (amt / val * 100).toFixed(1) : '0';
+  document.getElementById('s4c2').textContent = rate;
+  document.getElementById('s4c7').textContent = amt;
+}
+
+function onAmountChange() {
+  var amt = parseFloat(document.getElementById('applyAmount').value) || 0;
+  var avail = parseFloat(document.getElementById('availCredit').textContent) || 0;
+  var fg = document.getElementById('fgAmount');
+  fg.classList.remove('error');
+  if (amt > avail) {
+    fg.classList.add('error');
+    document.getElementById('errAmount').textContent = '申请金额超过可用授信额度，当前可用' + avail.toFixed(2) + '万元';
+  } else if (amt > 45) {
+    fg.classList.add('error');
+    document.getElementById('errAmount').textContent = '建议金额 ≤ 45.00 万元';
+  }
+  onPledgeChange();
+}
+
+function onFieldChange() {
+  // placeholder
+}
+
+function onAssocChange() {
+  var val = document.querySelector('input[name="assocType"]:checked').value;
+  document.getElementById('assocWarehouse').style.display = (val === 'warehouse') ? 'block' : 'none';
+  document.getElementById('assocPledge').style.display = (val === 'pledge') ? 'block' : 'none';
+}
+
+function onPledgeChange() {
+  var amt = parseFloat(document.getElementById('applyAmount').value) || 0;
+  var val = parseFloat(document.getElementById('pledgeValue').value) || 0;
+  var avail = parseFloat(document.getElementById('availCredit').textContent) || 0;
+
+  // Unit by category
+  var cat = document.getElementById('pledgeCategory').value;
+  var unitMap = { '3C电子': '台', '家电': '台', '建材': '吨', '食品': '箱', '日化': '件' };
+  document.getElementById('pledgeUnit').textContent = unitMap[cat] || '台';
+
+  // Pledge rate
+  var rate = (val > 0) ? (amt / val * 100) : 0;
+  document.getElementById('pledgeRateVal').textContent = rate.toFixed(1);
+  document.getElementById('calcAmt').textContent = amt.toFixed(2);
+  document.getElementById('calcVal').textContent = val.toFixed(2);
+  document.getElementById('calcRate').textContent = rate.toFixed(1);
+  document.getElementById('chkAmt').textContent = amt.toFixed(2);
+  document.getElementById('chkAmt2').textContent = amt.toFixed(2);
+  document.getElementById('chkAvail').textContent = avail.toFixed(2);
+
+  var maxFinance = val * 0.7;
+  document.getElementById('chkMaxFinance').textContent = maxFinance.toFixed(2);
+
+  // Update check states
+  var chkPledgeRate = document.getElementById('chkPledgeRate');
+  if (rate <= 70) {
+    chkPledgeRate.className = 'pass';
+    chkPledgeRate.innerHTML = '✓ 质押率校验：当前质押率 ' + rate.toFixed(1) + '% ≤ 品类上限70%';
+  } else {
+    chkPledgeRate.className = 'fail';
+    chkPledgeRate.innerHTML = '✗ 质押物可融资金额上限为 ' + maxFinance.toFixed(2) + ' 万';
+  }
+
+  var chkCredit = document.getElementById('chkCredit');
+  if (amt <= avail) {
+    chkCredit.className = 'pass';
+    chkCredit.innerHTML = '✓ 可用额度校验：申请金额 ' + amt.toFixed(2) + '万 ≤ 可用额度 ' + avail.toFixed(2) + '万';
+  } else {
+    chkCredit.className = 'fail';
+    chkCredit.innerHTML = '✗ 超出可用额度';
+  }
+
+  var chkSufficient = document.getElementById('chkSufficient');
+  if (maxFinance >= amt) {
+    chkSufficient.className = 'pass';
+    chkSufficient.innerHTML = '✓ 货值充足：质押物货值×质押率上限 ' + maxFinance.toFixed(2) + '万 ≥ 申请金额 ' + amt.toFixed(2) + '万';
+  } else {
+    chkSufficient.className = 'fail';
+    chkSufficient.innerHTML = '✗ 质押物可融资金额上限为 ' + maxFinance.toFixed(2) + '万，不满足申请金额';
+  }
+}
+
+function uploadClick(id) {
+  var el = document.getElementById(id);
+  el.classList.add('uploaded');
+  var statusId = id + 'Status';
+  var statusEl = document.getElementById(statusId);
+  if (id === 'uzPledge') {
+    isPledgeUploaded = true;
+    statusEl.className = 'tag tag-green';
+    statusEl.textContent = '已上传';
+  } else if (id === 'uzContract') {
+    isContractUploaded = true;
+    statusEl.className = 'tag tag-green';
+    statusEl.textContent = '已上传';
+  } else if (id === 'uzOther') {
+    statusEl.className = 'tag tag-green';
+    statusEl.textContent = '已上传';
+  }
+}
+
+function previewPdf() {
+  alert('预览：融资申请表-自动填充.pdf');
+}
+
+function regeneratePdf() {
+  alert('已重新生成融资申请表');
+}
+
+function submitApp() {
+  var finId = 'FIN-20260426-' + String(Math.floor(Math.random() * 900 + 100));
+  document.getElementById('finIdDisplay').textContent = finId;
+  document.getElementById('successModal').classList.add('show');
+}
+
+function viewProgress() {
+  alert('跳转至申请进度页面，业务编号：' + document.getElementById('finIdDisplay').textContent);
+  document.getElementById('successModal').classList.remove('show');
+}
+</script>
+</body>
+</html>

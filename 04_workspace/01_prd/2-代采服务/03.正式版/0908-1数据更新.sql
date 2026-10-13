@@ -1,0 +1,1 @@
+UPDATE `xswc_finance_assistant`.`fa_storage_agency_apply` SET  `storage_fee` = storage_fee / 30  WHERE storage_fee >10;

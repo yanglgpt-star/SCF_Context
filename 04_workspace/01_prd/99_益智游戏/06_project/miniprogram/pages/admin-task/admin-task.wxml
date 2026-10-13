@@ -1,0 +1,56 @@
+<view class="page-container fade-in">
+  <!-- 添加任务按钮 -->
+  <view class="add-btn-section">
+    <button class="btn-primary" bindtap="showAddForm">＋ 添加新任务</button>
+  </view>
+
+  <!-- 任务列表 -->
+  <view class="task-list">
+    <view class="card task-item" wx:for="{{tasks}}" wx:for-index="index" wx:key="_id">
+      <view class="task-item-header">
+        <text class="task-item-title">{{item.title}}</text>
+        <text class="task-item-diff">{{item.difficulty}}星</text>
+      </view>
+      <view class="task-item-meta">
+        <text class="task-item-category">{{item.category}}</text>
+        <text class="task-item-voice-status {{item.voiceUrl ? 'has-voice' : ''}}">
+          {{item.voiceUrl ? '🔊 有语音' : '🔇 无语音'}}
+        </text>
+      </view>
+      <view class="task-item-footer">
+        <button class="voice-btn {{item.recording ? 'recording' : ''}}" bindtap="recordVoice" data-id="{{item._id}}" data-title="{{item.title}}">
+          {{item.recording ? '⏺' : (item.voiceUrl ? '🔊' : '🔇')}} 语音
+        </button>
+        <view class="footer-right">
+          <button class="toggle-btn {{item.status}}" bindtap="toggleTaskStatus" data-id="{{item._id}}" data-status="{{item.status}}">
+            {{item.status === 'active' ? '停用' : '启用'}}
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加/编辑表单弹窗 -->
+  <view wx:if="{{showForm}}" class="form-overlay">
+    <view class="card form-card">
+      <view class="form-title">{{editingTask ? '编辑任务' : '添加任务'}}</view>
+
+      <input class="form-input" placeholder="任务标题" value="{{form.title}}" bindinput="onFormInput" data-field="title" />
+      <input class="form-input" placeholder="任务描述" value="{{form.description}}" bindinput="onFormInput" data-field="description" />
+      <input class="form-input" placeholder="小提示" value="{{form.tips}}" bindinput="onFormInput" data-field="tips" />
+
+      <picker range="{{['color_shape', 'sorting', 'sound', 'treasure']}}" value="0" bindchange="onFormInput" data-field="category">
+        <text>类别：{{form.category}}</text>
+      </picker>
+
+      <picker range="{{[1,2,3,4,5]}}" value="0" bindchange="onFormInput" data-field="difficulty">
+        <text>难度：{{form.difficulty}}星</text>
+      </picker>
+
+      <view class="form-actions">
+        <button class="btn-secondary" bindtap="hideForm">取消</button>
+        <button class="btn-primary" bindtap="saveTask">保存</button>
+      </view>
+    </view>
+  </view>
+</view>

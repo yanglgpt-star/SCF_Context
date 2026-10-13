@@ -1,0 +1,184 @@
+/* 菜谱详情页样式 */
+
+.image-swiper,
+.image-single {
+  height: 500rpx;
+}
+.swiper-img {
+  width: 100%;
+  height: 100%;
+}
+
+.image-placeholder {
+  height: 400rpx;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.placeholder-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+.placeholder-name {
+  font-size: 48rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 基本信息 */
+.info-section {
+  background: #fff;
+  padding: 32rpx 24rpx 24rpx;
+  margin-bottom: 16rpx;
+}
+.dish-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.tag-row {
+  margin-bottom: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+.meta-row {
+  display: flex;
+  background: #f9f9f9;
+  border-radius: 16rpx;
+  padding: 20rpx 0;
+}
+.meta-item {
+  flex: 1;
+  text-align: center;
+  border-right: 2rpx solid #eee;
+}
+.meta-item:last-child { border-right: none; }
+.meta-label {
+  font-size: 22rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 6rpx;
+}
+.meta-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+.meta-value-small {
+  font-size: 26rpx;
+  color: #333;
+  display: block;
+  margin-top: 8rpx;
+}
+.meta-sub {
+  font-size: 22rpx;
+  color: #999;
+  display: block;
+  margin-top: 2rpx;
+}
+
+/* 通用段落 */
+.section {
+  background: #fff;
+  padding: 24rpx;
+  margin-bottom: 16rpx;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.section-text {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.8;
+  display: block;
+}
+.expand-btn {
+  font-size: 26rpx;
+  color: #07c160;
+}
+
+/* 食材清单 */
+.ingredients-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.ingredient-item {
+  background: #f5f5f5;
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  color: #555;
+}
+.ingredient-dot {
+  color: #07c160;
+  margin-right: 6rpx;
+}
+.ingredients-actions {
+  margin-top: 20rpx;
+}
+.action-btn {
+  font-size: 26rpx;
+  color: #1890ff;
+  padding: 8rpx 16rpx;
+}
+
+/* 步骤列表 */
+.steps-list {
+  padding-left: 0;
+}
+.step-item {
+  display: flex;
+  margin-bottom: 24rpx;
+  gap: 16rpx;
+}
+.step-num {
+  width: 44rpx;
+  height: 44rpx;
+  background: #07c160;
+  color: #fff;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 44rpx;
+  font-size: 24rpx;
+  flex-shrink: 0;
+}
+.step-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.7;
+}
+
+/* 小贴士 */
+.tips-text {
+  background: #fffbe6;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  border-left: 6rpx solid #faad14;
+}
+
+/* 加载 */
+.loading-full {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  color: #999;
+  font-size: 28rpx;
+}

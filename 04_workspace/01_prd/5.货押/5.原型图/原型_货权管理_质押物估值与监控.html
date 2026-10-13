@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>质押物估值与监控 - 货权管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-orange { background: #fed7aa; color: #9a3412; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.info-card.warn { background: #fefce8; border-color: #fde68a; color: #92400e; }
+.info-card.danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.progress-bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 999px; }
+.sparkline { display: flex; align-items: flex-end; gap: 2px; height: 40px; }
+.sparkline .bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 3px; }
+.heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.heatmap .cell { aspect-ratio: 1; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.gauge-ring { position: relative; width: 100px; height: 60px; overflow: hidden; margin: 0 auto; }
+.gauge-ring .arc { width: 100px; height: 100px; border-radius: 50%; border: 8px solid #e5e7eb; border-top-color: #2563eb; border-right-color: #2563eb; transform: rotate(-45deg); }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 560px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.ltv-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item active">📦 货权管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">入库库存与仓单</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">出库审批与管控</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">质押物估值与监控</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item">🧾 结算管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">货权管理 / <strong>质押物估值与监控</strong></span></div>
+    <div class="topbar-right"><span>👤 风控专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">质押物估值与监控</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">估值监控看板</div>
+      <div class="tab" data-tab="category" onclick="switchTab('category')">品类配置</div>
+      <div class="tab" data-tab="price" onclick="switchTab('price')">价格库</div>
+      <div class="tab" data-tab="pledge" onclick="switchTab('pledge')">业务质押率明细</div>
+      <div class="tab" data-tab="alert" onclick="switchTab('alert')">预警列表</div>
+      <div class="tab" data-tab="adjust" onclick="switchTab('adjust')">3C动态调整</div>
+    </div>
+
+    <!-- Tab1: 估值监控看板 -->
+    <div class="tab-content active" id="tab-dashboard">
+      <div class="stats">
+        <div class="stat-card"><div class="num">¥ 8,560万</div><div class="label">质押物总估值</div></div>
+        <div class="stat-card"><div class="num" style="color:#3b82f6;">¥ 7,280万</div><div class="label">在押货值</div></div>
+        <div class="stat-card"><div class="num" style="color:#10b981;">85.1%</div><div class="label">平均质押率</div></div>
+        <div class="stat-card"><div class="num" style="color:#f59e0b;">8</div><div class="label">估值预警</div></div>
+        <div class="stat-card"><div class="num" style="color:#ef4444;">3</div><div class="label">严重预警</div></div>
+        <div class="stat-card"><div class="num" style="color:#8b5cf6;">¥ 1,280万</div><div class="label">敞口金额</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">各品类估值占比与趋势</div>
+        <table>
+          <thead><tr><th>品类</th><th>库存价值</th><th>在押价值</th><th>质押率</th><th>近7天价格趋势</th><th>30天波动率</th><th>预警阈值</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td><strong>3C电子</strong></td><td>¥ 3,200万</td><td>¥ 2,880万</td><td>90%</td>
+              <td><div class="sparkline"><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:22px;background:#10b981;"></div><div class="bar" style="height:18px;background:#10b981;"></div><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:15px;background:#f59e0b;"></div><div class="bar" style="height:14px;background:#ef4444;"></div><div class="bar" style="height:12px;background:#ef4444;"></div></div></td>
+              <td><span class="tag tag-yellow">-5.2%</span></td><td>-10%</td><td><span class="tag tag-yellow">注意</span></td></tr>
+            <tr><td><strong>家电</strong></td><td>¥ 2,100万</td><td>¥ 1,785万</td><td>85%</td>
+              <td><div class="sparkline"><div class="bar" style="height:18px;background:#10b981;"></div><div class="bar" style="height:19px;background:#10b981;"></div><div class="bar" style="height:18px;background:#10b981;"></div><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:19px;background:#10b981;"></div><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:21px;background:#10b981;"></div></div></td>
+              <td><span class="tag tag-green">+1.8%</span></td><td>-8%</td><td><span class="tag tag-green">正常</span></td></tr>
+            <tr><td><strong>食品</strong></td><td>¥ 1,500万</td><td>¥ 1,200万</td><td>80%</td>
+              <td><div class="sparkline"><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:21px;background:#10b981;"></div><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:19px;background:#10b981;"></div><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:19px;background:#10b981;"></div><div class="bar" style="height:18px;background:#10b981;"></div></div></td>
+              <td><span class="tag tag-green">+0.5%</span></td><td>-5%</td><td><span class="tag tag-green">正常</span></td></tr>
+            <tr><td><strong>建材</strong></td><td>¥ 1,000万</td><td>¥ 850万</td><td>85%</td>
+              <td><div class="sparkline"><div class="bar" style="height:18px;background:#f59e0b;"></div><div class="bar" style="height:16px;background:#f59e0b;"></div><div class="bar" style="height:14px;background:#ef4444;"></div><div class="bar" style="height:13px;background:#ef4444;"></div><div class="bar" style="height:15px;background:#f59e0b;"></div><div class="bar" style="height:16px;background:#f59e0b;"></div><div class="bar" style="height:18px;background:#10b981;"></div></div></td>
+              <td><span class="tag tag-red">-8.3%</span></td><td>-12%</td><td><span class="tag tag-red">预警</span></td></tr>
+            <tr><td><strong>化工</strong></td><td>¥ 760万</td><td>¥ 570万</td><td>75%</td>
+              <td><div class="sparkline"><div class="bar" style="height:19px;background:#10b981;"></div><div class="bar" style="height:20px;background:#10b981;"></div><div class="bar" style="height:21px;background:#10b981;"></div><div class="bar" style="height:22px;background:#10b981;"></div><div class="bar" style="height:24px;background:#10b981;"></div><div class="bar" style="height:23px;background:#10b981;"></div><div class="bar" style="height:25px;background:#10b981;"></div></div></td>
+              <td><span class="tag tag-green">+3.2%</span></td><td>-10%</td><td><span class="tag tag-green">正常</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-card">💡 估值更新策略：3C电子类每日更新（对接中关村/华强北指数），家电/建材每周更新，食品/化工每两周更新。价格波动超阈值自动触发质押率重算。</div>
+    </div>
+
+    <!-- Tab2: 品类配置 -->
+    <div class="tab-content" id="tab-category">
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部品类</option><option>3C电子</option><option>家电</option><option>食品</option><option>建材</option><option>化工</option></select>
+          <select><option>全部状态</option><option>启用</option><option>停用</option></select>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm">+ 新增品类</button>
+        </div>
+        <table>
+          <thead><tr><th>品类编码</th><th>品类名称</th><th>基准质押率</th><th>上限质押率</th><th>估值更新频率</th><th>价格数据源</th><th>预警阈值</th><th>折价系数</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>CAT_3C</td><td>3C电子</td><td>85%</td><td>90%</td><td>每日</td><td>中关村/华强北指数</td><td>-10%</td><td>0.95</td><td><span class="tag tag-green">启用</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>CAT_APPLIANCE</td><td>家电</td><td>80%</td><td>85%</td><td>每周</td><td>京东/苏宁均价</td><td>-8%</td><td>0.90</td><td><span class="tag tag-green">启用</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>CAT_FOOD</td><td>食品</td><td>75%</td><td>80%</td><td>每两周</td><td>批发市场价格</td><td>-5%</td><td>0.85</td><td><span class="tag tag-green">启用</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>CAT_BUILD</td><td>建材</td><td>80%</td><td>85%</td><td>每周</td><td>我的钢铁网/卓创</td><td>-12%</td><td>0.88</td><td><span class="tag tag-green">启用</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>CAT_CHEM</td><td>化工</td><td>70%</td><td>75%</td><td>每两周</td><td>隆众资讯</td><td>-10%</td><td>0.80</td><td><span class="tag tag-green">启用</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>CAT_AUTO</td><td>汽车配件</td><td>75%</td><td>80%</td><td>每周</td><td>汽配行业报价</td><td>-10%</td><td>0.85</td><td><span class="tag tag-gray">停用</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">质押率计算公式</div>
+        <div style="background:#f8fafc;padding:16px;border-radius:8px;font-size:13px;line-height:2;">
+          <code style="background:#e5e7eb;padding:2px 8px;border-radius:4px;">质押率 = 基准质押率 × 折价系数 × (1 - max(0, 价格波动率 + 预警阈值) × 0.5)</code>
+          <div style="margin-top:8px;color:#6b7280;">其中：折价系数按货物状态（未拆封1.0 / 已拆封0.95 / 已使用0.85），价格波动率 = (当前价 - 基准价) / 基准价</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab3: 价格库 -->
+    <div class="tab-content" id="tab-price">
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部品类</option><option>3C电子</option><option>家电</option><option>食品</option></select>
+          <input placeholder="搜索SKU/型号" style="width:180px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm">批量导入</button>
+          <button class="btn btn-outline btn-sm">导出</button>
+        </div>
+        <table>
+          <thead><tr><th>SKU编码</th><th>品类</th><th>品牌/型号</th><th>规格</th><th>基准价</th><th>当前市场价</th><th>涨跌幅</th><th>数据来源</th><th>更新时间</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>SKU-3C-001</td><td>3C电子</td><td>iPhone 15 Pro 256G</td><td>256GB/黑色</td><td>¥ 7,999</td><td>¥ 7,200</td><td><span class="tag tag-red">-10.0%</span></td><td>中关村指数</td><td>2026-04-26 08:00</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>SKU-3C-002</td><td>3C电子</td><td>华为 Mate 60 Pro</td><td>512GB/雅黑</td><td>¥ 6,999</td><td>¥ 6,500</td><td><span class="tag tag-yellow">-7.1%</span></td><td>华强北指数</td><td>2026-04-26 08:00</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>SKU-APP-001</td><td>家电</td><td>格力 KFR-35GW</td><td>1.5匹/冷暖</td><td>¥ 3,499</td><td>¥ 3,599</td><td><span class="tag tag-green">+2.9%</span></td><td>京东均价</td><td>2026-04-25 08:00</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>SKU-APP-002</td><td>家电</td><td>海尔 BCD-500WG</td><td>500L/对开门</td><td>¥ 4,299</td><td>¥ 4,199</td><td><span class="tag tag-yellow">-2.3%</span></td><td>苏宁均价</td><td>2026-04-25 08:00</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>SKU-FOOD-001</td><td>食品</td><td>三只松鼠坚果礼盒</td><td>1.5kg/箱</td><td>¥ 128</td><td>¥ 132</td><td><span class="tag tag-green">+3.1%</span></td><td>批发市场</td><td>2026-04-24 08:00</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>SKU-BLD-001</td><td>建材</td><td>HRB400螺纹钢</td><td>Φ20mm/吨</td><td>¥ 4,200</td><td>¥ 3,850</td><td><span class="tag tag-red">-8.3%</span></td><td>我的钢铁网</td><td>2026-04-26 08:00</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab4: 业务质押率明细 -->
+    <div class="tab-content" id="tab-pledge">
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部状态</option><option>正常</option><option>预警</option><option>超限</option></select>
+          <input placeholder="业务编号" style="width:160px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+        </div>
+        <table>
+          <thead><tr><th>业务编号</th><th>客户</th><th>质押物</th><th>货值</th><th>融资金额</th><th>当前LTV</th><th>预警LTV</th><th>上限LTV</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>FIN-20260426-001</td><td>XX商贸</td><td>iPhone15 Pro×100台</td><td>¥ 72万</td><td>¥ 68万</td>
+              <td><div class="ltv-badge" style="background:#eff6ff;color:#1e40af;">94.4%</div></td><td>85%</td><td>90%</td>
+              <td><span class="tag tag-red">超限</span></td><td><button class="btn btn-warning btn-sm">补仓</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20260315-002</td><td>YY电子</td><td>空调 KFR-35GW×50台</td><td>¥ 18万</td><td>¥ 14.4万</td>
+              <td><div class="ltv-badge" style="background:#f0fdf4;color:#065f46;">80.0%</div></td><td>80%</td><td>85%</td>
+              <td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20260201-003</td><td>ZZ食品</td><td>坚果零食×500箱</td><td>¥ 6.6万</td><td>¥ 5万</td>
+              <td><div class="ltv-badge" style="background:#f0fdf4;color:#065f46;">75.8%</div></td><td>75%</td><td>80%</td>
+              <td><span class="tag tag-green">正常</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20260115-004</td><td>WW家电</td><td>螺纹钢×100吨</td><td>¥ 38.5万</td><td>¥ 35万</td>
+              <td><div class="ltv-badge" style="background:#fefce8;color:#92400e;">90.9%</div></td><td>80%</td><td>85%</td>
+              <td><span class="tag tag-red">超限</span></td><td><button class="btn btn-danger btn-sm">紧急处置</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>FIN-20251201-005</td><td>AA建材</td><td>化工原料×20吨</td><td>¥ 57万</td><td>¥ 40万</td>
+              <td><div class="ltv-badge" style="background:#f0fdf4;color:#065f46;">70.2%</div></td><td>70%</td><td>75%</td>
+              <td><span class="tag tag-yellow">预警</span></td><td><button class="btn btn-outline btn-sm">详情</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-card">💡 LTV计算规则：LTV = 融资金额 ÷ (质押物数量 × 当前市场价 × 折价系数)，当LTV > 预警阈值时触发预警，LTV > 上限时触发补仓通知。</div>
+    </div>
+
+    <!-- Tab5: 预警列表 -->
+    <div class="tab-content" id="tab-alert">
+      <div class="info-card warn">⚠️ 当前活跃预警 8 条，其中严重预警 3 条需立即处理</div>
+      <div class="card">
+        <table>
+          <thead><tr><th>预警编号</th><th>业务编号</th><th>客户</th><th>预警类型</th><th>预警等级</th><th>触发条件</th><th>当前值</th><th>阈值</th><th>触发时间</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>ALT-20260426-001</td><td>FIN-20260426-001</td><td>XX商贸</td><td>LTV超限</td><td><span class="tag tag-red">严重</span></td><td>LTV > 90%</td><td>94.4%</td><td>90%</td><td>2026-04-26 08:30</td><td><span class="tag tag-red">待处理</span></td><td><button class="btn btn-warning btn-sm">处理</button></td></tr>
+            <tr><td>ALT-20260426-002</td><td>FIN-20260115-004</td><td>WW家电</td><td>LTV超限</td><td><span class="tag tag-red">严重</span></td><td>LTV > 85%</td><td>90.9%</td><td>85%</td><td>2026-04-26 08:30</td><td><span class="tag tag-red">待处理</span></td><td><button class="btn btn-danger btn-sm">紧急处置</button></td></tr>
+            <tr><td>ALT-20260425-001</td><td>FIN-20260201-003</td><td>ZZ食品</td><td>价格跌幅</td><td><span class="tag tag-yellow">一般</span></td><td>跌幅 > 5%</td><td>-5.2%</td><td>-5%</td><td>2026-04-25 16:00</td><td><span class="tag tag-yellow">监控中</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>ALT-20260424-001</td><td>FIN-20251201-005</td><td>AA建材</td><td>LTV预警</td><td><span class="tag tag-yellow">一般</span></td><td>LTV > 70%</td><td>70.2%</td><td>70%</td><td>2026-04-24 08:00</td><td><span class="tag tag-yellow">监控中</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>ALT-20260423-001</td><td>FIN-20251120-006</td><td>BB家电</td><td>货值跌破</td><td><span class="tag tag-red">严重</span></td><td>跌幅 > 12%</td><td>-15.6%</td><td>-12%</td><td>2026-04-23 09:00</td><td><span class="tag tag-orange">处置中</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>ALT-20260420-001</td><td>FIN-20251001-001</td><td>XX商贸</td><td>估值过期</td><td><span class="tag tag-gray">提示</span></td><td>超14天未更新</td><td>16天</td><td>14天</td><td>2026-04-20 02:00</td><td><span class="tag tag-gray">已忽略</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab6: 3C动态调整 -->
+    <div class="tab-content" id="tab-adjust">
+      <div class="info-card">📱 3C产品价格波动大，系统每日自动抓取市场价，动态调整质押率和可融资额度</div>
+      <div class="card">
+        <div class="card-title">3C产品动态调整记录（近30天）</div>
+        <div class="filter-bar">
+          <select><option>全部型号</option><option>iPhone 15 Pro</option><option>华为 Mate 60 Pro</option><option>小米14 Ultra</option></select>
+          <input type="date" value="2026-03-27" style="width:130px;"><input type="date" value="2026-04-26" style="width:130px;">
+          <button class="btn btn-primary btn-sm">查询</button>
+        </div>
+        <table>
+          <thead><tr><th>日期</th><th>SKU</th><th>型号</th><th>前日价</th><th>当日市场价</th><th>涨跌幅</th><th>调整前质押率</th><th>调整后质押率</th><th>调整前额度</th><th>调整后额度</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>2026-04-26</td><td>SKU-3C-001</td><td>iPhone 15 Pro 256G</td><td>¥ 7,400</td><td>¥ 7,200</td><td style="color:#ef4444;">-2.7%</td><td>87%</td><td>85%</td><td>¥ 643,800</td><td>¥ 612,000</td><td><span class="tag tag-yellow">已调整</span></td></tr>
+            <tr><td>2026-04-25</td><td>SKU-3C-001</td><td>iPhone 15 Pro 256G</td><td>¥ 7,450</td><td>¥ 7,400</td><td style="color:#ef4444;">-0.7%</td><td>88%</td><td>87%</td><td>¥ 655,600</td><td>¥ 643,800</td><td><span class="tag tag-yellow">已调整</span></td></tr>
+            <tr><td>2026-04-24</td><td>SKU-3C-001</td><td>iPhone 15 Pro 256G</td><td>¥ 7,500</td><td>¥ 7,450</td><td style="color:#ef4444;">-0.7%</td><td>88%</td><td>88%</td><td>¥ 660,000</td><td>¥ 655,600</td><td><span class="tag tag-green">正常</span></td></tr>
+            <tr><td>2026-04-23</td><td>SKU-3C-001</td><td>iPhone 15 Pro 256G</td><td>¥ 7,500</td><td>¥ 7,500</td><td style="color:#10b981;">0.0%</td><td>88%</td><td>88%</td><td>¥ 660,000</td><td>¥ 660,000</td><td><span class="tag tag-green">未调整</span></td></tr>
+            <tr><td>2026-04-26</td><td>SKU-3C-002</td><td>华为 Mate 60 Pro</td><td>¥ 6,600</td><td>¥ 6,500</td><td style="color:#ef4444;">-1.5%</td><td>83%</td><td>82%</td><td>¥ 547,800</td><td>¥ 533,000</td><td><span class="tag tag-yellow">已调整</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">3C品类调整规则</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
+          <div style="background:#f0fdf4;padding:12px;border-radius:8px;"><strong style="color:#065f46;">波动 &lt; 3%</strong><br>不调整，维持当前质押率</div>
+          <div style="background:#fefce8;padding:12px;border-radius:8px;"><strong style="color:#92400e;">波动 3%-10%</strong><br>质押率按比例下调1-3个百分点</div>
+          <div style="background:#fef2f2;padding:12px;border-radius:8px;"><strong style="color:#991b1b;">波动 &gt; 10%</strong><br>质押率下调5个百分点，冻结新增融资，通知客户补仓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab[data-tab="'+tab+'"]').classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+</script>
+</body>
+</html>

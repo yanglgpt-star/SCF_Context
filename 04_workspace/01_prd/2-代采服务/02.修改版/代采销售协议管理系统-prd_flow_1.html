@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代采销售协议管理系统 - 流程图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 32px;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .diagram-wrapper {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        .diagram-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .legend {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-top: 30px;
+        }
+        .legend h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .legend-color.start { background: #4CAF50; }
+        .legend-color.process { background: #2196F3; }
+        .legend-color.decision { background: #FF9800; }
+        .legend-color.end { background: #9E9E9E; }
+        .legend-color.warning { background: #F44336; }
+        
+        /* 状态对照表样式 */
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .status-table th, .status-table td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: left;
+        }
+        .status-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+        .status-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .tag-gray { background: #ECEFF1; color: #546E7A; }
+        .tag-orange { background: #FFF3E0; color: #EF6C00; }
+        .tag-yellow { background: #FFFDE7; color: #F9A825; }
+        .tag-green { background: #E8F5E9; color: #2E7D32; }
+        .tag-blue { background: #E3F2FD; color: #1565C0; }
+        .tag-red { background: #FFEBEE; color: #C62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>代采销售协议管理系统 - 流程图</h1>
+        
+        <div class="diagram-wrapper">
+            <div class="diagram-title">1. 协议状态流转图</div>
+            <div class="mermaid">
+flowchart TD
+    Start([开始]) --> Create[创建协议]
+    Create --> Save[保存]
+    Save -->|点击提交按钮| PendingContract[待签署合同]
+    PendingContract -->|点击撤销按钮| Save
+    PendingContract -->|上传合同| PendingDeposit[待交保证金]
+    PendingDeposit -->|保证金确认收款| Active[生效]
+    Active -->|预付采购已付款| Executing[执行中]
+    Executing -->|货物全部销售完成| Completed[已结清]
+    Executing -->|超过提货截止日期且剩余>0| Breach[已违约]
+    Save -->|删除| End1([结束])
+    Completed --> End2([结束])
+    Breach --> End3([结束])
+
+    style Start fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style End1 fill:#9E9E9E,stroke:#616161,color:#fff
+    style End2 fill:#9E9E9E,stroke:#616161,color:#fff
+    style End3 fill:#9E9E9E,stroke:#616161,color:#fff
+    style Save fill:#ECEFF1,stroke:#607D8B
+    style PendingContract fill:#FFF3E0,stroke:#FF9800
+    style PendingDeposit fill:#FFFDE7,stroke:#F9A825
+    style Active fill:#E8F5E9,stroke:#4CAF50
+    style Executing fill:#E3F2FD,stroke:#2196F3
+    style Completed fill:#E8F5E9,stroke:#4CAF50
+    style Breach fill:#FFEBEE,stroke:#F44336
+            </div>
+        </div>
+
+        <div class="diagram-wrapper">
+            <div class="diagram-title">2. 保证金状态流转图</div>
+            <div class="mermaid">
+flowchart LR
+    A[待生效] -->|提交协议| B[待支付]
+    B -->|确认收款| C[已支付]
+    C -->|转货款抵扣| D[已抵扣]
+    C -->|原路退回| E[已退回]
+    D --> F([结束])
+    E --> F
+    
+    style A fill:#ECEFF1,stroke:#607D8B
+    style B fill:#FFF3E0,stroke:#FF9800
+    style C fill:#E8F5E9,stroke:#4CAF50
+    style D fill:#E3F2FD,stroke:#2196F3
+    style E fill:#ECEFF1,stroke:#607D8B
+            </div>
+        </div>
+
+        <div class="diagram-wrapper">
+            <div class="diagram-title">3. 完整业务流程图</div>
+            <div class="mermaid">
+flowchart TD
+    Start([开始]) --> Create[创建代采协议]
+    Create --> Fill[填写基础信息<br/>业务条款]
+    Fill --> AddProduct[添加代采商品]
+    AddProduct --> UploadAttach[上传附件]
+    UploadAttach --> Save{保存或提交}
+    Save -->|保存| Draft[协议保存]
+    Save -->|提交| PendingContract[待签署合同]
+    Draft -->|后续提交| PendingContract
+    PendingContract --> UploadContract[上传合同]
+    UploadContract --> PendingDeposit[待交保证金]
+    PendingDeposit --> PayDeposit[保证金线下支付]
+    PayDeposit --> VerifyDeposit{保证金确认收款}
+    VerifyDeposit -->|已收款| Active[协议生效]
+    Active --> CreatePO[创建采购单]
+    CreatePO --> POApprove[采购审批]
+    POApprove -->|审批通过| Purchase[采购执行]
+    Purchase --> InStock[商品入库]
+    InStock --> Publish[商品批量分销发布]
+    Publish --> Sell[商品销售]
+    Sell --> Settlement[财务结算]
+    Settlement -->|剩余=0| Completed[已结清]
+    Settlement -->|超期且剩余>0| Breach[已违约]
+    Completed --> DepositBack[保证金退回/抵扣]
+    Breach --> DepositHandle[保证金处理]
+    DepositBack --> End([结束])
+    DepositHandle --> End
+
+    style Start fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style End fill:#9E9E9E,stroke:#616161,color:#fff
+    style PendingContract fill:#FFF3E0,stroke:#FF9800
+    style PendingDeposit fill:#FFFDE7,stroke:#F9A825
+    style Active fill:#E8F5E9,stroke:#4CAF50
+    style Completed fill:#E8F5E9,stroke:#4CAF50
+    style Breach fill:#FFEBEE,stroke:#F44336
+    style VerifyDeposit fill:#FFF3E0,stroke:#FF9800
+            </div>
+        </div>
+
+        <div class="diagram-wrapper">
+            <div class="diagram-title">4. 采购执行流程</div>
+            <div class="mermaid">
+flowchart TD
+    Start([协议生效]) --> Create[创建采购单]
+    Create --> Fill[填写采购明细<br/>选择收货仓库]
+    Fill --> Submit[提交采购单]
+    Submit --> AutoApprove[自动审批]
+    AutoApprove -->|生成订单| Send[发送至供应商]
+    Send --> Delivery[供应商发货]
+    Delivery --> Receive[仓库收货]
+    Receive --> QC{质检}
+    QC -->|合格| InStock[入库上架<br/>更新实际抵货数量]
+    QC -->|不合格| Return[退货处理]
+    InStock --> Available[商品可分销]
+    Return --> Refund[供应商退款]
+    Refund --> End1([结束])
+    Available --> End2([结束])
+
+    style Start fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style End1 fill:#9E9E9E,stroke:#616161,color:#fff
+    style End2 fill:#9E9E9E,stroke:#616161,color:#fff
+    style QC fill:#FFF3E0,stroke:#FF9800
+    style InStock fill:#E8F5E9,stroke:#4CAF50
+    style Return fill:#FFEBEE,stroke:#F44336
+            </div>
+        </div>
+
+        <div class="diagram-wrapper">
+            <div class="diagram-title">5. 分销发布与销售流程</div>
+            <div class="mermaid">
+flowchart TD
+    Start([商品入库]) --> Select[选择分销商品]
+    Select --> SetParams[设置分销参数<br/>渠道/价格/数量]
+    SetParams --> Submit[提交发布]
+    Submit --> Publish[分销活动发布]
+    Publish --> Customer[客户浏览下单]
+    Customer --> Lock[锁定库存]
+    Lock --> Pay{客户付款}
+    Pay -->|已付款| SaleConfirm[确认销售]
+    Pay -->|未付款超时| Unlock[释放库存]
+    SaleConfirm --> UpdateSale[更新实际销售数量]
+    UpdateSale --> Ship[发货出库]
+    Ship --> UpdateRemain[更新剩余数量]
+    Unlock --> End1([结束])
+    Ship --> End2([结束])
+
+    style Start fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style End1 fill:#9E9E9E,stroke:#616161,color:#fff
+    style End2 fill:#9E9E9E,stroke:#616161,color:#fff
+    style Pay fill:#FFF3E0,stroke:#FF9800
+    style Publish fill:#E8F5E9,stroke:#4CAF50
+    style SaleConfirm fill:#E3F2FD,stroke:#2196F3
+            </div>
+        </div>
+
+        <div class="diagram-wrapper">
+            <div class="diagram-title">6. 状态对照表</div>
+            <table class="status-table">
+                <thead>
+                    <tr>
+                        <th>操作</th>
+                        <th>协议状态</th>
+                        <th>保证金状态</th>
+                        <th>合同状态</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>创建协议</td>
+                        <td><span class="tag tag-gray">保存</span></td>
+                        <td><span class="tag tag-gray">待生效</span></td>
+                        <td><span class="tag tag-gray">未上传</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>提交协议</td>
+                        <td><span class="tag tag-orange">待签署合同</span></td>
+                        <td><span class="tag tag-gray">待生效</span></td>
+                        <td><span class="tag tag-gray">未上传</span></td>
+                        <td>同步生成应收保证金数据</td>
+                    </tr>
+                    <tr>
+                        <td>合同上传完成</td>
+                        <td><span class="tag tag-yellow">待交保证金</span></td>
+                        <td><span class="tag tag-orange">待支付</span></td>
+                        <td><span class="tag tag-green">已上传</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>保证金确认收款</td>
+                        <td><span class="tag tag-green">生效</span></td>
+                        <td><span class="tag tag-green">已支付</span></td>
+                        <td><span class="tag tag-green">已上传</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>预付采购已付款</td>
+                        <td><span class="tag tag-blue">执行中</span></td>
+                        <td><span class="tag tag-green">已支付</span></td>
+                        <td><span class="tag tag-green">已上传</span></td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>保证金处理</td>
+                        <td><span class="tag tag-blue">执行中</span></td>
+                        <td><span class="tag tag-blue">已抵扣/已退回</span></td>
+                        <td><span class="tag tag-green">已上传</span></td>
+                        <td>转货款抵扣或原路退回</td>
+                    </tr>
+                    <tr>
+                        <td>货物全部销售完成</td>
+                        <td><span class="tag tag-green">已结清</span></td>
+                        <td><span class="tag tag-blue">已抵扣/已退回</span></td>
+                        <td><span class="tag tag-green">已上传</span></td>
+                        <td>实际拣货数量=销售数量</td>
+                    </tr>
+                    <tr>
+                        <td>超过提货截止日期</td>
+                        <td><span class="tag tag-red">已违约</span></td>
+                        <td><span class="tag tag-green">已支付</span></td>
+                        <td><span class="tag tag-green">已上传</span></td>
+                        <td>实际拣货数量>销售数量</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="legend">
+            <h3>图例说明</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color start"></div>
+                    <span>开始/结束节点</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color process"></div>
+                    <span>处理步骤</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color decision"></div>
+                    <span>判断/分支</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color warning"></div>
+                    <span>异常/违约</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                curve: 'basis',
+                padding: 20,
+                nodeSpacing: 50,
+                rankSpacing: 50
+            }
+        });
+    </script>
+</body>
+</html>

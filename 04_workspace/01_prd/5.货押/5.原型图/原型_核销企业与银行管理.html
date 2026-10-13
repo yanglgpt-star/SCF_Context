@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>核销企业与银行管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-orange { background: #fed7aa; color: #9a3412; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: center; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.section-tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 16px; }
+.section-tab { padding: 8px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.section-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.section-content { display: none; }
+.section-content.active { display: block; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,.4); z-index:100; align-items:center; justify-content:center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 640px; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.perm-matrix { font-size: 13px; }
+.perm-matrix td { text-align: center; }
+.perm-matrix td:first-child { text-align: left; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item active">🧾 结算管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">核销企业与银行管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">结算管理 / <strong>核销企业与银行管理</strong></span></div>
+    <div class="topbar-right"><span>👤 风控专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">核销企业与银行管理</div>
+    <div class="section-tabs">
+      <div class="section-tab active" onclick="switchSection('writeoff')">核销企业管理</div>
+      <div class="section-tab" onclick="switchSection('bank')">银行管理</div>
+    </div>
+
+    <!-- 核销企业管理 -->
+    <div class="section-content active" id="sec-writeoff">
+      <div class="stats">
+        <div class="stat-card"><div class="num" style="color:#10b981;">128</div><div class="label">正常</div></div>
+        <div class="stat-card"><div class="num" style="color:#f59e0b;">3</div><div class="label">预警</div></div>
+        <div class="stat-card"><div class="num" style="color:#f97316;">1</div><div class="label">冻结</div></div>
+        <div class="stat-card"><div class="num" style="color:#3b82f6;">0</div><div class="label">清算</div></div>
+        <div class="stat-card"><div class="num" style="color:#6b7280;">5</div><div class="label">已注销</div></div>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部状态</option><option>正常</option><option>预警</option><option>冻结</option><option>清算</option><option>已注销</option></select>
+          <select><option>全部类型</option><option>主动注销</option><option>被动核销</option><option>强制清退</option></select>
+          <input placeholder="搜索企业名称" style="width:180px;">
+          <button class="btn btn-primary btn-sm">搜索</button>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm" onclick="showModal('writeoffModal')">+ 发起核销申请</button>
+        </div>
+        <table>
+          <thead><tr><th>企业名称</th><th>统一信用代码</th><th>当前状态</th><th>核销类型</th><th>申请人</th><th>申请时间</th><th>审批状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>XX商贸有限公司</td><td>91*******001</td><td><span class="tag tag-yellow">预警</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>YY贸易集团</td><td>91*******002</td><td><span class="tag tag-orange">冻结</span></td><td>被动核销</td><td>风控专员</td><td>2026-04-20</td><td><span class="tag tag-blue">风控审核中</span></td><td><button class="btn btn-outline btn-sm">审批</button></td></tr>
+            <tr><td>ZZ电子</td><td>91*******003</td><td><span class="tag tag-gray">已注销</span></td><td>主动注销</td><td>系统</td><td>2026-03-15</td><td><span class="tag tag-green">已通过</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>WW供应链</td><td>91*******004</td><td><span class="tag tag-gray">已注销</span></td><td>强制清退</td><td>风控经理</td><td>2026-02-01</td><td><span class="tag tag-green">已通过</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>VV食品经销</td><td>91*******005</td><td><span class="tag tag-yellow">预警</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">状态权限限制矩阵</div>
+        <table class="perm-matrix">
+          <thead><tr><th>状态</th><th>新增融资</th><th>出库</th><th>额度调整</th><th>数据查看</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag tag-green">正常</span></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td><span class="tag tag-yellow">预警</span></td><td>⚠️ 降额</td><td>✅</td><td>❌</td><td>✅</td></tr>
+            <tr><td><span class="tag tag-orange">冻结</span></td><td>❌</td><td>❌</td><td>❌</td><td>✅</td></tr>
+            <tr><td><span class="tag tag-blue">清算</span></td><td>❌</td><td>仅还款</td><td>❌</td><td>✅</td></tr>
+            <tr><td><span class="tag tag-gray">已注销</span></td><td>❌</td><td>❌</td><td>❌</td><td>仅历史查询</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 银行管理 -->
+    <div class="section-content" id="sec-bank">
+      <div class="stats">
+        <div class="stat-card"><div class="num" style="color:#10b981;">2</div><div class="label">A级银行</div></div>
+        <div class="stat-card"><div class="num" style="color:#3b82f6;">3</div><div class="label">B级银行</div></div>
+        <div class="stat-card"><div class="num" style="color:#f59e0b;">1</div><div class="label">C级银行</div></div>
+        <div class="stat-card"><div class="num" style="color:#6b7280;">0</div><div class="label">D级银行</div></div>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <select><option>全部状态</option><option>正常合作</option><option>暂停合作</option><option>退出中</option></select>
+          <input placeholder="搜索银行名称" style="width:180px;">
+          <button class="btn btn-primary btn-sm">搜索</button>
+          <span style="flex:1;"></span>
+          <button class="btn btn-primary btn-sm" onclick="showModal('bankModal')">+ 新增银行合作方</button>
+        </div>
+        <table>
+          <thead><tr><th>银行名称</th><th>银行编码</th><th>监管评级</th><th>合作评分</th><th>等级</th><th>授信额度</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>中国XX银行</td><td>BANK_001</td><td>2级</td><td>93</td><td><span class="tag tag-purple">A级</span></td><td>2亿</td><td><span class="tag tag-green">正常合作</span></td><td><button class="btn btn-outline btn-sm">评级</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>XX商业银行</td><td>BANK_002</td><td>2级</td><td>91</td><td><span class="tag tag-purple">A级</span></td><td>1.5亿</td><td><span class="tag tag-green">正常合作</span></td><td><button class="btn btn-outline btn-sm">评级</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>YY城市商业银行</td><td>BANK_003</td><td>3级</td><td>82</td><td><span class="tag tag-blue">B级</span></td><td>8000万</td><td><span class="tag tag-green">正常合作</span></td><td><button class="btn btn-outline btn-sm">评级</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>ZZ农商银行</td><td>BANK_004</td><td>3级</td><td>78</td><td><span class="tag tag-blue">B级</span></td><td>6000万</td><td><span class="tag tag-yellow">暂停合作</span></td><td><button class="btn btn-outline btn-sm">评级</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+            <tr><td>WW村镇银行</td><td>BANK_005</td><td>4级</td><td>65</td><td><span class="tag tag-yellow">C级</span></td><td>5000万</td><td><span class="tag tag-yellow">暂停合作</span></td><td><button class="btn btn-outline btn-sm">评级</button> <button class="btn btn-outline btn-sm">详情</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">银行评级维度（5维度加权）</div>
+        <table>
+          <thead><tr><th>评级维度</th><th>权重</th><th>评分标准</th><th>中国XX银行</th><th>XX商业银行</th></tr></thead>
+          <tbody>
+            <tr><td>放款效率</td><td>25%</td><td>放款时效、成功率</td><td>95</td><td>90</td></tr>
+            <tr><td>资金稳定性</td><td>25%</td><td>资金到位及时性</td><td>92</td><td>88</td></tr>
+            <tr><td>系统稳定性</td><td>20%</td><td>接口可用率、响应时间</td><td>90</td><td>95</td></tr>
+            <tr><td>合作配合度</td><td>20%</td><td>对账配合、异常处理</td><td>95</td><td>92</td></tr>
+            <tr><td>风险控制</td><td>10%</td><td>风控合规、安全性</td><td>90</td><td>90</td></tr>
+            <tr style="background:#f0fdf4;font-weight:600;"><td>综合评分</td><td>100%</td><td>—</td><td>92.75 → <span class="tag tag-purple">A级</span></td><td>90.90 → <span class="tag tag-purple">A级</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">银行等级标准</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:13px;">
+          <div style="background:#f0fdf4;padding:12px;border-radius:8px;"><strong style="color:#065f46;">A级 ≥90</strong><br>优先推荐<br>快速审批</div>
+          <div style="background:#eff6ff;padding:12px;border-radius:8px;"><strong style="color:#1e40af;">B级 75-89</strong><br>正常合作</div>
+          <div style="background:#fefce8;padding:12px;border-radius:8px;"><strong style="color:#92400e;">C级 60-74</strong><br>限制新增<br>加强监控</div>
+          <div style="background:#fef2f2;padding:12px;border-radius:8px;"><strong style="color:#991b1b;">D级 &lt;60</strong><br>暂停合作<br>启动退出</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">银行退出管理</div>
+        <table>
+          <thead><tr><th>退出类型</th><th>触发条件</th><th>通知期</th><th>存量业务处理</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag tag-blue">主动退出</span></td><td>银行单方面终止合作</td><td>提前90天</td><td>结清存量业务</td></tr>
+            <tr><td><span class="tag tag-yellow">被动退出</span></td><td>连续2季度D级/重大违约/监管处罚</td><td>提前60天</td><td>存量转移或到期结清</td></tr>
+            <tr><td><span class="tag tag-red">强制退出</span></td><td>被吊销牌照/破产/重大金融犯罪</td><td>立即</td><td>启动应急预案</td></tr>
+          </tbody>
+        </table>
+        <div class="info-card" style="margin-top:12px;">💡 多银行切换路由策略：A级 &gt; B级 &gt; C级 优先级分配，同等级内随机分配。切换后自动通知受影响经销商。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 核销申请弹窗 -->
+<div class="modal-overlay" id="writeoffModal">
+  <div class="modal">
+    <div class="modal-title">📋 发起核销申请</div>
+    <div class="form-group"><label>选择企业 <span style="color:#ef4444;">*</span></label><select><option>请选择</option><option>YY贸易集团</option><option>VV食品经销</option></select></div>
+    <div class="form-group"><label>核销类型 <span style="color:#ef4444;">*</span></label>
+      <select><option>被动核销</option><option>主动注销</option><option>强制清退</option></select></div>
+    <div class="form-group"><label>触发条件 <span style="color:#ef4444;">*</span></label>
+      <select><option>破产</option><option>吊销满6个月</option><option>失联满1年</option><option>资产核销审批通过</option><option>欺诈立案</option></select></div>
+    <div class="card-title" style="margin-top:12px;">证明材料上传</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+      <div>📄 破产裁定书 <button class="btn btn-outline btn-sm">上传</button></div>
+      <div>📄 债务清偿说明 <button class="btn btn-outline btn-sm">上传</button></div>
+      <div>📄 追索记录 <button class="btn btn-outline btn-sm">上传</button></div>
+      <div>📄 剩余债权金额计算表 <button class="btn btn-outline btn-sm">上传</button></div>
+    </div>
+    <div class="form-group" style="margin-top:12px;"><label>审批流程预览</label>
+      <div style="background:#f8fafc;border-radius:6px;padding:12px;display:flex;align-items:center;gap:12px;font-size:13px;">
+        <span>风控经理</span> → <span>财务总监</span> → <span style="color:#ef4444;">总经理（&gt;50万）</span>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="hideModal('writeoffModal')">取消</button>
+      <button class="btn btn-primary">提交申请</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增银行弹窗 -->
+<div class="modal-overlay" id="bankModal">
+  <div class="modal">
+    <div class="modal-title">🏦 新增银行合作方</div>
+    <div class="card-title">准入条件（5维度）</div>
+    <table style="font-size:12px;margin-bottom:12px;">
+      <thead><tr><th>维度</th><th>要求</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td>机构资质</td><td>持牌银行或持牌消费金融公司</td><td><span class="tag tag-yellow">待上传</span></td></tr>
+        <tr><td>监管评级</td><td>银保监会监管评级 ≥ 3级</td><td><span class="tag tag-yellow">待上传</span></td></tr>
+        <tr><td>技术能力</td><td>支持银企直联或标准API对接</td><td><span class="tag tag-yellow">待上传</span></td></tr>
+        <tr><td>合作意愿</td><td>签署战略合作协议</td><td><span class="tag tag-yellow">待上传</span></td></tr>
+        <tr><td>授信额度</td><td>初始合作授信 ≥ 5000万</td><td><span class="tag tag-yellow">待填写</span></td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">准入资料（7份必填）：金融许可证、营业执照、近一年年报、监管评级证明、技术能力说明、合作产品方案、法律合规意见书</div>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="hideModal('bankModal')">取消</button>
+      <button class="btn btn-primary">提交准入申请</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchSection(section) {
+  document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.section-tab[onclick*="${section}"]`).classList.add('active');
+  document.getElementById(`sec-${section}`).classList.add('active');
+}
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+</script>
+</body>
+</html>

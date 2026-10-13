@@ -1,0 +1,49 @@
+{
+  "workId": "W-20260917-001",
+  "schemaVersion": 1,
+  "version": 1,
+  "meta": {
+    "title": "小鱼",
+    "theme": "动物",
+    "ageBand": "启蒙",
+    "tags": ["动物", "入门", "左右对称"],
+    "createdAt": "2026-09-17"
+  },
+  "canvas": {
+    "unit": 7.5,
+    "cols": 6,
+    "rows": 5,
+    "background": "#FBFAF6"
+  },
+  "palette": {
+    "橙": "#F08A24",
+    "黄": "#F5C518",
+    "红": "#E8443A",
+    "蓝": "#2E7DD1"
+  },
+  "tiles": [
+    { "id": "t01", "shape": "SQ", "i": 0, "j": 1, "rot": 0, "color": "橙", "locked": false, "source": "solver" },
+    { "id": "t02", "shape": "SQ", "i": 1, "j": 1, "rot": 0, "color": "橙", "locked": false, "source": "solver" },
+    { "id": "t03", "shape": "SQ", "i": 2, "j": 1, "rot": 0, "color": "橙", "locked": false, "source": "solver" },
+    { "id": "t04", "shape": "SQ", "i": 3, "j": 1, "rot": 0, "color": "橙", "locked": false, "source": "solver" },
+    { "id": "t05", "shape": "SQ", "i": 0, "j": 2, "rot": 0, "color": "黄", "locked": false, "source": "solver" },
+    { "id": "t06", "shape": "SQ", "i": 1, "j": 2, "rot": 0, "color": "黄", "locked": false, "source": "solver" },
+    { "id": "t07", "shape": "SQ", "i": 2, "j": 2, "rot": 0, "color": "黄", "locked": false, "source": "solver" },
+    { "id": "t08", "shape": "SQ", "i": 3, "j": 2, "rot": 0, "color": "黄", "locked": false, "source": "solver" },
+    { "id": "t09", "shape": "TRI-R", "i": 4, "j": 1, "rot": 0, "color": "红", "locked": false, "source": "solver" },
+    { "id": "t10", "shape": "TRI-R", "i": 4, "j": 2, "rot": 270, "color": "红", "locked": false, "source": "solver" },
+    { "id": "t11", "shape": "TRI-R", "i": 2, "j": 0, "rot": 270, "color": "蓝", "locked": false, "source": "solver" },
+    { "id": "t12", "shape": "TRI-R", "i": 2, "j": 3, "rot": 0, "color": "蓝", "locked": false, "source": "solver" }
+  ],
+  "steps": [],
+  "solution": {
+    "coverage": 1,
+    "overflow": 0,
+    "stockOk": true,
+    "connectivityOk": true,
+    "fallbackLevel": "L0",
+    "shapeUsage": { "SQ": 8, "TRI-R": 4 },
+    "colorUsage": { "橙": 4, "黄": 4, "红": 2, "蓝": 2 }
+  },
+  "assets": {}
+}

@@ -1,0 +1,3 @@
+<view class="character-wrapper">
+  <view class="character-avatar {{anim}}">{{emoji}}</view>
+</view>

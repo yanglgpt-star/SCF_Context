@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>服务费计费 - 结算管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.filter-bar .btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; }
+.stat-card .num { font-size: 24px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.stat-card .sub { font-size: 11px; color: #10b981; margin-top: 2px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+.form-group select, .form-group input { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-size: 12px; }
+.formula-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin: 12px 0; }
+.formula-box .title { font-size: 13px; font-weight: 600; color: #065f46; margin-bottom: 8px; }
+.formula-box .step { font-size: 13px; color: #374151; margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item active">🧾 结算管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">服务费计费</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">分润对账与资金</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item">⚙️ 系统管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">结算管理 / <strong>服务费计费</strong></span></div>
+    <div class="topbar-right"><span>👤 财务专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="page-title">服务费计费管理</div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('rules')" data-tab="rules">计费规则配置</div>
+      <div class="tab" onclick="switchTab('bills')" data-tab="bills">账单列表</div>
+      <div class="tab" onclick="switchTab('detail')" data-tab="detail">账单详情</div>
+      <div class="tab" onclick="switchTab('versions')" data-tab="versions">规则版本管理</div>
+    </div>
+
+    <!-- Tab1: 计费规则配置 -->
+    <div class="tab-content active" id="tab-rules">
+      <div class="card">
+        <div class="card-title">计费模式</div>
+        <div class="form-row">
+          <div class="form-group"><label>计费模式 <span style="color:#ef4444;">*</span></label>
+            <select><option>按融资金额比例（年化）</option><option>按天计息</option><option>固定费用</option><option>分段计费</option></select></div>
+          <div class="form-group"><label>规则版本</label><input value="v20260426" readonly style="background:#f3f4f6;color:#6b7280;width:160px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">基础费率配置（按客户等级）</div>
+        <table>
+          <thead><tr><th>客户等级</th><th>年化费率</th><th>日费率</th><th>生效日期</th><th>失效日期</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag tag-green">A级</span></td><td><input value="3.000%" style="width:100px;"></td><td>0.00833%</td><td>2026-01-01</td><td>—</td><td><button class="btn btn-outline btn-sm">保存</button></td></tr>
+            <tr><td><span class="tag tag-blue">B级</span></td><td><input value="4.000%" style="width:100px;"></td><td>0.01111%</td><td>2026-01-01</td><td>—</td><td><button class="btn btn-outline btn-sm">保存</button></td></tr>
+            <tr><td><span class="tag tag-gray">C级</span></td><td><input value="5.000%" style="width:100px;"></td><td>0.01389%</td><td>2026-01-01</td><td>—</td><td><button class="btn btn-outline btn-sm">保存</button></td></tr>
+          </tbody>
+        </table>
+        <div class="info-card" style="margin-top:8px;">💡 系统强制校验：A级=3%、B级=4%、C级=5%，超出范围将拦截</div>
+      </div>
+      <div class="card">
+        <div class="card-title">分段计费调整</div>
+        <table>
+          <thead><tr><th>融资金额区间</th><th>费率调整</th><th>说明</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>≤ 50 万元</td><td><input value="+0%" style="width:80px;"></td><td>基础费率不变</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>50 - 100 万元</td><td><input value="-0.5%" style="width:80px;"></td><td>超过50万部分费率下调0.5%</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>&gt; 100 万元</td><td><input value="-1.0%" style="width:80px;"></td><td>超过100万部分费率下调1.0%</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">期限调整</div>
+        <table>
+          <thead><tr><th>融资期限</th><th>费率调整</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>≤ 30 天</td><td><input value="+0.5%" style="width:80px;"></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>31 - 90 天</td><td><input value="+0%" style="width:80px;"></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            <tr><td>&gt; 90 天</td><td><input value="-0.5%" style="width:80px;"></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">税率配置</div>
+        <div class="form-row">
+          <div class="form-group"><label>增值税率</label><input value="6.00%" readonly style="background:#f3f4f6;color:#6b7280;width:120px;"><div class="info-card" style="margin:0;font-size:11px;">系统固定税率，不可修改</div></div>
+        </div>
+      </div>
+      <div class="formula-box">
+        <div class="title">📐 计费公式预览</div>
+        <div class="step"><strong>示例：</strong>A级客户融资 100万，期限 60天，品类 3C电子</div>
+        <div class="step">① 基础服务费 = 100万 × 3% × 60/360 = 5,000.00 元</div>
+        <div class="step">② 分段调整 = 0%（未触发分段条件）</div>
+        <div class="step">③ 期限调整 = 0%（31-90天无调整）</div>
+        <div class="step">④ 最终服务费 = <strong>5,000.00 元</strong></div>
+        <div class="step">⑤ 增值税（6%）= 5,000.00 × 6% = <strong>300.00 元</strong></div>
+        <div class="step" style="font-weight:600;color:#065f46;">⑥ 合计应缴 = 5,000.00 + 300.00 = <strong>5,300.00 元</strong></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-outline">取消</button>
+        <button class="btn btn-primary">保存配置</button>
+        <button class="btn btn-outline">历史版本</button>
+      </div>
+    </div>
+
+    <!-- Tab2: 账单列表 -->
+    <div class="tab-content" id="tab-bills">
+      <div class="stats">
+        <div class="stat-card"><div class="num">168</div><div class="label">总账单数</div></div>
+        <div class="stat-card"><div class="num">¥1,286.5万</div><div class="label">总金额</div></div>
+        <div class="stat-card"><div class="num">¥1,156.8万</div><div class="label">已收款</div><div class="sub">占比 89.9%</div></div>
+        <div class="stat-card"><div class="num" style="color:#ef4444;">¥72.3万</div><div class="label">逾期未付</div></div>
+      </div>
+      <div class="card">
+        <div class="filter-bar">
+          <input placeholder="客户名称" style="width:160px;"><select><option>全部状态</option><option>待核对</option><option>待发送</option><option>已发送</option><option>已付款</option><option>逾期</option><option>已核销</option></select>
+          <input type="date" value="2026-04-01" style="width:140px;"><input type="date" value="2026-04-26" style="width:140px;">
+          <button class="btn btn-primary btn-sm">搜索</button>
+          <span style="flex:1;text-align:right;"><button class="btn btn-outline btn-sm">导出</button></span>
+        </div>
+        <table>
+          <thead><tr><th>账单编号</th><th>客户名称</th><th>融资金额</th><th>服务费</th><th>税额</th><th>合计</th><th>计费版本</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>BILL20260426000001</td><td>XX商贸有限公司</td><td>100.00万</td><td>5,000.00</td><td>300.00</td><td>5,300.00</td><td>v20260426</td><td><span class="tag tag-green">已付款</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>BILL20260426000002</td><td>YY电子科技</td><td>50.00万</td><td>1,500.00</td><td>90.00</td><td>1,590.00</td><td>v20260426</td><td><span class="tag tag-yellow">待发送</span></td><td><button class="btn btn-outline btn-sm">发送</button></td></tr>
+            <tr><td>BILL20260425000015</td><td>ZZ食品经销</td><td>80.00万</td><td>3,200.00</td><td>192.00</td><td>3,392.00</td><td>v20260425</td><td><span class="tag tag-red">逾期</span></td><td><button class="btn btn-outline btn-sm">催缴</button></td></tr>
+            <tr><td>BILL20260425000014</td><td>WW家电贸易</td><td>200.00万</td><td>10,000.00</td><td>600.00</td><td>10,600.00</td><td>v20260425</td><td><span class="tag tag-blue">待核对</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>BILL20260424000010</td><td>XX商贸有限公司</td><td>60.00万</td><td>2,400.00</td><td>144.00</td><td>2,544.00</td><td>v20260424</td><td><span class="tag tag-green">已付款</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+            <tr><td>BILL20260423000008</td><td>YY电子科技</td><td>150.00万</td><td>6,250.00</td><td>375.00</td><td>6,625.00</td><td>v20260423</td><td><span class="tag tag-gray">已核销</span></td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab3: 账单详情 -->
+    <div class="tab-content" id="tab-detail">
+      <div class="card">
+        <div class="card-title">账单基本信息</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;font-size:13px;">
+          <div><strong>账单编号：</strong>BILL20260426000001</div>
+          <div><strong>客户名称：</strong>XX商贸有限公司</div>
+          <div><strong>融资业务编号：</strong>FIN-20260426-001</div>
+          <div><strong>计费版本：</strong>v20260426</div>
+          <div><strong>生成时间：</strong>2026-04-26 10:30:00</div>
+          <div><strong>状态：</strong><span class="tag tag-green">已付款</span></div>
+        </div>
+      </div>
+      <div class="formula-box">
+        <div class="title">🧾 计费明细</div>
+        <div class="step"><strong>① 基础计算：</strong>100.00万 × 3%（A级年化费率） × 60/360 = <strong>5,000.00 元</strong></div>
+        <div class="step"><strong>② 分段调整：</strong>未触发（≤100万）— 调整值：0%</div>
+        <div class="step"><strong>③ 期限调整：</strong>31-90天档位 — 调整值：0%</div>
+        <div class="step" style="font-weight:600;">④ 最终服务费 = <strong>5,000.00 元</strong></div>
+        <div class="step"><strong>⑤ 增值税：</strong>5,000.00 × 6% = <strong>300.00 元</strong></div>
+        <div class="step" style="font-weight:600;color:#065f46;">⑥ 合计金额 = 5,000.00 + 300.00 = <strong>5,300.00 元</strong></div>
+      </div>
+      <div class="card">
+        <div class="card-title">PDF 预览</div>
+        <div style="background:#f8fafc;border:1px dashed #d1d5db;border-radius:8px;padding:40px;text-align:center;color:#9ca3af;font-size:14px;">
+          📄 BILL20260426000001_服务费账单.pdf<br>
+          <span style="font-size:12px;">点击此处预览PDF账单内容</span>
+        </div>
+        <div class="btn-group" style="margin-bottom:0;">
+          <button class="btn btn-primary">发送账单</button>
+          <button class="btn btn-outline">下载PDF</button>
+          <button class="btn btn-warning">标记催缴</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab4: 规则版本管理 -->
+    <div class="tab-content" id="tab-versions">
+      <div class="card">
+        <div class="card-title">版本历史</div>
+        <table>
+          <thead><tr><th>版本号</th><th>生效日期</th><th>变更内容</th><th>操作人</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><span class="tag tag-green">v20260426</span></td><td>2026-04-26</td><td>A级费率从3.5%调整为3.0%</td><td>财务专员</td><td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">对比</button></td></tr>
+            <tr><td>v20260401</td><td>2026-04-01</td><td>新增分段计费规则（50万/100万两档）</td><td>财务专员</td><td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">对比</button> <button class="btn btn-outline btn-sm">回滚</button></td></tr>
+            <tr><td>v20260315</td><td>2026-03-15</td><td>C级费率从5.5%调整为5.0%</td><td>财务经理</td><td><button class="btn btn-outline btn-sm">查看</button> <button class="btn btn-outline btn-sm">对比</button></td></tr>
+            <tr><td>v20260101</td><td>2026-01-01</td><td>初始版本</td><td>系统</td><td><button class="btn btn-outline btn-sm">查看</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">版本对比（v20260426 vs v20260401）</div>
+        <table>
+          <thead><tr><th>配置项</th><th>v20260401</th><th>v20260426</th><th>差异</th></tr></thead>
+          <tbody>
+            <tr><td>A级年化费率</td><td>3.500%</td><td style="color:#10b981;font-weight:600;">3.000%</td><td><span class="tag tag-red">-0.5%</span></td></tr>
+            <tr><td>B级年化费率</td><td>4.000%</td><td>4.000%</td><td>—</td></tr>
+            <tr><td>C级年化费率</td><td>5.000%</td><td>5.000%</td><td>—</td></tr>
+            <tr><td>分段计费-50万档</td><td>—</td><td>+0%</td><td><span class="tag tag-green">新增</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+</script>
+</body>
+</html>

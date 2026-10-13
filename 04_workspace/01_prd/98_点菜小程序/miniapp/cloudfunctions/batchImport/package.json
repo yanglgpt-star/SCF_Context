@@ -1,0 +1,9 @@
+{
+  "name": "batchImport",
+  "version": "1.0.0",
+  "description": "批量导入菜品数据",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

@@ -1,0 +1,106 @@
+<!-- 菜谱详情页 -->
+<view class="page-detail">
+  <!-- 加载状态 -->
+  <view class="loading-full" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:else>
+    <!-- 云存储图片（images 字段为 cloud:// 路径时显示） -->
+    <swiper class="image-swiper" wx:if="{{dish.images && dish.images.length > 0 && dish.images[0].indexOf('cloud://') === 0}}"
+      indicator-dots autoplay circular interval="3000">
+      <swiper-item wx:for="{{dish.images}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFill" class="swiper-img"
+          data-url="{{item}}" bindtap="previewImage" />
+      </swiper-item>
+    </swiper>
+
+    <!-- 兼容 images_url 字段 -->
+    <view class="image-single" wx:elif="{{dish.images_url && dish.images_url.indexOf('cloud://') === 0}}">
+      <image src="{{dish.images_url}}" mode="aspectFill" class="swiper-img"
+        data-url="{{dish.images_url}}" bindtap="previewImage" />
+    </view>
+
+    <!-- 无图片时的占位 -->
+    <view class="image-placeholder" wx:else>
+      <text class="placeholder-icon">🍽️</text>
+      <text class="placeholder-name">{{dish.name}}</text>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="info-section">
+      <text class="dish-title">{{dish.name}}</text>
+      <view class="tag-row">
+        <text class="tag tag-green" wx:if="{{dish.isMeat}}">荤菜</text>
+        <text class="tag tag-orange" wx:if="{{!dish.isMeat}}">素菜</text>
+        <text class="tag tag-blue" wx:for="{{dish.meal_type || []}}" wx:key="*this">{{item}}</text>
+        <text class="tag tag-purple" wx:for="{{dish.taste || []}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="meta-row">
+        <view class="meta-item">
+          <text class="meta-label">难度</text>
+          <text class="meta-value stars">{{renderStars(dish.difficulty)}}</text>
+          <text class="meta-sub">{{difficultyText(dish.difficulty)}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">热量</text>
+          <text class="meta-value">{{dish.calories || '?'}}</text>
+          <text class="meta-sub">大卡</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">用时</text>
+          <text class="meta-value">{{dish.cook_time || '?'}}</text>
+          <text class="meta-sub">分钟</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-label">受众</text>
+          <text class="meta-value-small">{{dish.target ? dish.target.join('/') : '全家'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 描述 -->
+    <view class="section" wx:if="{{dish.description}}">
+      <text class="section-title">📝 简介</text>
+      <text class="section-text">{{dish.description}}</text>
+    </view>
+
+    <!-- 食材清单 -->
+    <view class="section">
+      <view class="section-header" bindtap="toggleIngredients">
+        <text class="section-title">🥘 食材清单</text>
+        <text class="expand-btn">{{isIngredientsExpanded ? '收起' : '展开'}}</text>
+      </view>
+      <view class="ingredients-list" wx:if="{{isIngredientsExpanded}}">
+        <text class="ingredient-item"
+          wx:for="{{dish.ingredients}}" wx:key="*this">
+          <text class="ingredient-dot">●</text>
+          {{item}}
+        </text>
+      </view>
+      <view class="ingredients-actions" wx:if="{{isIngredientsExpanded}}">
+        <text class="action-btn" bindtap="copyIngredients">📋 复制清单</text>
+      </view>
+    </view>
+
+    <!-- 操作步骤 -->
+    <view class="section">
+      <text class="section-title">👨‍🍳 做法步骤</text>
+      <view class="steps-list">
+        <view class="step-item" wx:for="{{dish.steps}}" wx:key="*this">
+          <view class="step-num">{{index + 1}}</view>
+          <view class="step-text">{{item}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 小贴士 -->
+    <view class="section" wx:if="{{dish.tips}}">
+      <text class="section-title">💡 小贴士</text>
+      <text class="section-text tips-text">{{dish.tips}}</text>
+    </view>
+
+    <!-- 底部留白 -->
+    <view style="height: 60rpx;"></view>
+  </view>
+</view>

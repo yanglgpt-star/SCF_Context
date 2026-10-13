@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "source": "标准通用套装默认值（非实测，待卡尺核对）",
+  "updatedAt": "2026-09-17T02:52:25.020Z",
+  "items": [
+    {
+      "shapeId": "SQ",
+      "count": 24,
+      "colors": [
+        "红",
+        "橙",
+        "黄",
+        "绿",
+        "蓝"
+      ]
+    },
+    {
+      "shapeId": "TRI-E",
+      "count": 20,
+      "colors": [
+        "红",
+        "橙",
+        "黄",
+        "绿",
+        "蓝"
+      ]
+    },
+    {
+      "shapeId": "TRI-R",
+      "count": 16,
+      "colors": [
+        "红",
+        "橙",
+        "黄",
+        "绿",
+        "蓝"
+      ]
+    },
+    {
+      "shapeId": "RECT",
+      "count": 8,
+      "colors": [
+        "红",
+        "橙",
+        "黄",
+        "绿",
+        "蓝"
+      ]
+    },
+    {
+      "shapeId": "SECTOR",
+      "count": 4,
+      "colors": [
+        "红",
+        "黄",
+        "蓝"
+      ]
+    },
+    {
+      "shapeId": "SEMI",
+      "count": 4,
+      "colors": [
+        "橙",
+        "绿"
+      ]
+    }
+  ]
+}

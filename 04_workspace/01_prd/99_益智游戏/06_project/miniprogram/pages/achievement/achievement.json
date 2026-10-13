@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "progress-bar": "/components/progress-bar/progress-bar"
+  },
+  "navigationBarTitleText": "我的成就"
+}

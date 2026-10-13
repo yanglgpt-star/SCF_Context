@@ -1,0 +1,176 @@
+.page-container {
+  min-height: 100vh;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 类别大图标 */
+.category-badge {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF9A76, #FF6B6B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(255, 107, 107, 0.3);
+}
+
+/* 大语音按钮 */
+.voice-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20rpx 0 40rpx;
+}
+
+.voice-circle {
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF9A76, #FF6B6B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 48rpx rgba(255, 107, 107, 0.4);
+  transition: transform 0.2s;
+}
+
+.voice-circle:active {
+  transform: scale(0.95);
+}
+
+.voice-circle.idle {
+  background: linear-gradient(135deg, #FF9A76, #FF6B6B);
+}
+
+.voice-circle.loading {
+  background: linear-gradient(135deg, #F39C12, #E67E22);
+  animation: voicePulse 0.6s ease infinite alternate;
+}
+
+.voice-circle.playing {
+  background: linear-gradient(135deg, #27AE60, #2ECC71);
+  animation: voicePulse 0.4s ease infinite alternate;
+}
+
+.voice-circle.done {
+  background: linear-gradient(135deg, #27AE60, #2ECC71);
+}
+
+.voice-circle.error {
+  background: linear-gradient(135deg, #E74C3C, #C0392B);
+}
+
+.voice-icon {
+  font-size: 96rpx;
+}
+
+.voice-hint {
+  font-size: 28rpx;
+  color: #999;
+  margin-top: 20rpx;
+  font-weight: 500;
+}
+
+@keyframes voicePulse {
+  0% { transform: scale(1); box-shadow: 0 12rpx 48rpx rgba(255, 107, 107, 0.4); }
+  100% { transform: scale(1.08); box-shadow: 0 20rpx 64rpx rgba(255, 107, 107, 0.6); }
+}
+
+/* 任务卡片（小字辅助） */
+.task-card {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 16rpx;
+}
+
+.task-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2D3436;
+  margin-bottom: 12rpx;
+  line-height: 1.4;
+}
+
+.task-desc {
+  font-size: 26rpx;
+  color: #888;
+  line-height: 1.5;
+  margin-bottom: 12rpx;
+}
+
+.difficulty-row {
+  display: flex;
+  justify-content: center;
+  font-size: 22rpx;
+}
+
+/* 提示横幅 */
+.tip-banner {
+  width: 100%;
+  background: #FFF8E1;
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  font-size: 24rpx;
+  color: #856404;
+  line-height: 1.4;
+  margin-bottom: 32rpx;
+}
+
+/* 操作按钮行 */
+.action-row {
+  width: 100%;
+  display: flex;
+  gap: 24rpx;
+  margin-top: 16rpx;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 0;
+  border-radius: 20rpx;
+  background: #fff;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-icon {
+  font-size: 56rpx;
+  margin-bottom: 8rpx;
+}
+
+.action-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 24rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}

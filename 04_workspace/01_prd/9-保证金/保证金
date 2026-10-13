@@ -1,0 +1,260 @@
+## 一、保证金概述
+
+### 1.1 定义
+
+也叫押金，在客户交易时使用一小部分资金作为担保，目的是提升毁约成本，促使客户完成最终交易，一方面订单时效性的产生的毁约风险
+
+### 1.2 保证金业务类型
+
+> 0、充值 ：保证充值
+
+> 1、抢单：一件代发抢单冻结保证金
+
+> 2、串码：更换串码
+
+> 3、取消订单：撤销订单、毁单
+
+> 4、物流补贴：无
+
+> 5、撤销订单：22年10月11日之后无数据
+
+> 6、毁单：供应商毁单
+
+> 7、退货追单：采购单撤销导致的退货追单、供应商毁约导致的退货追单
+
+> 8、物流异常：串码异常、物流信息异常等
+
+> 9、接龙抢单：群接龙抢单
+
+> 10、采购入仓：采购入仓订单
+
+> 11、扣罚订单：虚假物流扣罚
+
+> 12、修改物流：修改物流单号保证金扣罚
+
+> 13、运费：电子面单月结
+
+> 14、转账：企业保证金出现账户转移
+
+> 15、特邀竞价报名：暗盘参与竞价冻结保证金
+
+> 
+
+### 1.3 保证金状态
+
+> 0、充值：保证金充值
+
+> 1、冻结 ：
+
+> 抢单扣除基于合作关系设置的保证金(默认50)
+
+> 抢单接龙冻结保证金(默认20每台，最大200)
+
+> 修改物流冻结保证金(30)
+
+> 采购商退货追单扣除采购1元保证金
+
+> 2、扣除：
+
+> 串码交换扣除保证金
+
+> 物流申请扣除保证金
+
+> 电子面单扣除保证金(运费)
+
+> 超时扣除保证金
+
+> 3、解冻成功：无
+
+> 4、解冻返回：
+
+> 解冻保证金
+
+> 5、已返还：运费返还
+
+> 6、收入：能良-电子面单运费
+
+### 1.4 大致框架
+
+![](https://tcs-devops.aliyuncs.com/storage/113e549ccbe4dbfda2d2a0833c09b3b36032?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2U1NDljY2JlNGRiZmRhMmQyYTA4MzNjMDliM2IzNjAzMiJ9.LX-tMB3zdiBJPgZDeSgbIDhiOJi4548sxiVVvy0JT4A&download=image.png "")
+
+### 1.5  脑图整理
+
+![](https://tcs-devops.aliyuncs.com/storage/113e392c9c709ca6cc400ff15b0969ee14fe?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2UzOTJjOWM3MDljYTZjYzQwMGZmMTViMDk2OWVlMTRmZSJ9.4cQQwHIRP_K8h2TW8nVJPOQqmABxjEmj-jRaoaavojk&download=whiteboard_exported_image%20(2).png "")
+
+## 二.数据表设计
+
+### 2.1 实体关系图
+
+![](https://tcs-devops.aliyuncs.com/storage/113ecb2755d9e562f4b5ade33d18cbda317a?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2VjYjI3NTVkOWU1NjJmNGI1YWRlMzNkMThjYmRhMzE3YSJ9.FtrKzlI4pOVLm7hwmdxp8mPPdtSMy2W8IEAgPQsDgHI&download=image.png "")
+
+### 2.2 表结构设计
+
+```sql
+#支付记录表
+CREATE TABLE `u_payment` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `company_id` bigint NOT NULL COMMENT '企业id',
+  `trade_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '支付单号',
+  `trade_states` tinyint(1) NOT NULL COMMENT '支付状态',
+  `trade_channel` tinyint(1) NOT NULL COMMENT '支付渠道',
+  `trade_type` tinyint(1) DEFAULT NULL COMMENT '支付类型 1.二维码支付 2.JSAPI支付 3.小程序支付',
+  `amount` decimal(10,2) NOT NULL COMMENT '金额',
+  `out_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '第三方单号',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `notify_time` datetime DEFAULT NULL COMMENT '回调时间',
+  `create_by` bigint NOT NULL COMMENT '发起支付人',
+  PRIMARY KEY (`id`),
+  KEY `index_1` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='企业支付记录表';
+
+#企业保证金账户表
+CREATE TABLE `u_company_capital` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `service_type` tinyint DEFAULT NULL,
+  `company_id` bigint DEFAULT NULL COMMENT '企业id',
+  `available_amount` decimal(10,2) DEFAULT NULL COMMENT '可用金额',
+  `frozen_amount` decimal(10,2) DEFAULT NULL COMMENT '冻结金额',
+  `create_time` datetime NOT NULL,
+  `update_time` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `in` (`company_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9368 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='企业押金表';
+
+#保证金记录表
+CREATE TABLE `u_company_capital_log` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `capital_id` bigint NOT NULL COMMENT '资金id',
+  `company_id` bigint DEFAULT NULL COMMENT '企业id',
+  `trade_order_id` bigint DEFAULT NULL COMMENT '抢单id',
+  `order_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '业务单号',
+  `out_amount` decimal(10,2) DEFAULT NULL COMMENT '出项',
+  `add_amount` decimal(10,2) DEFAULT NULL COMMENT '进项',
+  `subtotal` decimal(10,2) DEFAULT NULL COMMENT '小计',
+  `available_amount` decimal(10,2) DEFAULT NULL COMMENT '可用资金',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `type` int DEFAULT NULL COMMENT '业务类型（1.抢单 2.串码）',
+  `processed` tinyint(1) DEFAULT '1' COMMENT '是否已处理（1 - 已处理 0 - 未处理），默认已处理',
+  `handle_num` int DEFAULT '0' COMMENT '清算次数，默认为 0,最多 2 次',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `index_01` (`trade_order_id`) USING BTREE,
+  KEY `index_0` (`company_id`),
+  KEY `index_order_on` (`order_no`),
+  KEY `index_1` (`capital_id`,`type`,`create_time`)
+) ENGINE=InnoDB AUTO_INCREMENT=2764066 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='企业押金记录';
+
+#保证金明细表
+CREATE TABLE `u_company_capital_detail` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `capital_id` bigint NOT NULL COMMENT '资金id',
+  `company_id` bigint NOT NULL COMMENT '企业id',
+  `available_amount` decimal(10,2) DEFAULT NULL COMMENT '可用资金',
+  `order_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '抢单成功no',
+  `trade_order_id` bigint DEFAULT NULL COMMENT '抢单成功id',
+  `amount` decimal(10,2) DEFAULT NULL COMMENT '金额',
+  `capital_status` tinyint DEFAULT NULL COMMENT '资金状态 1 冻结 2 扣除 3 解冻',
+  `order_status` int DEFAULT NULL COMMENT '订单状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建者',
+  `create_time` datetime DEFAULT NULL,
+  `update_by` bigint DEFAULT NULL,
+  `update_time` datetime DEFAULT NULL,
+  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `type` int DEFAULT NULL COMMENT '业务类型（1.抢单 2.串码）',
+  PRIMARY KEY (`id`),
+  KEY `index_0` (`trade_order_id`),
+  KEY `index_1` (`company_id`),
+  KEY `index_order_on` (`order_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=5278683 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='企业押金明细';
+
+```
+
+### 
+
+## 三.保证金充值
+
+### 3.1 前置条件
+
+> 1. 企业完成对公认证
+
+> 2. 企业成立时间大于半年
+
+> 3. 企业拥有纳税人资质
+
+### 3.2 充值时序图
+
+![](https://tcs-devops.aliyuncs.com/storage/113deba92d424485c531080c9f845598ad86?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2RlYmE5MmQ0MjQ0ODVjNTMxMDgwYzlmODQ1NTk4YWQ4NiJ9.fK5DPGJBwcqiVjAztPYMgI2jk1QuCAe-pV9NmmrDKBs&download=image.png "")
+
+## 三、保证金冻结
+
+### 3.1 涉及业务
+
+> 1.代发抢单
+
+> 2.接龙抢单(已废弃)
+
+> 3.异常物流冻结保证金
+
+### 3.2 一件代发保证金冻结
+
+![](https://tcs-devops.aliyuncs.com/storage/113d27347f054c2a4ecc0429ffba5962502f?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2QyNzM0N2YwNTRjMmE0ZWNjMDQyOWZmYmE1OTYyNTAyZiJ9.OG-AHgK8Wh_M3U1AGNnR1c55e7iDCbUz-7cZWSeH0y8&download=%E4%BB%A3%E5%8F%91%E6%8A%A2%E5%8D%95%E5%86%BB%E7%BB%93%E4%BF%9D%E8%AF%81%E9%87%91.png "")
+
+### 3.2 抢单接龙保证金冻结
+
+![](https://tcs-devops.aliyuncs.com/storage/113df7ae1b3e35618a3ffe15498d391ecd09?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2RmN2FlMWIzZTM1NjE4YTNmZmUxNTQ5OGQzOTFlY2QwOSJ9.ulenTuAZCRDE8AQyJmppwsbTvW4oRxP8dBxwwWUMjr4&download=%E6%8A%A2%E5%8D%95%E6%8E%A5%E9%BE%99%E5%86%BB%E7%BB%93%E4%BF%9D%E8%AF%81%E9%87%91.png "")
+
+## 四、保证金扣除、返还
+
+### 4.1 串码交换扣除保证金
+
+![](https://tcs-devops.aliyuncs.com/storage/113d87b2174ae8a7922c3366648033c9eb87?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2Q4N2IyMTc0YWU4YTc5MjJjMzM2NjY0ODAzM2M5ZWI4NyJ9.BZ6jqkVObdEGjOx1Bm5ddQn5j4jlV8JsyLPevEd9sjc&download=%E4%B8%B2%E7%A0%81%E4%BA%A4%E6%8D%A2%E6%89%A3%E9%99%A4%E4%BF%9D%E8%AF%81%E9%87%91-.png "")
+
+### 4.2 超时扣除保证金
+
+![](https://tcs-devops.aliyuncs.com/storage/113dd6a61a4a7077b837aa79ddfa4373a7da?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2RkNmE2MWE0YTcwNzdiODM3YWE3OWRkZmE0MzczYTdkYSJ9.uvsyHJTw_esGE9xRw8FDj5gEQQn0cPWwXhplxTsnyWU&download=%E8%B6%85%E6%97%B6%E6%89%A3%E9%99%A4%E4%BF%9D%E8%AF%81%E9%87%91.png "")
+
+### 4.3 物流申请扣除保证金
+
+![](https://tcs-devops.aliyuncs.com/storage/113d991947fead6a0e5009cecf9cf804d733?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2Q5OTE5NDdmZWFkNmEwZTUwMDljZWNmOWNmODA0ZDczMyJ9.zEPwU-btYxq8SipZMXXqzf0B7uLGlfHpMkU-AA3Zo-M&download=%E7%89%A9%E6%B5%81%E7%94%B3%E8%AF%B7%E6%89%A3%E9%99%A4%E4%BF%9D%E8%AF%81%E9%87%91.png "")
+
+### 4.4 电子面单扣除保证金
+
+![](https://tcs-devops.aliyuncs.com/storage/113d8fc96c50b41cc95e3c6fd322d6427720?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2Q4ZmM5NmM1MGI0MWNjOTVlM2M2ZmQzMjJkNjQyNzcyMCJ9._PWr2jI0UlJAobdJyElna7sm-WAzoZ2JP8NTdMsL_AA&download=%E7%94%B5%E5%AD%90%E9%9D%A2%E5%8D%95%E6%89%A3%E9%99%A4%E4%BF%9D%E8%AF%81%E9%87%91-.png "")
+
+### 4.5 毁单扣除/返还保证金
+
+![](https://tcs-devops.aliyuncs.com/storage/113d0ec332282ba981d65be8b6e3f51fd937?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2QwZWMzMzIyODJiYTk4MWQ2NWJlOGI2ZTNmNTFmZDkzNyJ9.jrA-Na8AldIMNJn_9iXRoh7Hw1DftE6dciwdOuKdFe8&download=%E7%94%B3%E8%AF%B7%E6%AF%81%E5%8D%95%E8%BF%94%E8%BF%98%E4%BF%9D%E8%AF%81%E9%87%91.png "")
+
+### 4.6  撤销挂单扣除/返还保证金
+
+![](https://tcs-devops.aliyuncs.com/storage/113d25422823152da48fd0c6448156ed4830?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2QyNTQyMjgyMzE1MmRhNDhmZDBjNjQ0ODE1NmVkNDgzMCJ9.FKib2lc6NBSW1m8POq1B-qAgUXoYrVgIS4dBcDp8leQ&download=%E6%92%A4%E9%94%80%E6%8C%82%E5%8D%95%E8%BF%94%E8%BF%98%E4%BF%9D%E8%AF%81%E9%87%91.png "")
+
+### 4.7 退货追单
+
+![](https://tcs-devops.aliyuncs.com/storage/113d787b8d57f9ddb122e3f474749d64dd74?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2Q3ODdiOGQ1N2Y5ZGRiMTIyZTNmNDc0NzQ5ZDY0ZGQ3NCJ9.WrrfwfeaiRfEEhuWkClvY7tO4wWix0A1K63MYtRRqqw&download=%E9%80%80%E8%B4%A7%E8%BF%BD%E5%8D%95%E8%BF%94%E8%BF%98%E4%BF%9D%E8%AF%81%E9%87%91-.png "")
+
+### 4.8 虚假物流扣罚
+
+![](https://tcs-devops.aliyuncs.com/storage/113edd7b401f6c8e8c14278696f53be77390?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc4MzMxODQ3NywiaWF0IjoxNzgyNzEzNjc3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM2VkZDdiNDAxZjZjOGU4YzE0Mjc4Njk2ZjUzYmU3NzM5MCJ9.DWj9pIPplElkrFGsG0613G1PYMKncsrbx4M-XXnEvNY&download=%E8%99%9A%E5%81%87%E7%89%A9%E6%B5%81%E6%89%A3%E7%BD%9A-.png "")
+
+### 
+
+### 4.9 手动退款
+
+略
+
+## 五、当前问题
+
+### 5.1 虚入问题
+
+保证金存在虚入问题，导致实际商户余额与保证金账户的余额对不上
+
+### 5.2 保证金类型问题
+
+### 5.2.1 代码问题
+
+存在多套枚举，使用不统一
+
+### 
+

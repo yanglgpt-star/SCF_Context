@@ -1,0 +1,12 @@
+<view class="safe-page home device-{{deviceType}}">
+  <view class="topbar capsule-safe"><view class="profile"><view class="avatar">{{profile.avatar}}</view><text>你好，{{profile.nickname}}</text></view><view class="harvest" bindtap="openRewards">⭐ 我的收获</view></view>
+  <view class="landscape-main">
+    <view class="card recommend"><view class="tag">今天玩什么</view><view class="recommend-title">先来数一数糖果吧</view><view class="recommend-meta">5 个小游戏 · 大约 5 分钟</view><view class="recommend-scene">🐻　🍬🍬🍬</view><view class="progress-dots"><view class="dot"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view><view class="dot"></view></view><button class="primary start" bindtap="startGame">▶ 开始玩</button></view>
+    <view class="learning-area"><view class="section-head"><view class="section-title">学习乐园</view><button class="listen" bindtap="replayHomeGuide">🔊</button></view><view class="modules">
+      <view wx:for="{{modules}}" wx:key="id" class="module {{item.theme}}" data-id="{{item.id}}" bindtap="openModule"><view class="module-badge" wx:if="{{item.badge}}">{{item.badge}}</view><view class="module-icon">{{item.icon}}</view><view><view class="module-title">{{item.name}}</view><view class="module-state">{{item.stateText}}</view></view></view>
+    </view></view>
+  </view>
+  <view class="bottom-nav"><view class="bottom-item" bindtap="openRewards"><text class="bottom-icon">⭐</text><text>我的收获</text></view><view class="bottom-item active"><text class="bottom-icon">🏠</text><text>首页</text></view><view class="bottom-item parent {{parentPressing?'pressing':''}}" bindtouchstart="parentStart" bindtouchend="parentEnd" bindtouchcancel="parentEnd"><text class="bottom-icon">👨‍👩‍👧</text><text>长按家长</text></view></view>
+</view>
+<view class="setup-mask device-{{deviceType}}" wx:if="{{showSetup}}"><view class="setup card"><view class="setup-icon">🌿</view><view class="setup-title">先请爸爸妈妈帮一下</view><view class="setup-row"><view><view class="setup-label">给孩子选一个角色</view><view class="avatar-list"><view wx:for="{{avatars}}" wx:key="*this" class="avatar-choice {{selectedAvatar===item?'selected':''}}" data-avatar="{{item}}" bindtap="chooseAvatar">{{item}}</view></view></view><view class="name-side"><view class="setup-label">怎么称呼孩子？</view><input class="name-input" maxlength="6" value="{{nickname}}" bindinput="inputNickname" /><view class="privacy">记录只保存在本机，不需要微信资料授权。</view><button class="primary" bindtap="finishSetup">设置完成</button></view></view></view></view>
+<orientation-guard/><rest-overlay/>

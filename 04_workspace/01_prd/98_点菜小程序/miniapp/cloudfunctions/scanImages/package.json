@@ -1,0 +1,9 @@
+{
+  "name": "scanImages",
+  "version": "1.0.0",
+  "description": "扫描需要上传图片的菜品",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

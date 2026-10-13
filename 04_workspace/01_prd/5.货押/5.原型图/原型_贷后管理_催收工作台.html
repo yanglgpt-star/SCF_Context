@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>催收工作台 - 贷后管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+
+/* ===== Sidebar ===== */
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .sub-item { padding: 8px 20px 8px 44px; cursor: pointer; font-size: 13px; color: #94a3b8; }
+.sidebar .sub-item.active { color: #fff; font-weight: 600; }
+
+/* ===== Main ===== */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ===== Topbar ===== */
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 18px; font-size: 13px; color: #6b7280; }
+.topbar-right .user-name { color: #1f2937; font-weight: 500; }
+
+/* ===== Content ===== */
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+
+/* ===== Stats Cards ===== */
+.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 14px; text-align: center; }
+.stat-card .num { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.stat-card .trend { font-size: 11px; margin-top: 2px; }
+.stat-card .trend.up { color: #10b981; }
+.stat-card .trend.down { color: #ef4444; }
+
+/* ===== Card ===== */
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+
+/* ===== Layout Split ===== */
+.layout-split { display: grid; grid-template-columns: 230px 1fr; gap: 16px; }
+
+/* ===== Filter Panel ===== */
+.filter-panel { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px; }
+.filter-panel .fp-section { margin-bottom: 16px; }
+.filter-panel .fp-section:last-child { margin-bottom: 0; }
+.filter-panel .fp-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+.filter-panel .fp-item { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.filter-panel .fp-item:hover { background: #f9fafb; }
+.filter-panel .fp-item .count { margin-left: auto; background: #e5e7eb; border-radius: 999px; padding: 0 7px; font-size: 11px; color: #6b7280; line-height: 18px; }
+.filter-panel .fp-item .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.filter-panel .fp-divider { border: none; border-top: 1px solid #e5e7eb; margin: 12px 0; }
+.filter-panel .reset-btn { width: 100%; margin-top: 8px; padding: 6px 0; text-align: center; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; color: #6b7280; cursor: pointer; }
+.filter-panel .reset-btn:hover { background: #f3f4f6; }
+
+/* Custom checkbox styling */
+.filter-panel input[type="checkbox"] { accent-color: #2563eb; cursor: pointer; }
+
+/* ===== Table ===== */
+.table-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+th { background: #f9fafb; padding: 10px 10px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+td { padding: 10px 10px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr { cursor: pointer; }
+tr:hover td { background: #f0f7ff; }
+
+/* ===== Tags ===== */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-orange { background: #ffedd5; color: #9a3412; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+
+/* Status tags */
+.status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.status-tag .sd { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.status-tag.pending { background: #f3f4f6; color: #6b7280; }
+.status-tag.pending .sd { background: #9ca3af; }
+.status-tag.active { background: #dbeafe; color: #1e40af; }
+.status-tag.active .sd { background: #3b82f6; }
+.status-tag.done { background: #d1fae5; color: #065f46; }
+.status-tag.done .sd { background: #10b981; }
+.status-tag.disposal { background: #ffedd5; color: #9a3412; }
+.status-tag.disposal .sd { background: #f97316; }
+
+/* ===== Overdue label badge ===== */
+.overdue-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.overdue-badge.m0 { background: #d1fae5; color: #065f46; }
+.overdue-badge.m1 { background: #fef3c7; color: #92400e; }
+.overdue-badge.m2 { background: #ffedd5; color: #9a3412; }
+.overdue-badge.m3 { background: #fee2e2; color: #991b1b; }
+.overdue-badge.m4 { background: #ede9fe; color: #5b21b6; }
+
+/* ===== Buttons ===== */
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ===== Info Cards (detail) ===== */
+.info-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.info-card { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; font-size: 13px; }
+.info-card .ic-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+.info-card .ic-row { display: flex; justify-content: space-between; padding: 4px 0; }
+.info-card .ic-row .label { color: #6b7280; }
+.info-card .ic-row .value { font-weight: 500; color: #1f2937; }
+
+/* ===== Timeline ===== */
+.timeline { font-size: 13px; }
+.timeline .tl-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; position: relative; }
+.timeline .tl-item:last-child { border-bottom: none; }
+.timeline .tl-item .tl-dot-col { display: flex; flex-direction: column; align-items: center; width: 20px; flex-shrink: 0; }
+.timeline .tl-item .tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.timeline .tl-item .tl-line { width: 1px; flex: 1; background: #e5e7eb; margin-top: 2px; }
+.timeline .tl-item:last-child .tl-line { display: none; }
+.timeline .tl-item .tl-body { flex: 1; min-width: 0; }
+.timeline .tl-item .tl-time { color: #6b7280; font-size: 12px; }
+.timeline .tl-item .tl-method { font-weight: 600; }
+.timeline .tl-item .tl-content { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.timeline .tl-item .tl-feedback { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; margin-top: 4px; }
+.timeline .tl-feedback.promise { background: #d1fae5; color: #065f46; }
+.timeline .tl-feedback.evade { background: #fef3c7; color: #92400e; }
+.timeline .tl-feedback.lost { background: #fee2e2; color: #991b1b; }
+.timeline .tl-feedback.reject { background: #ffedd5; color: #9a3412; }
+.timeline .tl-feedback.noreply { background: #f3f4f6; color: #6b7280; }
+
+/* ===== Tabs ===== */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 16px; }
+.tabs .tab { padding: 8px 18px; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tabs .tab:hover { color: #374151; }
+.tabs .tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+/* ===== Form Elements ===== */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; color: #374151; }
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select,
+.form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+.form-group textarea { resize: vertical; min-height: 70px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+
+/* Radio group */
+.radio-group { display: flex; gap: 16px; flex-wrap: wrap; }
+.radio-group label { display: inline-flex; align-items: center; gap: 4px; font-weight: 400; font-size: 13px; cursor: pointer; }
+.radio-group input[type="radio"] { accent-color: #2563eb; }
+
+/* ===== Warning/Info boxes ===== */
+.info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.success-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #166534; margin-bottom: 16px; }
+
+/* ===== Status Flow ===== */
+.coop-status { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.coop-status.triggered { background: #f3f4f6; color: #6b7280; }
+.coop-status.pushed { background: #dbeafe; color: #1e40af; }
+.coop-status.responded { background: #d1fae5; color: #065f46; }
+.coop-status.ended { background: #f3f4f6; color: #6b7280; }
+
+/* ===== Drawer ===== */
+.drawer-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.35); z-index: 100; }
+.drawer-overlay.show { display: block; }
+.drawer { position: fixed; top: 0; right: -680px; width: 680px; max-width: 90vw; height: 100vh; background: #fff; box-shadow: -4px 0 20px rgba(0,0,0,.1); z-index: 101; transition: right .3s ease; display: flex; flex-direction: column; }
+.drawer.open { right: 0; }
+.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #e5e7eb; }
+.drawer-header .dh-title { font-size: 16px; font-weight: 600; }
+.drawer-header .dh-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 18px; color: #6b7280; }
+.drawer-header .dh-close:hover { background: #f3f4f6; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+/* ===== Pagination ===== */
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 4px; font-size: 13px; color: #6b7280; }
+.pagination .page-btns { display: flex; align-items: center; gap: 4px; }
+.pagination .page-btns button { width: 28px; height: 28px; border: 1px solid #d1d5db; background: #fff; border-radius: 4px; cursor: pointer; font-size: 12px; color: #374151; }
+.pagination .page-btns button:hover { background: #f3f4f6; }
+.pagination .page-btns button.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+/* ===== Topbar Actions ===== */
+.top-action-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.top-action-bar .search-area { display: flex; align-items: center; gap: 8px; }
+.top-action-bar .search-area input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; width: 240px; outline: none; }
+.top-action-bar .search-area input:focus { border-color: #2563eb; }
+.top-action-bar .search-area select { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; outline: none; }
+
+/* ===== Disposal buttons ===== */
+.disposal-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ===== Scrollable container for tab content ===== */
+.tab-content { min-height: 200px; }
+</style>
+</head>
+<body>
+
+<!-- =============== SIDEBAR =============== -->
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item active">📋 贷后管理</div>
+    <div class="sub-item active">催收工作台</div>
+    <div class="sub-item">货物处置与核销</div>
+  </div>
+</div>
+
+<!-- =============== MAIN =============== -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="breadcrumb">贷后管理 / <strong>催收工作台</strong></span>
+    </div>
+    <div class="topbar-right">
+      <span>🔔</span>
+      <span>⚙️</span>
+      <span>👤</span>
+      <span>欢迎，<span class="user-name">张催收员</span></span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="page-title">催收工作台</div>
+
+    <!-- ===== Stats Cards ===== -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="num" style="color:#2563eb;">23</div>
+        <div class="label">今日待催收</div>
+        <div class="trend up">↑ 5</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#10b981;">92.5%</div>
+        <div class="label">M1催收成功率</div>
+        <div class="trend up">↑ 2.1%</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#10b981;">89.3%</div>
+        <div class="label">逾期回收率</div>
+        <div class="trend down">↓ 1.2%</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#f59e0b;">68.2%</div>
+        <div class="label">协同催收成功率</div>
+        <div class="trend up">↑ 3.5%</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#2563eb;">14笔/天</div>
+        <div class="label">人均处理量</div>
+        <div class="trend up">↑ 2笔</div>
+      </div>
+    </div>
+
+    <!-- ===== Layout Split ===== -->
+    <div class="layout-split">
+      <!-- ===== Left: Filter Panel ===== -->
+      <div class="filter-panel">
+        <div class="fp-section">
+          <div class="fp-title">逾期等级</div>
+          <label class="fp-item"><input type="checkbox" checked> <span>M0 (1-3天)</span><span class="count">5</span></label>
+          <label class="fp-item"><input type="checkbox" checked> <span>M1 (4-15天)</span><span class="count">12</span></label>
+          <label class="fp-item"><input type="checkbox" checked> <span>M2 (16-30天)</span><span class="count">4</span></label>
+          <label class="fp-item"><input type="checkbox" checked> <span>M3 (31-90天)</span><span class="count">2</span></label>
+          <label class="fp-item"><input type="checkbox" checked> <span>M4 (&gt;90天)</span><span class="count">0</span></label>
+        </div>
+
+        <hr class="fp-divider">
+
+        <div class="fp-section">
+          <div class="fp-title">客户等级</div>
+          <label class="fp-item"><input type="checkbox" checked> A级</label>
+          <label class="fp-item"><input type="checkbox" checked> B级</label>
+          <label class="fp-item"><input type="checkbox" checked> C级</label>
+        </div>
+
+        <hr class="fp-divider">
+
+        <div class="fp-section">
+          <div class="fp-title">催收状态</div>
+          <label class="fp-item"><input type="checkbox" checked> 待处理</label>
+          <label class="fp-item"><input type="checkbox" checked> 进行中</label>
+          <label class="fp-item"><input type="checkbox" checked> 已结清</label>
+          <label class="fp-item"><input type="checkbox" checked> 转处置</label>
+        </div>
+
+        <hr class="fp-divider">
+
+        <div class="fp-section">
+          <div class="fp-title">责任人</div>
+          <label class="fp-item"><input type="checkbox"> 张三</label>
+          <label class="fp-item"><input type="checkbox"> 李四</label>
+          <label class="fp-item"><input type="checkbox"> 王五</label>
+          <label class="fp-item"><input type="checkbox"> 赵六</label>
+          <label class="fp-item"><input type="checkbox" checked> 全部</label>
+        </div>
+
+        <hr class="fp-divider">
+
+        <div class="fp-section">
+          <div class="fp-title">核心企业</div>
+          <label class="fp-item"><input type="checkbox" checked> 华为</label>
+          <label class="fp-item"><input type="checkbox" checked> 小米</label>
+          <label class="fp-item"><input type="checkbox" checked> OPPO</label>
+          <label class="fp-item"><input type="checkbox" checked> vivo</label>
+        </div>
+
+        <button class="reset-btn" onclick="alert('筛选条件已重置')">重置筛选</button>
+      </div>
+
+      <!-- ===== Right: Table + Drawer ===== -->
+      <div>
+        <!-- ===== Search & Sort ===== -->
+        <div class="top-action-bar">
+          <div class="search-area">
+            <span style="font-size:13px;color:#374151;font-weight:500;">搜索：</span>
+            <input type="text" placeholder="客户名称/任务编号" onkeydown="if(event.key==='Enter')alert('搜索: '+this.value)">
+            <span style="font-size:13px;color:#374151;font-weight:500;">排序：</span>
+            <select>
+              <option>逾期天数+金额降序</option>
+              <option>逾期天数降序</option>
+              <option>金额降序</option>
+              <option>金额升序</option>
+            </select>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="alert('刷新列表')">🔄 刷新</button>
+        </div>
+
+        <!-- ===== Task Table ===== -->
+        <div class="card" style="padding:0;">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>任务编号</th>
+                  <th>客户名称</th>
+                  <th>逾期本金</th>
+                  <th>逾期天数</th>
+                  <th>逾期等级</th>
+                  <th>核心企业</th>
+                  <th>催收员</th>
+                  <th>状态</th>
+                  <th>最后跟进时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr onclick="openDrawer(0)">
+                  <td style="color:#2563eb;font-weight:500;">C202604001</td>
+                  <td>xx科技</td>
+                  <td style="font-weight:500;">¥580,000</td>
+                  <td style="color:#ef4444;font-weight:600;">42</td>
+                  <td><span class="overdue-badge m2">M2</span></td>
+                  <td>华为</td>
+                  <td>张三</td>
+                  <td><span class="status-tag active"><span class="sd"></span>进行中</span></td>
+                  <td>10:23</td>
+                </tr>
+                <tr onclick="openDrawer(1)">
+                  <td style="color:#2563eb;font-weight:500;">C202604002</td>
+                  <td>yy贸易</td>
+                  <td style="font-weight:500;">¥320,000</td>
+                  <td style="color:#ef4444;font-weight:600;">28</td>
+                  <td><span class="overdue-badge m2">M2</span></td>
+                  <td>小米</td>
+                  <td>李四</td>
+                  <td><span class="status-tag active"><span class="sd"></span>进行中</span></td>
+                  <td>09:45</td>
+                </tr>
+                <tr onclick="openDrawer(2)">
+                  <td style="color:#2563eb;font-weight:500;">C202604003</td>
+                  <td>zz电子</td>
+                  <td style="font-weight:500;">¥150,000</td>
+                  <td style="color:#f59e0b;font-weight:600;">15</td>
+                  <td><span class="overdue-badge m1">M1</span></td>
+                  <td>华为</td>
+                  <td>张三</td>
+                  <td><span class="status-tag active"><span class="sd"></span>进行中</span></td>
+                  <td>昨天</td>
+                </tr>
+                <tr onclick="openDrawer(3)">
+                  <td style="color:#2563eb;font-weight:500;">C202604004</td>
+                  <td>ww商贸</td>
+                  <td style="font-weight:500;">¥85,000</td>
+                  <td>8</td>
+                  <td><span class="overdue-badge m1">M1</span></td>
+                  <td>OPPO</td>
+                  <td>王五</td>
+                  <td><span class="status-tag pending"><span class="sd"></span>待处理</span></td>
+                  <td style="color:#9ca3af;">--</td>
+                </tr>
+                <tr onclick="openDrawer(4)">
+                  <td style="color:#2563eb;font-weight:500;">C202604005</td>
+                  <td>aa制造</td>
+                  <td style="font-weight:500;">¥420,000</td>
+                  <td style="color:#ef4444;font-weight:600;">67</td>
+                  <td><span class="overdue-badge m3">M3</span></td>
+                  <td>华为</td>
+                  <td>赵六</td>
+                  <td><span class="status-tag active"><span class="sd"></span>进行中</span></td>
+                  <td>前天</td>
+                </tr>
+                <tr onclick="openDrawer(5)">
+                  <td style="color:#2563eb;font-weight:500;">C202604006</td>
+                  <td>bb零售</td>
+                  <td style="font-weight:500;">¥45,000</td>
+                  <td>3</td>
+                  <td><span class="overdue-badge m0">M0</span></td>
+                  <td>vivo</td>
+                  <td>张三</td>
+                  <td><span class="status-tag pending"><span class="sd"></span>待处理</span></td>
+                  <td style="color:#9ca3af;">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Pagination ===== -->
+        <div class="pagination">
+          <div style="font-size:13px;color:#6b7280;">共 23 条记录 &nbsp;|&nbsp; 每页10条</div>
+          <div class="page-btns">
+            <button>&#8249;</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>&#8250;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============== DRAWER OVERLAY =============== -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- =============== DRAWER =============== -->
+<div class="drawer" id="detailDrawer">
+  <div class="drawer-header">
+    <div class="dh-title">催收详情 — <span id="drawerTaskId">C202604001</span></div>
+    <div class="dh-close" onclick="closeDrawer()">&times;</div>
+  </div>
+  <div class="drawer-body">
+    <!-- ===== Info Cards ===== -->
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="ic-title">客户信息</div>
+        <div class="ic-row"><span class="label">客户</span><span class="value" id="dCustomer">xx科技</span></div>
+        <div class="ic-row"><span class="label">等级</span><span class="value">B级</span></div>
+        <div class="ic-row"><span class="label">电话</span><span class="value">138****8888</span></div>
+        <div class="ic-row"><span class="label">历史逾期</span><span class="value">2次</span></div>
+        <div class="ic-row"><span class="label">累计融资</span><span class="value">¥500万</span></div>
+      </div>
+      <div class="info-card">
+        <div class="ic-title" style="color:#92400e;">逾期信息</div>
+        <div class="ic-row"><span class="label">业务编号</span><span class="value">F001</span></div>
+        <div class="ic-row"><span class="label">本金</span><span class="value" style="color:#ef4444;font-weight:600;" id="dAmount">¥580,000</span></div>
+        <div class="ic-row"><span class="label">逾期</span><span class="value" style="color:#ef4444;" id="dDays">42天</span></div>
+        <div class="ic-row"><span class="label">逾期利息</span><span class="value">¥6,960</span></div>
+        <div class="ic-row"><span class="label">到期日</span><span class="value">3/15</span></div>
+      </div>
+      <div class="info-card">
+        <div class="ic-title" style="color:#1e40af;">核心企业信息</div>
+        <div class="ic-row"><span class="label">企业</span><span class="value" id="dCore">华为</span></div>
+        <div class="ic-row"><span class="label">等级</span><span class="value">S级</span></div>
+        <div class="ic-row"><span class="label">推荐质量</span><span class="value">优</span></div>
+        <div class="ic-row"><span class="label">协同状态</span><span class="value"><span class="coop-status responded" style="font-size:11px;">已响应</span></span></div>
+      </div>
+    </div>
+
+    <!-- ===== Tabs ===== -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this, 'tabRecord')">催收记录</div>
+      <div class="tab" onclick="switchTab(this, 'tabNewRecord')">新增记录</div>
+      <div class="tab" onclick="switchTab(this, 'tabCoop')">协同催收</div>
+      <div class="tab" onclick="switchTab(this, 'tabDisposal')">处置评估 <span style="font-size:11px;color:#9ca3af;">M2+显示</span></div>
+    </div>
+
+    <!-- ===== Tab: 催收记录 ===== -->
+    <div class="tab-content" id="tabRecord">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot-col">
+            <div class="tl-dot" style="background:#10b981;"></div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-body">
+            <div><span class="tl-time">2026-04-26 10:23</span></div>
+            <div><span class="tl-method">电话催收</span> <span style="color:#6b7280;font-size:12px;">— 张三</span></div>
+            <div class="tl-content">沟通内容：客户承诺本周五还款，约定期限4/30</div>
+            <div>
+              <span class="tl-feedback promise">承诺还款</span>
+              <span style="font-size:12px;color:#6b7280;margin-left:4px;">承诺还款日：2026-04-30</span>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot-col">
+            <div class="tl-dot" style="background:#f59e0b;"></div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-body">
+            <div><span class="tl-time">2026-04-24 16:00</span></div>
+            <div><span class="tl-method">电话催收</span></div>
+            <div class="tl-content">沟通内容：客户表示资金周转困难，申请延期</div>
+            <div>
+              <span class="tl-feedback evade">推脱</span>
+              <span style="font-size:12px;color:#6b7280;margin-left:4px;">下次跟进：2026-04-26</span>
+            </div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot-col">
+            <div class="tl-dot" style="background:#e5e7eb;"></div>
+            <div class="tl-line"></div>
+          </div>
+          <div class="tl-body">
+            <div><span class="tl-time">2026-04-22 09:15</span></div>
+            <div><span class="tl-method">短信催收</span></div>
+            <div class="tl-content">沟通内容：发送逾期提醒短信</div>
+            <div>
+              <span class="tl-feedback noreply">未回复</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Tab: 新增记录 ===== -->
+    <div class="tab-content" id="tabNewRecord" style="display:none;">
+      <div class="form-group">
+        <label>催收方式</label>
+        <div class="radio-group">
+          <label><input type="radio" name="method" checked> 电话</label>
+          <label><input type="radio" name="method"> 上门</label>
+          <label><input type="radio" name="method"> 短信</label>
+          <label><input type="radio" name="method"> 法务函</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>沟通内容摘要</label>
+        <textarea placeholder="请输入催收沟通内容（最多500字）"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>客户反馈</label>
+          <select id="feedbackSelect" onchange="togglePromiseDate()">
+            <option value="promise">承诺还款</option>
+            <option value="evade">推脱</option>
+            <option value="lost">失联</option>
+            <option value="reject">拒绝</option>
+          </select>
+        </div>
+        <div class="form-group" id="promiseDateGroup">
+          <label>承诺还款日期 <span style="color:#ef4444;">*</span></label>
+          <input type="date" value="2026-04-30">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>下次跟进日期</label>
+        <input type="date" value="2026-04-28">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+        <button class="btn btn-outline" onclick="alert('已取消')">取消</button>
+        <button class="btn btn-primary" onclick="saveRecord()">保存记录</button>
+      </div>
+    </div>
+
+    <!-- ===== Tab: 协同催收区 ===== -->
+    <div class="tab-content" id="tabCoop" style="display:none;">
+      <div class="info-box">【触发条件】逾期≥15天 或 逾期金额≥30万</div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <span style="font-size:13px;font-weight:500;">当前协同状态：</span>
+        <span class="coop-status responded">已响应</span>
+      </div>
+
+      <div class="form-group">
+        <label>核心企业响应内容</label>
+        <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;">
+          已接受协同请求，已联系客户上级管理层协调还款。<br>
+          预计协助回收金额：¥400,000，预计时间：5个工作日内
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="alert('协同请求已推送至核心企业端')">一键推送协同请求</button>
+        <span style="display:inline-flex;align-items:center;font-size:12px;color:#6b7280;">已推送，等待响应中...</span>
+      </div>
+    </div>
+
+    <!-- ===== Tab: 处置评估入口（M2+） ===== -->
+    <div class="tab-content" id="tabDisposal" style="display:none;">
+      <div class="warn-box">
+        <span style="font-size:16px;">⚠️</span>
+        <span>该任务逾期 <strong id="dDisposalDays">42</strong> 天（M2），已满足处置启动条件</span>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;color:#6b7280;margin-bottom:12px;">
+          <strong style="color:#374151;">按钮触发条件说明：</strong><br>
+          · 进入货物处置流程：M2+ 且催收无效时启用<br>
+          · 法律诉讼：M3+ 时启用<br>
+          · 核销申请：M4 或满足核销条件时启用
+        </div>
+
+        <div class="disposal-btns">
+          <button class="btn btn-primary" onclick="alert('跳转货物处置流程页面')">进入货物处置流程</button>
+          <button class="btn btn-warning" onclick="alert('跳转诉讼案件录入页面')">法律诉讼</button>
+          <button class="btn btn-outline" style="color:#ef4444;border-color:#ef4444;" onclick="alert('跳转资产核销申请页面')">核销申请</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== Drawer =====
+function openDrawer(idx) {
+  var data = [
+    { id:'C202604001', cust:'xx科技', amount:'¥580,000', days:'42天', core:'华为', overdue:'m2', grade:'M2' },
+    { id:'C202604002', cust:'yy贸易', amount:'¥320,000', days:'28天', core:'小米', overdue:'m2', grade:'M2' },
+    { id:'C202604003', cust:'zz电子', amount:'¥150,000', days:'15天', core:'华为', overdue:'m1', grade:'M1' },
+    { id:'C202604004', cust:'ww商贸', amount:'¥85,000',  days:'8天',  core:'OPPO', overdue:'m1', grade:'M1' },
+    { id:'C202604005', cust:'aa制造', amount:'¥420,000', days:'67天', core:'华为', overdue:'m3', grade:'M3' },
+    { id:'C202604006', cust:'bb零售', amount:'¥45,000',  days:'3天',  core:'vivo', overdue:'m0', grade:'M0' }
+  ];
+  var d = data[idx] || data[0];
+  document.getElementById('drawerTaskId').textContent = d.id;
+  document.getElementById('dCustomer').textContent = d.cust;
+  document.getElementById('dAmount').textContent = d.amount;
+  document.getElementById('dDays').textContent = d.days;
+  document.getElementById('dCore').textContent = d.core;
+  document.getElementById('dDisposalDays').textContent = d.days.replace('天','');
+
+  // Show/hide 处置评估 tab based on M2+
+  var disposalTab = document.querySelectorAll('.tabs .tab')[3];
+  if (d.overdue === 'm2' || d.overdue === 'm3' || d.overdue === 'm4') {
+    disposalTab.style.display = '';
+  } else {
+    disposalTab.style.display = 'none';
+  }
+
+  document.getElementById('drawerOverlay').classList.add('show');
+  document.getElementById('detailDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('show');
+  document.getElementById('detailDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ===== Tab Switching =====
+function switchTab(el, tabId) {
+  document.querySelectorAll('.tabs .tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+  document.getElementById(tabId).style.display = '';
+}
+
+// ===== Promise date toggle =====
+function togglePromiseDate() {
+  var val = document.getElementById('feedbackSelect').value;
+  var grp = document.getElementById('promiseDateGroup');
+  grp.style.display = val === 'promise' ? '' : 'none';
+}
+
+// ===== Save Record =====
+function saveRecord() {
+  alert('催收记录保存成功，时间轴已更新');
+  switchTab(document.querySelectorAll('.tabs .tab')[0], 'tabRecord');
+}
+</script>
+</body>
+</html>

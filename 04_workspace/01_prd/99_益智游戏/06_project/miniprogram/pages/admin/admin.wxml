@@ -1,0 +1,104 @@
+<view class="page-container fade-in">
+  <!-- 登录界面 -->
+  <view wx:if="{{!loggedIn}}" class="login-section">
+    <view class="lock-icon">🔒</view>
+    <view class="login-title">家长验证</view>
+    <input class="password-input" type="number" password placeholder="请输入四位密码" maxlength="4" bindinput="onPasswordInput" />
+    <button class="btn-primary" bindtap="login">验证</button>
+  </view>
+
+  <!-- 管理界面 -->
+  <view wx:else class="admin-section">
+    <view class="page-title">家长中心</view>
+
+    <!-- 统计卡片 -->
+    <view class="card stats-card">
+      <view class="admin-stats-row">
+        <view class="admin-stat">
+          <text class="admin-stat-num">{{stats.pendingReview}}</text>
+          <text class="admin-stat-label">待审核</text>
+        </view>
+        <view class="admin-stat">
+          <text class="admin-stat-num">{{stats.todayCompleted}}</text>
+          <text class="admin-stat-label">今日完成</text>
+        </view>
+        <view class="admin-stat">
+          <text class="admin-stat-num">{{stats.totalTasks}}</text>
+          <text class="admin-stat-label">任务总数</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 孩子管理 -->
+    <view class="card children-card" wx:if="{{role === 'parent'}}">
+      <view class="children-card-header">
+        <text class="children-card-title">👶 我的孩子</text>
+        <text class="children-add-btn" bindtap="toggleAddChild">+ 添加</text>
+      </view>
+
+      <!-- 添加孩子表单 -->
+      <view class="add-child-form" wx:if="{{showAddChild}}">
+        <input class="add-child-input" type="text" placeholder="输入孩子昵称" maxlength="20" value="{{childName}}" bindinput="onChildNameInput" />
+        <button class="btn-primary btn-small" bindtap="addChild">确认添加</button>
+      </view>
+
+      <!-- 孩子列表 -->
+      <view wx:if="{{children.length === 0}}" class="empty-children">
+        <text>还没有添加孩子，点击上方添加</text>
+      </view>
+      <view wx:else class="children-list">
+        <view
+          class="child-item {{activeChildIndex === index ? 'child-active' : ''}}"
+          wx:for="{{children}}"
+          wx:for-item="child"
+          wx:for-index="index"
+          wx:key="openId"
+          bindtap="selectChild"
+          data-index="{{index}}"
+        >
+          <view class="child-avatar">{{child.nickName.slice(0, 1)}}</view>
+          <view class="child-info">
+            <text class="child-name">{{child.nickName}}</text>
+            <text class="child-stars">⭐ {{child.stars}}  |  🌳 {{child.treeGrowth || 0}}</text>
+          </view>
+          <view class="child-check" wx:if="{{activeChildIndex === index}}">✓</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 功能入口 -->
+    <view class="menu-list">
+      <view class="card menu-item" bindtap="goReview">
+        <text class="menu-icon">📋</text>
+        <view class="menu-info">
+          <text class="menu-title">审核中心</text>
+          <text class="menu-desc">查看和审核孩子的任务提交</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <view class="card menu-item" bindtap="goTaskManage">
+        <text class="menu-icon">✏️</text>
+        <view class="menu-info">
+          <text class="menu-title">任务管理</text>
+          <text class="menu-desc">添加、编辑和管理任务库</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <view class="card menu-item" bindtap="goReport">
+        <text class="menu-icon">📊</text>
+        <view class="menu-info">
+          <text class="menu-title">成长报告</text>
+          <text class="menu-desc">查看每日完成趋势和类别分布</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <view class="logout-section">
+      <button class="btn-secondary" bindtap="logout">退出登录</button>
+    </view>
+  </view>
+</view>

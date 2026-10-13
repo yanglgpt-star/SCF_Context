@@ -1,0 +1,139 @@
+/* 饮食记录页样式 */
+
+.page-history {
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+/* 日历 */
+.calendar-card {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.month-nav {
+  font-size: 44rpx;
+  color: #333;
+  padding: 8rpx 20rpx;
+}
+.month-title {
+  font-size: 32rpx;
+  font-weight: 500;
+}
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 12rpx;
+}
+.weekday {
+  font-size: 24rpx;
+  color: #999;
+  padding: 8rpx 0;
+}
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4rpx;
+}
+.day-cell {
+  text-align: center;
+  padding: 12rpx 0;
+  border-radius: 12rpx;
+  position: relative;
+  min-height: 70rpx;
+}
+.day-cell.empty { visibility: hidden; }
+.day-cell.today .day-text {
+  background: #07c160;
+  color: #fff;
+  width: 56rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  border-radius: 50%;
+  display: inline-block;
+}
+.day-cell.selected {
+  background: #e8f8ee;
+}
+.day-text {
+  font-size: 28rpx;
+  color: #333;
+}
+.mark-dot {
+  position: absolute;
+  bottom: 4rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 16rpx;
+  color: #07c160;
+}
+
+/* 段落 */
+.section {
+  padding: 0 20rpx;
+  margin-top: 20rpx;
+}
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+/* 餐次分组 */
+.meal-group {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 12rpx;
+}
+.meal-group-title {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #07c160;
+  display: block;
+  margin-bottom: 12rpx;
+}
+.log-dish-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+.log-dish-item:last-child { border-bottom: none; }
+.log-dish-name { font-size: 28rpx; color: #555; }
+.log-dish-stars { font-size: 22rpx; color: #fa8c16; }
+
+/* 本周看板 */
+.week-board {
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+}
+.week-group {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid #f5f5f5;
+  gap: 20rpx;
+}
+.week-group:last-child { border-bottom: none; }
+.week-date {
+  font-size: 26rpx;
+  color: #999;
+  min-width: 140rpx;
+}
+.week-meal {
+  font-size: 26rpx;
+  color: #555;
+}

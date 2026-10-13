@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>平台准入审核 - 客户管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-group input:disabled, .form-group select:disabled { background: #f3f4f6; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.layout-split { display: grid; grid-template-columns: 1fr 400px; gap: 16px; }
+.doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.doc-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; cursor: pointer; }
+.doc-card:hover { border-color: #2563eb; background: #f8faff; }
+.doc-card .doc-icon { font-size: 24px; margin-bottom: 4px; }
+.doc-card .doc-name { font-size: 12px; color: #374151; font-weight: 500; }
+.doc-card .doc-status { font-size: 11px; margin-top: 4px; }
+.doc-card .doc-actions { display: flex; gap: 6px; justify-content: center; margin-top: 4px; }
+.core-block { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 1px solid #c4b5fd; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+.core-block .cb-title { font-size: 13px; font-weight: 600; color: #5b21b6; margin-bottom: 8px; }
+.core-block .cb-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; }
+.core-block .cb-info div { color: #4b5563; }
+.suggestion-list { list-style: none; font-size: 12px; }
+.suggestion-list li { padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+.title-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.title-bar .app-id { font-size: 18px; font-weight: 600; }
+.title-bar .timeout { font-size: 13px; color: #6b7280; margin-left: auto; }
+.title-bar .timeout .urgent { color: #ef4444; font-weight: 600; }
+.completeness { background: #f9fafb; border-radius: 8px; padding: 12px; margin-top: 12px; }
+.completeness .c-stats { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.completeness .c-list { list-style: none; font-size: 12px; }
+.completeness .c-list li { padding: 2px 0; display: flex; align-items: center; gap: 6px; }
+.check-icon { display: inline-block; width: 16px; text-align: center; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: center; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item active">👥 客户管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">平台准入审核</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;">企业档案与推荐</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">客户管理 / 准入审核 / <strong>审核详情</strong></span></div>
+    <div class="topbar-right"><span>审批待办 12</span><span>👤 审核专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <!-- Title bar with channel tag + countdown -->
+    <div class="title-bar">
+      <span class="app-id">ADM-20260426-001</span>
+      <span class="tag tag-purple">🏷 快速通道</span>
+      <span class="timeout">⏱ 剩余 <span class="urgent" id="countdown">23:45:12</span></span>
+    </div>
+
+    <!-- Layout: left = application info, right = approval decision -->
+    <div class="layout-split">
+      <!-- LEFT: Application Info -->
+      <div>
+        <!-- Basic Info -->
+        <div class="card">
+          <div class="card-title">📋 基本信息</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+            <div><strong>企业名称：</strong>XX商贸有限公司</div>
+            <div><strong>统一信用代码：</strong>91110000MA******01</div>
+            <div><strong>法定代表人：</strong>张三</div>
+            <div><strong>联系电话：</strong>138****8888</div>
+            <div><strong>注册地址：</strong>福建省厦门市思明区湖滨南路100号</div>
+          </div>
+        </div>
+
+        <!-- Uploaded Docs Preview (7 items) -->
+        <div class="card">
+          <div class="card-title">📄 上传资料预览</div>
+          <div class="doc-grid">
+            <div class="doc-card">
+              <div class="doc-icon">📄</div>
+              <div class="doc-name">① 营业执照.pdf</div>
+              <div class="doc-status"><span class="tag tag-green">✓ 已上传</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-icon">🪪</div>
+              <div class="doc-name">② 法人身份证正反面.jpg</div>
+              <div class="doc-status"><span class="tag tag-yellow">⚠ 临期 19天</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-icon">📘</div>
+              <div class="doc-name">③ 公司章程.pdf</div>
+              <div class="doc-status"><span class="tag tag-green">✓ 已上传</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-icon">📊</div>
+              <div class="doc-name">④ 审计报告.pdf</div>
+              <div class="doc-status"><span class="tag tag-green">✓ 已上传</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-icon">💰</div>
+              <div class="doc-name">⑤ 银行流水.xlsx</div>
+              <div class="doc-status"><span class="tag tag-green">✓ 已上传</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-icon">🤝</div>
+              <div class="doc-name">⑥ 合作协议.pdf</div>
+              <div class="doc-status"><span class="tag tag-green">✓ 已上传</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+            <div class="doc-card">
+              <div class="doc-icon">📋</div>
+              <div class="doc-name">⑦ 采购记录.xlsx</div>
+              <div class="doc-status"><span class="tag tag-green">✓ 已上传</span></div>
+              <div class="doc-actions"><button class="btn btn-outline btn-sm">预览</button><button class="btn btn-outline btn-sm">下载</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completeness Check -->
+        <div class="card">
+          <div class="card-title">📋 资料完整性检查</div>
+          <div class="completeness">
+            <div class="c-stats">资料完整度：<span style="color:#10b981;">7/7 ✓</span></div>
+            <ul class="c-list">
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 营业执照</li>
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 法人身份证 <span class="tag tag-yellow" style="margin-left:8px;">⚠ 临期 19天</span></li>
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 公司章程</li>
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 审计报告</li>
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 银行流水</li>
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 合作协议</li>
+              <li><span class="check-icon" style="color:#10b981;">✓</span> 采购记录</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Approval Decision -->
+      <div>
+        <!-- Core Enterprise Recommendation (purple block) -->
+        <div class="core-block">
+          <div class="cb-title">🟣 核心企业推荐信息</div>
+          <div class="cb-info">
+            <div><strong>核心企业：</strong>XX科技有限公司</div>
+            <div><strong>核心企业等级：</strong><span class="tag tag-purple">S级</span> ⭐⭐⭐⭐⭐</div>
+            <div><strong>推荐质量得分：</strong>92分（优秀）</div>
+            <div><strong>经销商信用评级：</strong>A+（视为A级）</div>
+            <div><strong>推荐确认时间：</strong>2026-04-25 14:30</div>
+            <div><strong>近期供货数据：</strong>月均采购额约80万</div>
+          </div>
+        </div>
+
+        <!-- System Suggestions -->
+        <div class="card">
+          <div class="card-title">🤖 系统智能建议</div>
+          <div style="margin-bottom:8px;">
+            <span style="font-weight:600;">综合评估结果：</span>
+            <span class="tag tag-green">✓ 建议通过</span>
+          </div>
+          <div style="font-size:12px;color:#4b5563;">
+            <div><strong>准入通道：</strong>快速通道（2级审批）</div>
+            <div><strong>建议授信额度范围：</strong>100-500万元</div>
+            <div><strong>质押率上限：</strong>品类基准 +5%</div>
+          </div>
+          <ul class="suggestion-list">
+            <li style="margin-top:6px;font-weight:600;">匹配依据：</li>
+            <li>• 核心企业等级=S级</li>
+            <li>• 经销商等级=A级（A+视为A级）</li>
+            <li>• 推荐质量优秀（≥90分）</li>
+          </ul>
+          <ul class="suggestion-list" style="margin-top:6px;">
+            <li style="font-weight:600;">风险扫描结果：</li>
+            <li><span style="color:#10b981;">✓</span> 未命中黑名单</li>
+            <li><span style="color:#10b981;">✓</span> 征信校验通过</li>
+            <li><span style="color:#f59e0b;">⚠</span> 法人身份证临期（审批注意）</li>
+            <li><span style="color:#10b981;">✓</span> 无未结清逾期</li>
+          </ul>
+        </div>
+
+        <!-- Approval Form -->
+        <div class="card">
+          <div class="card-title">✍️ 审批操作</div>
+          <div class="form-group">
+            <label>审批结果 <span style="color:#ef4444;">*</span></label>
+            <div style="display:flex;gap:24px;padding:4px 0;">
+              <label><input type="radio" name="approval" value="approve" onchange="toggleApproval('approve')"> 通过</label>
+              <label><input type="radio" name="approval" value="reject" onchange="toggleApproval('reject')"> 驳回</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>授信额度（通过时必填）</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="number" id="creditLine" value="300" style="flex:1;" disabled>
+              <span style="font-size:13px;">万元</span>
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">范围参考：100-500万元</div>
+          </div>
+          <div class="form-group">
+            <label>审批意见 *（不少于10字符）</label>
+            <textarea id="opinion" placeholder="请输入审批意见..." oninput="checkOpinion()"></textarea>
+            <div id="opinionHint" style="font-size:11px;color:#ef4444;margin-top:2px;">审批意见不少于10字符</div>
+          </div>
+          <div class="form-group" id="rejectReason" style="display:none;">
+            <label>驳回原因（驳回时选择）</label>
+            <select>
+              <option value="">请选择驳回原因</option>
+              <option>资料不完整</option>
+              <option>信息不真实</option>
+              <option>征信校验不通过</option>
+              <option>黑名单命中</option>
+              <option>核心企业拒绝推荐</option>
+              <option>其他原因</option>
+            </select>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-outline">取消</button>
+            <button class="btn btn-primary" onclick="submitApproval()">提交审批</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title">⚠️ 确认提交审批</div>
+    <p style="font-size:14px;color:#4b5563;margin-bottom:12px;">确认提交审批结果？通过后不可撤销。</p>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="document.getElementById('confirmModal').classList.remove('show')">取消</button>
+      <button class="btn btn-primary" onclick="document.getElementById('confirmModal').classList.remove('show');alert('审批已提交！')">确认提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var sec = 23*3600 + 45*60 + 12;
+setInterval(function() {
+  sec--;
+  var h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  var el = document.getElementById('countdown');
+  if (el) el.textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}, 1000);
+
+function toggleApproval(val) {
+  var cl = document.getElementById('creditLine');
+  var rr = document.getElementById('rejectReason');
+  if (val === 'approve') {
+    cl.disabled = false;
+    rr.style.display = 'none';
+  } else {
+    cl.disabled = true;
+    rr.style.display = 'block';
+  }
+}
+
+function checkOpinion() {
+  var len = document.getElementById('opinion').value.length;
+  var hint = document.getElementById('opinionHint');
+  hint.textContent = len >= 10 ? '✓ 已满足' : '审批意见不少于10字符（当前' + len + '字符）';
+  hint.style.color = len >= 10 ? '#10b981' : '#ef4444';
+}
+
+function submitApproval() {
+  var sel = document.querySelector('input[name="approval"]:checked');
+  if (!sel) { alert('请选择审批结果'); return; }
+  var op = document.getElementById('opinion').value;
+  if (op.length < 10) { alert('审批意见不少于10字符'); return; }
+  if (sel.value === 'approve' && document.getElementById('creditLine').disabled) { alert('请先选择"通过"'); return; }
+  document.getElementById('confirmModal').classList.add('show');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "dbtest",
+  "version": "1.0.0",
+  "description": "测试数据库连通性",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

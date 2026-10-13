@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>销售订单管理 - 金融助手</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; line-height: 1.6; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 256px; background: #001529; color: #fff; flex-shrink: 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-brand { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .sidebar-brand::before { content: '⚡'; font-size: 20px; }
+        .sidebar-menu { flex: 1; padding: 12px 0; overflow-y: auto; }
+        .sidebar-item { padding: 14px 24px; color: rgba(255,255,255,0.65); cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: all 0.3s; border-left: 3px solid transparent; }
+        .sidebar-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar-item.active { color: #fff; background: #1890ff; border-left-color: #fff; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .top-header { background: #fff; height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e8e8e8; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .breadcrumb { font-size: 14px; color: #8c8c8c; }
+        .breadcrumb span:last-child { color: #262626; font-weight: 500; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #8c8c8c; }
+        .header-icon:hover { background: #f5f5f5; color: #262626; }
+        .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+        .content-wrapper { flex: 1; padding: 24px; overflow-y: auto; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .card-header { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 600; color: #262626; }
+        .search-area { background: #fafafa; padding: 20px 24px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+        .search-item { display: flex; flex-direction: column; gap: 6px; }
+        .form-label { display: block; font-size: 13px; color: #262626; margin-bottom: 6px; }
+        .form-input { padding: 9px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; transition: all 0.3s; min-width: 180px; }
+        .form-input:focus { outline: none; border-color: #1890ff; box-shadow: 0 0 0 3px rgba(24,144,255,0.1); }
+        select.form-input { cursor: pointer; }
+        .btn { padding: 9px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #595959; }
+        .btn-default:hover { border-color: #1890ff; color: #1890ff; }
+        .data-table { border-collapse: collapse; font-size: 14px; width: 100%; }
+        .data-table th { background: #fafafa; padding: 14px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; font-weight: 600; color: #262626; white-space: nowrap; }
+        .data-table td { padding: 16px; border-bottom: 1px solid #f0f0f0; color: #595959; white-space: nowrap; }
+        .data-table tr:hover { background: #fafafa; }
+        .table-scroll { overflow-x: auto; margin: 0 24px 24px; width: calc(100% - 48px); }
+        .table-scroll .data-table { width: auto; min-width: 100%; }
+        
+        /* 状态标签 */
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+        
+        /* 支付状态标签 */
+        .tag-pay-pending { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+        .tag-pay-paid { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        
+        /* 订单状态标签 */
+        .tag-order-pending { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
+        .tag-order-ship { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+        .tag-order-shipped { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .tag-order-completed { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        
+        .amount { font-family: "SF Mono", monospace; text-align: right; }
+        .link { color: #1890ff; cursor: pointer; }
+        .link:hover { text-decoration: underline; }
+        
+        /* 分页样式 */
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #f0f0f0; }
+        .pagination-total { font-size: 13px; color: #8c8c8c; margin-right: 12px; }
+        .pagination-page { display: flex; gap: 4px; }
+        .pagination-item { min-width: 32px; height: 32px; padding: 0 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; color: #595959; cursor: pointer; transition: all 0.3s; background: #fff; }
+        .pagination-item:hover { border-color: #1890ff; color: #1890ff; }
+        .pagination-item.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .pagination-item.disabled { color: #d9d9d9; cursor: not-allowed; border-color: #d9d9d9; }
+        .pagination-jump { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #595959; margin-left: 12px; }
+        .pagination-jump input { width: 48px; height: 32px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 6px; text-align: center; font-size: 14px; }
+        
+        .alert-info { background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: #1890ff; margin: 0 24px 24px; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 8px; font-size: 14px; color: #fff; z-index: 9999; animation: slideDown 0.3s ease; }
+        .toast.success { background: #52c41a; }
+        .toast.error { background: #ff4d4f; }
+        .toast.warning { background: #faad14; }
+        .toast.info { background: #1890ff; }
+        @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .amount-positive { color: #52c41a; font-weight: 600; }
+        .amount-negative { color: #cf1322; font-weight: 600; }
+        .amount-primary { color: #1890ff; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- 左侧菜单 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">金融助手</div>
+            </div>
+            <nav class="sidebar-menu">
+                <div class="sidebar-item" data-menu="audit" onclick="switchMenu('audit')">代储代销审核</div>
+                <div class="sidebar-item" data-menu="warehouse" onclick="switchMenu('warehouse')">电子仓单管理</div>
+                <div class="sidebar-item" data-menu="margin" onclick="switchMenu('margin')">保证金拨付</div>
+                <div class="sidebar-item" data-menu="order" onclick="switchMenu('order')">代储订单管理</div>
+                <div class="sidebar-item active" data-menu="sale" onclick="switchMenu('sale')">销售订单管理</div>
+                <div class="sidebar-item" data-menu="outbound" onclick="switchMenu('outbound')">出库指令管理</div>
+                <div class="sidebar-item" data-menu="settlement" onclick="switchMenu('settlement')">清结算中心</div>
+                <div class="sidebar-item" data-menu="invoice" onclick="switchMenu('invoice')">票据中心</div>
+                <div class="sidebar-item" data-menu="receipt" onclick="switchMenu('receipt')">提货凭证管理</div>
+            </nav>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="breadcrumb"><span>首页</span> / <span id="current-menu">销售订单管理</span></div>
+                <div class="header-right">
+                    <div class="header-icon">🔔</div>
+                    <div class="header-icon">⚙️</div>
+                    <div class="header-user">👤 管理员</div>
+                </div>
+            </header>
+            
+            <div class="content-wrapper">
+
+                
+                <!-- 列表卡片 -->
+                <div class="card">
+                    <!-- 搜索区域 -->
+                    <div class="search-area">
+                        <div class="search-item">
+                            <label class="form-label">销售订单编号</label>
+                            <input type="text" class="form-input" id="search-order-no" placeholder="请输入销售订单编号">
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">采购商</label>
+                            <input type="text" class="form-input" id="search-buyer" placeholder="请输入采购商名称">
+                        </div>
+                        <div class="search-item">
+                            <label class="form-label">订单状态</label>
+                            <select class="form-input" id="search-status">
+                                <option value="">全部</option>
+                                <option value="PENDING_PAY">待支付</option>
+                                <option value="PAID">已支付</option>
+                                <option value="PENDING_SHIP">待发货</option>
+                                <option value="SHIPPED">已发货</option>
+                                <option value="COMPLETED">已完成</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="handleQuery()">查询</button>
+                        <button class="btn btn-default" onclick="handleReset()">重置</button>
+                    </div>
+                    
+                    <!-- 表格区域 -->
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>销售订单编号</th>
+                                    <th>代储订单编号</th>
+                                    <th>采购商</th>
+                                    <th>供应商</th>
+                                    <th>货物信息</th>
+                                    <th style="text-align: right;">货物数量</th>
+                                    <th style="text-align: right;">销售单价</th>
+                                    <th style="text-align: right;">实付金额</th>
+                                    <th>支付状态</th>
+                                    <th>订单状态</th>
+                                    <th>下单时间</th>
+                                    <th>支付时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250909001')">XS20250909001</span></td>
+                                    <td>DC20250909001</td>
+                                    <td>买家科技</td>
+                                    <td>能良科技</td>
+                                    <td>iPhone 15 Pro</td>
+                                    <td class="amount">10</td>
+                                    <td class="amount">¥8,999.00</td>
+                                    <td class="amount">¥89,990.00</td>
+                                    <td><span class="tag tag-pay-paid">已支付</span></td>
+                                    <td><span class="tag tag-order-ship">待发货</span></td>
+                                    <td>2026-09-09 14:30</td>
+                                    <td>2026-09-09 14:35</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250909002')">XS20250909002</span></td>
+                                    <td>DC20250909001</td>
+                                    <td>华东采购</td>
+                                    <td>能良科技</td>
+                                    <td>iPhone 15 Pro</td>
+                                    <td class="amount">5</td>
+                                    <td class="amount">¥8,999.00</td>
+                                    <td class="amount">-</td>
+                                    <td><span class="tag tag-pay-pending">待支付</span></td>
+                                    <td><span class="tag tag-order-pending">待支付</span></td>
+                                    <td>2026-09-09 15:00</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250909003')">XS20250909003</span></td>
+                                    <td>DC20250909002</td>
+                                    <td>深圳数码</td>
+                                    <td>无锡科技</td>
+                                    <td>华为 Mate 60</td>
+                                    <td class="amount">8</td>
+                                    <td class="amount">¥6,999.00</td>
+                                    <td class="amount">¥55,992.00</td>
+                                    <td><span class="tag tag-pay-paid">已支付</span></td>
+                                    <td><span class="tag tag-order-shipped">已发货</span></td>
+                                    <td>2026-09-09 10:20</td>
+                                    <td>2026-09-09 10:25</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250908004')">XS20250908004</span></td>
+                                    <td>DC20250908003</td>
+                                    <td>北京科技</td>
+                                    <td>深圳数码</td>
+                                    <td>iPad Air</td>
+                                    <td class="amount">20</td>
+                                    <td class="amount">¥4,799.00</td>
+                                    <td class="amount">¥95,980.00</td>
+                                    <td><span class="tag tag-pay-paid">已支付</span></td>
+                                    <td><span class="tag tag-order-completed">已完成</span></td>
+                                    <td>2026-09-08 16:00</td>
+                                    <td>2026-09-08 16:05</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250908005')">XS20250908005</span></td>
+                                    <td>DC20250907004</td>
+                                    <td>上海贸易</td>
+                                    <td>华东科技</td>
+                                    <td>小米14</td>
+                                    <td class="amount">15</td>
+                                    <td class="amount">¥3,999.00</td>
+                                    <td class="amount">-</td>
+                                    <td><span class="tag tag-pay-pending">待支付</span></td>
+                                    <td><span class="tag tag-order-pending">待支付</span></td>
+                                    <td>2026-09-08 09:30</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250907006')">XS20250907006</span></td>
+                                    <td>DC20250907004</td>
+                                    <td>广州电子</td>
+                                    <td>华东科技</td>
+                                    <td>小米14</td>
+                                    <td class="amount">30</td>
+                                    <td class="amount">¥3,999.00</td>
+                                    <td class="amount">¥119,970.00</td>
+                                    <td><span class="tag tag-pay-paid">已支付</span></td>
+                                    <td><span class="tag tag-order-completed">已完成</span></td>
+                                    <td>2026-09-07 11:00</td>
+                                    <td>2026-09-07 11:10</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250906007')">XS20250906007</span></td>
+                                    <td>DC20250906005</td>
+                                    <td>杭州互联</td>
+                                    <td>北京电子</td>
+                                    <td>OPPO Find X7</td>
+                                    <td class="amount">12</td>
+                                    <td class="amount">¥5,299.00</td>
+                                    <td class="amount">¥63,588.00</td>
+                                    <td><span class="tag tag-pay-paid">已支付</span></td>
+                                    <td><span class="tag tag-order-shipped">已发货</span></td>
+                                    <td>2026-09-06 14:00</td>
+                                    <td>2026-09-06 14:05</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="link" onclick="showSaleDetail('XS20250906008')">XS20250906008</span></td>
+                                    <td>DC20250906005</td>
+                                    <td>南京通讯</td>
+                                    <td>北京电子</td>
+                                    <td>OPPO Find X7</td>
+                                    <td class="amount">6</td>
+                                    <td class="amount">¥5,299.00</td>
+                                    <td class="amount">-</td>
+                                    <td><span class="tag tag-pay-pending">待支付</span></td>
+                                    <td><span class="tag tag-order-pending">待支付</span></td>
+                                    <td>2026-09-06 10:00</td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <span class="pagination-total">共 8 条</span>
+                        <div class="pagination-page">
+                            <span class="pagination-item disabled">&lt;</span>
+                            <span class="pagination-item active">1</span>
+                            <span class="pagination-item">2</span>
+                            <span class="pagination-item">3</span>
+                            <span class="pagination-item">&gt;</span>
+                        </div>
+                        <div class="pagination-jump">跳至 <input type="text" value="1"> 页</div>
+                    </div>
+                    
+                    <!-- 说明 -->
+                    <div class="alert-info">
+                        <strong>说明：</strong>
+                        销售订单数据来自市场助手系统，本页面仅做查询展示。订单状态变化：定向销售创建→待支付→采购商支付→已支付/待发货→出库指令发布→已发货→确认收货→已完成。
+                        <br>待支付状态的订单，实付金额和支付时间显示"-"。
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 弹窗: 销售订单详情 -->
+    <div class="modal-overlay" id="modal-sale-detail" onclick="if(event.target===this)closeModal('modal-sale-detail')">
+        <div class="modal" style="max-width: 720px;">
+            <div class="modal-header"><div class="modal-title">销售订单详情</div><div class="modal-close" onclick="closeModal('modal-sale-detail')">×</div></div>
+            <div class="modal-body">
+                <div class="info-card blue"><div class="info-card-title">基本信息</div><div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">销售订单编号</div><div class="info-value" id="sale-detail-order-no" style="color: #1890ff; font-weight: 600;">-</div></div><div class="form-group"><div class="info-label">代储订单编号</div><div class="info-value" id="sale-detail-storage-order">-</div></div><div class="form-group"><div class="info-label">采购商</div><div class="info-value" id="sale-detail-buyer">-</div></div><div class="form-group"><div class="info-label">供应商</div><div class="info-value" id="sale-detail-supplier">-</div></div></div></div>
+                <div style="font-weight: 600; color: #262626; margin: 24px 0 16px; padding-left: 12px; border-left: 4px solid #1890ff;">货物信息</div>
+                <table class="data-table" style="margin-bottom: 20px;"><thead><tr><th>货物信息</th><th>数量</th><th>销售单价</th><th>实付金额</th></tr></thead><tbody><tr><td id="sale-detail-goods">-</td><td id="sale-detail-quantity">-</td><td id="sale-detail-price">-</td><td id="sale-detail-amount">-</td></tr></tbody></table>
+                <div style="font-weight: 600; color: #262626; margin: 24px 0 16px; padding-left: 12px; border-left: 4px solid #1890ff;">订单状态</div>
+                <div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">支付状态</div><div class="info-value" id="sale-detail-pay-status">-</div></div><div class="form-group"><div class="info-label">订单状态</div><div class="info-value" id="sale-detail-order-status">-</div></div><div class="form-group"><div class="info-label">下单时间</div><div class="info-value" id="sale-detail-order-time">-</div></div><div class="form-group"><div class="info-label">支付时间</div><div class="info-value" id="sale-detail-pay-time">-</div></div></div>
+                <div style="font-weight: 600; color: #262626; margin: 24px 0 16px; padding-left: 12px; border-left: 4px solid #1890ff;">收货信息</div>
+                <div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">联系人</div><div class="info-value" id="sale-detail-buyer-contact">-</div></div><div class="form-group"><div class="info-label">收货地址</div><div class="info-value" id="sale-detail-buyer-address">-</div></div><div class="form-group"><div class="info-label">提货方式</div><div class="info-value" id="sale-detail-delivery">-</div></div></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-sale-detail')">关闭</button></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示提示
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 2500);
+        }
+        
+        var menuNames = {'audit':'代储代销审核','warehouse':'电子仓单管理','margin':'保证金拨付','order':'代储订单管理','sale':'销售订单管理','outbound':'出库指令管理','settlement':'清结算中心','invoice':'票据中心','receipt':'提货凭证管理'};
+        function switchMenu(key) {
+            document.getElementById('current-menu').textContent = menuNames[key] || key;
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                if(item.dataset.menu === key) { item.classList.add('active'); } else { item.classList.remove('active'); }
+            });
+        }
+        
+        // 查询
+        function handleQuery() {
+            const orderNo = document.getElementById('search-order-no').value;
+            const buyer = document.getElementById('search-buyer').value;
+            const status = document.getElementById('search-status').value;
+            
+            showToast('正在查询...', 'info');
+            
+            // 模拟查询过滤
+            setTimeout(() => {
+                showToast('查询完成', 'success');
+                console.log('查询条件：', { orderNo, buyer, status });
+            }, 600);
+        }
+        
+        // 重置
+        function handleReset() {
+            document.getElementById('search-order-no').value = '';
+            document.getElementById('search-buyer').value = '';
+            document.getElementById('search-status').value = '';
+            showToast('已重置查询条件', 'info');
+        }
+        
+        // 分页点击
+        document.querySelectorAll('.pagination-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (!this.classList.contains('disabled')) {
+                    document.querySelectorAll('.pagination-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+        
+        // 销售订单数据
+        var saleData = {
+            'XS20250909001': { orderNo: 'XS20250909001', storageOrderNo: 'DC20250909001', buyer: '买家科技', supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: 10, price: '¥8,999.00', amount: '¥89,990.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '待发货', orderStatusClass: 'tag-order-ship', orderTime: '2026-09-09 14:30', payTime: '2026-09-09 14:35', buyerContact: '张经理 13800138000', buyerAddress: '上海市浦东新区世纪大道100号', deliveryType: '快递物流' },
+            'XS20250909002': { orderNo: 'XS20250909002', storageOrderNo: 'DC20250909001', buyer: '华东采购', supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: 5, price: '¥8,999.00', amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending', orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: '2026-09-09 15:00', payTime: '-', buyerContact: '王经理 13900139000', buyerAddress: '江苏省南京市鼓楼区中山路200号', deliveryType: '快递物流' },
+            'XS20250909003': { orderNo: 'XS20250909003', storageOrderNo: 'DC20250909002', buyer: '深圳数码', supplier: '无锡科技', goods: '华为 Mate 60', quantity: 8, price: '¥6,999.00', amount: '¥55,992.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已发货', orderStatusClass: 'tag-order-shipped', orderTime: '2026-09-09 10:20', payTime: '2026-09-09 10:25', buyerContact: '李经理 13700137000', buyerAddress: '广东省深圳市福田区华强北路300号', deliveryType: '档口自提' },
+            'XS20250908004': { orderNo: 'XS20250908004', storageOrderNo: 'DC20250908003', buyer: '北京科技', supplier: '深圳数码', goods: 'iPad Air', quantity: 20, price: '¥4,799.00', amount: '¥95,980.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已完成', orderStatusClass: 'tag-order-completed', orderTime: '2026-09-08 16:00', payTime: '2026-09-08 16:05', buyerContact: '赵经理 13600136000', buyerAddress: '北京市朝阳区建国路400号', deliveryType: '快递物流' },
+            'XS20250908005': { orderNo: 'XS20250908005', storageOrderNo: 'DC20250907004', buyer: '上海贸易', supplier: '华东科技', goods: '小米14', quantity: 15, price: '¥3,999.00', amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending', orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: '2026-09-08 09:30', payTime: '-', buyerContact: '陈经理 13500135000', buyerAddress: '上海市黄浦区南京东路500号', deliveryType: '快递物流' },
+            'XS20250907006': { orderNo: 'XS20250907006', storageOrderNo: 'DC20250907004', buyer: '广州电子', supplier: '华东科技', goods: '小米14', quantity: 30, price: '¥3,999.00', amount: '¥119,970.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已完成', orderStatusClass: 'tag-order-completed', orderTime: '2026-09-07 11:00', payTime: '2026-09-07 11:10', buyerContact: '刘经理 13400134000', buyerAddress: '广东省广州市天河区珠江新城600号', deliveryType: '档口自提' }
+        };
+
+        function showSaleDetail(orderNo) {
+            var data = saleData[orderNo];
+            if (!data) return;
+            document.getElementById('sale-detail-order-no').textContent = data.orderNo;
+            document.getElementById('sale-detail-storage-order').textContent = data.storageOrderNo;
+            document.getElementById('sale-detail-buyer').textContent = data.buyer;
+            document.getElementById('sale-detail-supplier').textContent = data.supplier;
+            document.getElementById('sale-detail-goods').textContent = data.goods;
+            document.getElementById('sale-detail-quantity').textContent = data.quantity;
+            document.getElementById('sale-detail-price').textContent = data.price;
+            document.getElementById('sale-detail-amount').textContent = data.amount;
+            document.getElementById('sale-detail-pay-status').textContent = data.payStatus;
+            document.getElementById('sale-detail-order-status').textContent = data.orderStatus;
+            document.getElementById('sale-detail-order-time').textContent = data.orderTime;
+            document.getElementById('sale-detail-pay-time').textContent = data.payTime;
+            document.getElementById('sale-detail-buyer-contact').textContent = data.buyerContact;
+            document.getElementById('sale-detail-buyer-address').textContent = data.buyerAddress;
+            document.getElementById('sale-detail-delivery').textContent = data.deliveryType;
+            openModal('modal-sale-detail');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // 回车搜索
+        document.getElementById('search-order-no').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleQuery();
+        });
+        document.getElementById('search-buyer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleQuery();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>供应链管理系统 (B2B2B2B) 产品需求文档</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    flowchart: { useMaxWidth: true, htmlLabels: true },
+    sequence: { useMaxWidth: true },
+  });
+</script>
+<style>
+  :root {
+    --primary: #1a56db;
+    --primary-light: #e8effd;
+    --text: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --bg: #ffffff;
+    --bg-code: #f3f4f6;
+    --accent-green: #059669;
+    --accent-orange: #d97706;
+    --accent-red: #dc2626;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: #f8fafc;
+    line-height: 1.7;
+    font-size: 14px;
+  }
+
+  /* Header */
+  .doc-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1a56db 100%);
+    color: #fff;
+    padding: 48px 0 32px;
+  }
+  .doc-header .container { text-align: center; }
+  .doc-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+  .doc-header .subtitle { font-size: 14px; opacity: 0.8; }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  .doc-body { display: flex; gap: 32px; padding: 24px 0 60px; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    position: sticky; top: 24px; align-self: flex-start;
+    max-height: calc(100vh - 48px); overflow-y: auto;
+    background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    padding: 16px 0;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+  .sidebar-title {
+    font-size: 12px; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 8px 20px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
+  }
+  .sidebar a {
+    display: block; padding: 6px 20px; font-size: 13px; color: var(--text);
+    text-decoration: none; transition: all .15s; border-left: 3px solid transparent;
+  }
+  .sidebar a:hover { background: var(--primary-light); color: var(--primary); }
+  .sidebar a.l1 { font-weight: 600; }
+  .sidebar a.l2 { padding-left: 36px; font-size: 12.5px; color: var(--text-secondary); }
+
+  /* Main Content */
+  .main-content { flex: 1; min-width: 0; }
+  .main-content > section {
+    background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    padding: 28px 32px; margin-bottom: 20px;
+  }
+
+  /* Typography */
+  h2 {
+    font-size: 20px; font-weight: 700; color: #111;
+    border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 20px;
+  }
+  h3 {
+    font-size: 16px; font-weight: 700; color: #1e293b;
+    margin: 24px 0 12px;
+  }
+  h4 {
+    font-size: 14px; font-weight: 700; color: #374151;
+    margin: 18px 0 8px;
+  }
+  p { margin-bottom: 12px; }
+  ul, ol { margin: 8px 0 12px 20px; }
+  li { margin-bottom: 4px; }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; margin: 12px 0 16px;
+    font-size: 13px; overflow-x: auto; display: block;
+  }
+  thead { background: #f1f5f9; }
+  th, td {
+    border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top;
+  }
+  th { font-weight: 600; color: #374151; white-space: nowrap; }
+  tr:nth-child(even) { background: #fafbfc; }
+
+  /* Code */
+  code {
+    font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Monaco, Consolas, monospace;
+    background: var(--bg-code); padding: 2px 6px; border-radius: 3px; font-size: 12.5px;
+    color: #be185d;
+  }
+  pre {
+    background: #1e293b; color: #e2e8f0; padding: 16px 20px; border-radius: 6px;
+    overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 12px 0;
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+  /* Mermaid */
+  .mermaid-container {
+    background: #fafbfc; border: 1px solid var(--border); border-radius: 8px;
+    padding: 20px; margin: 16px 0; overflow-x: auto;
+  }
+  .mermaid { text-align: center; }
+
+  /* Version Table */
+  .version-table th:first-child { width: 80px; }
+  .version-table th:nth-child(2) { width: 80px; }
+  .version-table th:nth-child(3) { width: 60px; }
+  .version-table th:nth-child(4) { width: 100px; }
+
+  /* Blockquote / Notes */
+  blockquote {
+    border-left: 4px solid var(--primary); background: var(--primary-light);
+    padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0;
+    color: #1e40af; font-size: 13px;
+  }
+
+  /* Tag badges */
+  .tag {
+    display: inline-block; padding: 1px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 600; margin-left: 4px;
+  }
+  .tag-p0 { background: #fee2e2; color: #dc2626; }
+  .tag-p1 { background: #fef3c7; color: #d97706; }
+  .tag-p2 { background: #dbeafe; color: #2563eb; }
+  .tag-resolved { background: #d1fae5; color: #059669; }
+
+  /* State machine */
+  .state-row {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0;
+  }
+  .state-item {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 14px; font-size: 12px; font-weight: 500;
+  }
+  .state-start { background: #e8effd; color: #1a56db; }
+  .state-mid { background: #fef3c7; color: #92400e; }
+  .state-end { background: #d1fae5; color: #065f46; }
+  .state-err { background: #fee2e2; color: #991b1b; }
+  .state-arrow { color: var(--text-secondary); font-size: 14px; }
+
+  /* Priority */
+  .prio { font-weight: 700; }
+  .prio-0 { color: #dc2626; }
+  .prio-1 { color: #d97706; }
+  .prio-2 { color: #2563eb; }
+
+  /* Risk table */
+  .risk-high { color: #dc2626; font-weight: 600; }
+  .risk-mid { color: #d97706; font-weight: 600; }
+  .risk-low { color: #059669; font-weight: 600; }
+
+  /* Footer */
+  .doc-footer {
+    text-align: center; padding: 20px; color: var(--text-secondary);
+    font-size: 12px; border-top: 1px solid var(--border); margin-top: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .doc-body { flex-direction: column; }
+    .main-content > section { padding: 20px 16px; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="doc-header">
+  <div class="container">
+    <h1>供应链管理系统 (B2B2B2B) 产品需求文档</h1>
+    <p class="subtitle">版本 V1.1 · 2026-05-31 · 覆盖采购计划、订单、合同、仓单、财务、售后全链路</p>
+  </div>
+</header>
+
+<div class="container doc-body">
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-title">目录</div>
+  <a href="#sec1" class="l1">一. 文档概述</a>
+  <a href="#sec1-1" class="l2">1.1 愿景及目标</a>
+  <a href="#sec1-2" class="l2">1.2 全局约束</a>
+  <a href="#sec1-3" class="l2">1.3 名词定义</a>
+  <a href="#sec1-4" class="l2">1.4 参考资料</a>
+  <a href="#sec2" class="l1">二. 业务概述</a>
+  <a href="#sec2-1" class="l2">2.1 业务蓝图</a>
+  <a href="#sec2-2" class="l2">2.2 业务需求</a>
+  <a href="#sec2-3" class="l2">2.3 方案概述</a>
+  <a href="#sec3" class="l1">三. 系统用例需求</a>
+  <a href="#sec3-1" class="l2">3.1 功能用例</a>
+  <a href="#sec3-2" class="l2">3.2 接口定义</a>
+  <a href="#sec4" class="l1">四. 非功能性需求</a>
+  <a href="#sec4-1" class="l2">4.1 上线方案</a>
+  <a href="#sec4-2" class="l2">4.2 兼容性要求</a>
+  <a href="#sec4-3" class="l2">4.3 性能要求</a>
+  <a href="#sec4-4" class="l2">4.4 监控/埋点需求</a>
+  <a href="#sec5" class="l1">五. 风险分析</a>
+  <a href="#sec6" class="l1">六. 后端/供应链金融专项</a>
+  <a href="#sec6-1" class="l2">6.1 业务用例设计</a>
+  <a href="#sec6-2" class="l2">6.2 业务规则</a>
+  <a href="#sec6-3" class="l2">6.3 数据设计</a>
+  <a href="#sec6-4" class="l2">6.4 异常处理</a>
+  <a href="#sec6-5" class="l2">6.5 分阶段实现</a>
+  <a href="#sec6-6" class="l2">6.6 多端适配</a>
+  <a href="#sec7" class="l1">七. 文档维护</a>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content">
+
+<!-- Version History -->
+<section>
+  <h3>版本历史</h3>
+  <table class="version-table">
+    <thead><tr><th>版本号</th><th>作者</th><th>操作</th><th>日期</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>V1.0</td><td>—</td><td>创建</td><td>2026-05-31</td><td>初版，覆盖采购计划、订单、合同、仓单、财务、售后全链路</td></tr>
+      <tr><td><strong>V1.1</strong></td><td>—</td><td><strong>修订</strong></td><td><strong>2026-05-31</strong></td><td><strong>确认遗留问题：商品主数据由S统一维护、融资利率由资金方线下核定、法大大为签章平台、不实现部门级权限；聚水潭API文档待后续提供</strong></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== 一 ==================== -->
+<section id="sec1">
+  <h2>一. 文档概述</h2>
+
+  <h3 id="sec1-1">1.1 愿景及目标</h3>
+
+  <h4>业务现状与痛点</h4>
+  <p>当前多主体（供应商 → 一级采购商 → 二级采购商 → 三级采购商）的供应链协同普遍存在以下问题：</p>
+  <ul>
+    <li><strong>链路割裂</strong>：各段交易独立管理，订单、合同、结算信息不互通，上下游对账困难。</li>
+    <li><strong>物权风控薄弱</strong>：实物货物在多级流转中权属不清，融资方无法有效控货。</li>
+    <li><strong>结算效率低</strong>：上游付款依赖下游回款，但缺乏背对背结算的自动约束机制。</li>
+    <li><strong>合同签署周期长</strong>：多段合同的生成、审批、签署依赖线下流程，耗时数天。</li>
+    <li><strong>售后处理成本高</strong>：末端退货需要人工逐级通知上游，递归生成逆向单据费时费力。</li>
+  </ul>
+
+  <h4>系统建设目标</h4>
+  <ol>
+    <li><strong>采购计划驱动全链路</strong>：一次配置参与主体（S/B1/B2/B3），自动判定交易段数。</li>
+    <li><strong>多级订单自动流转</strong>：前段确认后自动触发后段生成，实现全链路溯源。</li>
+    <li><strong>电子仓单控货</strong>：物权在系统内阶梯流转，实物不动，支持融资锁定与解锁。</li>
+    <li><strong>背对背结算</strong>：下级回款后才允许向上级付款，控制资金风险。</li>
+    <li><strong>合同自动生成与电签</strong>：各段合同一键生成，对接电子签章平台完成在线签署。</li>
+    <li><strong>售后递归处理</strong>：末端退货自动生成各级逆向单与红字单据，完成链路结清。</li>
+  </ol>
+
+  <h4>涉众列表</h4>
+  <table>
+    <thead><tr><th>角色</th><th>简称</th><th>期望与利益</th><th>优先级</th></tr></thead>
+    <tbody>
+      <tr><td><strong>供应商</strong></td><td>S</td><td>及时收到货款，发货后不再承担物权风险</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td><strong>一级采购商</strong></td><td>B1</td><td>资金代持安全，物权过渡清晰，背对背结算不垫资</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td><strong>二级采购商</strong></td><td>B2</td><td>融资控货有保障，仓单锁定/解锁机制透明</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td><strong>三级采购商</strong></td><td>B3</td><td>便捷发起出库和售后，全链路状态可视可查</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td><strong>平台管理员</strong></td><td>Admin</td><td>全局数据可审计、权限可控、异常流程可人工介入</td><td><span class="tag tag-p1">P1</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec1-2">1.2 全局约束</h3>
+  <ol>
+    <li><strong>状态枚举规范</strong>：核心业务对象的状态按业务流程顺序编排（0=初始/草稿、4=已完成、9=异常/已取消），异常状态统一使用 9。</li>
+    <li><strong>编号规则</strong>：所有单据编号格式统一为 <code>前缀 + YYYYMMDD + 4位流水号</code>，前缀按业务类型定义（详见数据设计章节）。</li>
+    <li><strong>列表页规范</strong>：所有列表页支持分页（10/50/100/行可选）、支持勾选/反选、支持批量操作。</li>
+    <li><strong>权限隔离</strong>：各主体仅能查询与自身相关的订单、合同与账单数据，数据级权限由后台配置。</li>
+    <li><strong>操作审计</strong>：所有核心操作（审批、过户、锁定、核销）必须记录操作人、时间戳、IP 及关联业务单据 ID。</li>
+    <li><strong>传输安全</strong>：涉及金额、合同内容的数据传输使用 HTTPS，敏感字段存储加密。</li>
+  </ol>
+
+  <h3 id="sec1-3">1.3 名词定义</h3>
+  <table>
+    <thead><tr><th>术语</th><th>释义</th></tr></thead>
+    <tbody>
+      <tr><td><strong>一段交易</strong></td><td>S → B1 的直接交易</td></tr>
+      <tr><td><strong>二段交易</strong></td><td>S → B1 → B2 的链式交易</td></tr>
+      <tr><td><strong>三段交易</strong></td><td>S → B1 → B2 → B3 的全链路交易</td></tr>
+      <tr><td><strong>采购计划</strong></td><td>全链路的起点，定义参与主体和交易段数</td></tr>
+      <tr><td><strong>电子仓单</strong></td><td>记录货物权属的电子凭证，物权转移的唯一依据</td></tr>
+      <tr><td><strong>权属过户</strong></td><td>仓单所有权人变更，实物货物不移动</td></tr>
+      <tr><td><strong>背对背结算</strong></td><td>上级付款以下级回款为前提条件</td></tr>
+      <tr><td><strong>红字单据</strong></td><td>财务冲账使用的负数金额单据，抵消原正向单据</td></tr>
+      <tr><td><strong>递归退货</strong></td><td>末端退货后，系统自动生成各级对应的逆向单据</td></tr>
+      <tr><td><strong>聚水潭</strong></td><td>外部 WMS 系统，处理实物出入库</td></tr>
+      <tr><td><strong>链路灯</strong></td><td>可视化的单据流转状态标识（绿/黄/红）</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec1-4">1.4 参考资料</h3>
+  <table>
+    <thead><tr><th>参考内容</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>聚水潭 WMS 开放 API 文档</td><td>对接出入库、库存查询接口</td></tr>
+      <tr><td>法大大 电子签章 API</td><td>合同签署、回执回调接口</td></tr>
+      <tr><td>采购法相关业务规范</td><td>发票管理：各段卖方直接向买方开票</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== 二 ==================== -->
+<section id="sec2">
+  <h2>二. 业务概述</h2>
+
+  <h3 id="sec2-1">2.1 业务蓝图</h3>
+
+  <h4>核心业务流程图</h4>
+  <p>以下流程图展示从计划启动到财务结算、售后的完整闭环。</p>
+  <div class="mermaid-container">
+    <div class="mermaid">
+flowchart TD
+    Start([开始]) --> Plan[创建采购计划]
+    Plan --> Logic{判定交易链路}
+    Logic -- B2B2B2B --> Stage3[生成三段订单/合同]
+    Stage3 --> Inbound[供应商入库/生成仓单]
+    Inbound --> EWR_S[权属: 供应商]
+    EWR_S --> Transfer1[权属过户: 一级采购商]
+    Transfer1 --> Transfer2[权属过户: 二级采购商]
+    Transfer2 --> Lock[金融锁定: 融资控货]
+    Lock --> PayCheck{三级采购商结算?}
+    PayCheck -- 否 --> Wait[仓单持续锁定/禁发货]
+    PayCheck -- 是 --> Unlock[释放货权: 三级采购商]
+    Unlock --> Outbound[推送聚水潭出库]
+    Outbound --> Settlement[背对背财务结算]
+    Settlement --> AfterSales{是否有售后?}
+    AfterSales -- 是 --> RedNote[递归生成红字单据/物权回溯]
+    AfterSales -- 否 --> End([流程结束])
+    </div>
+  </div>
+
+  <h4>逆向退货流程图</h4>
+  <p>展示售后逆向递归的处理逻辑。</p>
+  <div class="mermaid-container">
+    <div class="mermaid">
+flowchart TD
+    Start([售后触发]) --> B3App[三级采购商提交售后申请]
+    B3App --> AutoGen[系统自动递归生成]
+    AutoGen --> TH003[TH003: B3→B2 退货单]
+    AutoGen --> TH002[TH002: B2→B1 退货单]
+    AutoGen --> TH001[TH001: B1→S 退货单]
+    TH003 --> Check403{二级采购商审核}
+    Check403 -- 通过 --> Step2[退货实物入B2仓库]
+    Check403 -- 驳回 --> B3Rev[B3修改或终止售后]
+    Step2 --> B2Confirm[B2入库确认]
+    B2Confirm --> AutoTH002[触发TH002]
+    TH002 --> Check402{一级采购商审核}
+    Check402 -- 通过 --> Step1[退货实物入B1仓库]
+    Check402 -- 驳回 --> B2Rev[B2协调处理]
+    Step1 --> B1Confirm[B1入库确认]
+    B1Confirm --> AutoTH001[触发TH001]
+    TH001 --> Check401{供应商审核}
+    Check401 -- 通过 --> FinalStep[退货实物入S仓库]
+    Check401 -- 驳回 --> B1Rev[B1协调处理]
+    FinalStep --> EndSettlement[链路结清/红字冲账]
+    AutoGen --> RedNotes[自动生成红字应收/应付]
+    RedNotes --> End([售后完结])
+    </div>
+  </div>
+
+  <h3 id="sec2-2">2.2 业务需求</h3>
+  <table>
+    <thead><tr><th>编号</th><th>需求领域</th><th>需求项</th><th>涉及系统</th><th>重要级</th></tr></thead>
+    <tbody>
+      <tr><td>BR-01</td><td>采购计划管理</td><td>支持多主体选择、自动定段、审批流</td><td>本系统</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-02</td><td>订单管理</td><td>多级订单自动递归生成、全链路溯源</td><td>本系统</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-03</td><td>合同管理</td><td>多段合同自动生成、模板填充、电子签章</td><td>本系统 + 签章平台</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-04</td><td>电子仓单</td><td>权属阶梯过户、融资锁定/解锁、出库核销</td><td>本系统 + 聚水潭</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-05</td><td>财务管理</td><td>背对背结算、逾期预警、发票管理</td><td>本系统</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-06</td><td>售后管理</td><td>逆向递归退货、红字冲账、链路结清</td><td>本系统</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-07</td><td>系统集成</td><td>聚水潭 WMS 出入库同步</td><td>本系统 + 聚水潭</td><td><span class="tag tag-p0">P0</span></td></tr>
+      <tr><td>BR-08</td><td>系统集成</td><td>电子签章平台对接</td><td>本系统 + 签章平台</td><td><span class="tag tag-p1">P1</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec2-3">2.3 方案概述</h3>
+
+  <h4>产品结构图</h4>
+  <div class="mermaid-container">
+    <div class="mermaid">
+mindmap
+  root((供应链管理系统))
+    采购计划管理
+      核心功能: 多主体选择/自动定段/阶段预览
+      审批流: 二级会签/驳回/超时催办
+    项目与订单管理
+      核心功能: 多级递归/全链路溯源
+      操作: 同步聚水潭/导出报表
+    合同管理模块
+      核心功能: 自动生成/主体映射/模板填充
+      电签: 发起签署/回执回调
+    仓储与电子仓单
+      核心功能: 权属过户/锁定解锁/核销
+      特殊: 仓单挂失/部分过户
+    财务管理模块
+      核心功能: 背对背结算/逾期预警
+      发票: 采购法自动开票通知
+    售后管理模块
+      核心功能: 逆向递归/红字冲账
+      操作: 链路结清/入库确认
+    </div>
+  </div>
+
+  <h4>资金流时序图</h4>
+  <div class="mermaid-container">
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant S as 供应商
+    participant B1 as 一级采购商
+    participant B2 as 二级采购商
+    participant B3 as 三级采购商
+    participant Bank as 资金方/银行
+    Note over B3, Bank: 阶段一：三级回款
+    B3->>B2: ① 支付货款（或触发账期）
+    B2->>Bank: ② 融资还款（若涉及融资）
+    Note over B1, B2: 阶段二：二级结算
+    B2->>B1: ③ 背对背付款（收齐下级后触发）
+    Note over S, B1: 阶段三：一级结算
+    B1->>S: ④ 背对背付款（收齐下级后触发）
+    Note over S, Bank: 阶段四：发票闭环
+    S->>B1: ⑤ 开票（采购法：向直接买方开票）
+    B1->>B2: ⑥ 转开票
+    B2->>B3: ⑦ 转开票
+    </div>
+  </div>
+
+  <h4>系统集成边界图</h4>
+  <div class="mermaid-container">
+    <div class="mermaid">
+graph LR
+    subgraph 本系统
+        SC[供应链管理系统]
+    end
+    subgraph 外部系统
+        WMS[聚水潭 WMS]
+        ESIGN[法大大签章平台]
+        BANK[银行/资金方]
+    end
+    SC -->|入库/出库/退货同步| WMS
+    WMS -->|状态回推| SC
+    SC -->|合同签署请求| ESIGN
+    ESIGN -->|签署完成回执| SC
+    SC -->|融资申请| BANK
+    BANK -->|融资结果| SC
+    </div>
+  </div>
+
+  <h4>系统用例清单</h4>
+  <table>
+    <thead><tr><th>用例编号</th><th>系统用例名称</th><th>需求类型</th><th>简述</th></tr></thead>
+    <tbody>
+      <tr><td>UC-PLAN-001</td><td>采购计划管理</td><td>功能需求</td><td>创建采购计划、自动定段、发起审批</td></tr>
+      <tr><td>UC-ORDER-001</td><td>项目与订单管理</td><td>功能需求</td><td>多级订单递归生成、全链路溯源</td></tr>
+      <tr><td>UC-CONTRACT-001</td><td>合同管理</td><td>功能需求</td><td>多段合同自动生成、电子签章</td></tr>
+      <tr><td>UC-EWR-001</td><td>电子仓单管理</td><td>功能需求</td><td>权属过户、锁定解锁、出库核销</td></tr>
+      <tr><td>UC-FIN-001</td><td>财务管理</td><td>功能需求</td><td>背对背结算、逾期预警、开票管理</td></tr>
+      <tr><td>UC-AFTERSALE-001</td><td>售后管理</td><td>功能需求</td><td>逆向递归退货、红字冲账、链路结清</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== 三 ==================== -->
+<section id="sec3">
+  <h2>三. 系统用例需求</h2>
+
+  <h3 id="sec3-1">3.1 功能用例</h3>
+
+  <!-- UC-PLAN-001 -->
+  <h4>UC-PLAN-001 采购计划管理</h4>
+  <table>
+    <thead><tr><th style="width:120px">字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>用例名称</strong></td><td>采购计划管理</td></tr>
+      <tr><td><strong>用例编号</strong></td><td>UC-PLAN-001</td></tr>
+      <tr><td><strong>用例简述</strong></td><td>作为采购计划的创建入口，通过勾选参与主体自动判定交易链路段数，经审批后驱动后续订单与合同生成</td></tr>
+      <tr><td><strong>主执行者</strong></td><td>B1/B2/B3 业务操作员</td></tr>
+      <tr><td><strong>辅助执行者</strong></td><td>审批人（业务负责人、风控负责人）</td></tr>
+      <tr><td><strong>前置条件</strong></td><td>操作员已登录系统并具备采购计划新增权限</td></tr>
+      <tr><td><strong>事件流–主要路径</strong></td><td>① 操作员点击【新增计划】→ ② 填写项目标题、选择 S/B1/B2/B3 参与主体、录入预计总额 → ③ 系统自动判定阶段（一段/二段/三段）并展示预览 → ④ 操作员点击【发起审批】 → ⑤ 系统生成审批任务，推送通知至业务负责人和风控负责人 → ⑥ 两级审批人分别审核通过 → ⑦ 计划状态变更为"已生效"</td></tr>
+      <tr><td><strong>替代流程</strong></td><td>3a. 主体校验不通过（如存在 B2 但未填 B1），系统提示"二级采购商前必须有一级采购商"并阻止提交；6a. 任一审批人驳回，计划退回"草稿"状态，修改后可重新提交；6b. 审批超时 48 小时，系统自动推送催办通知</td></tr>
+      <tr><td><strong>后置条件</strong></td><td>计划状态变更为"已生效"，后续可在此计划下生成订单</td></tr>
+      <tr><td><strong>业务规则</strong></td><td>① 自动定段规则：全选 B1/B2/B3 为三段；仅选 B1/B3 为二段（跳过 B2）；仅选 B1 为一段；② 主体校验规则：B2 存在时 B1 必填；③ 编号规则：PD + YYYYMMDD + 4位流水</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>状态机</strong></p>
+  <div class="state-row">
+    <span class="state-item state-start">草稿</span>
+    <span class="state-arrow">→ 发起审批 →</span>
+    <span class="state-item state-mid">审批中</span>
+    <span class="state-arrow">→ 通过 →</span>
+    <span class="state-item state-mid">已生效</span>
+    <span class="state-arrow">→ 生成订单 →</span>
+    <span class="state-item state-mid">执行中</span>
+    <span class="state-arrow">→ 完结 →</span>
+    <span class="state-item state-end">已完成</span>
+    <span class="state-arrow">|</span>
+    <span class="state-item state-err">已关闭</span>
+  </div>
+
+  <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+
+  <!-- UC-ORDER-001 -->
+  <h4>UC-ORDER-001 项目与订单管理</h4>
+  <table>
+    <thead><tr><th style="width:120px">字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>用例名称</strong></td><td>项目与订单管理</td></tr>
+      <tr><td><strong>用例编号</strong></td><td>UC-ORDER-001</td></tr>
+      <tr><td><strong>用例简述</strong></td><td>管理 XM 项目下的所有采购与销售单据，支持多级订单自动递归生成和全链路溯源</td></tr>
+      <tr><td><strong>主执行者</strong></td><td>B1/B2/B3 业务操作员</td></tr>
+      <tr><td><strong>辅助执行者</strong></td><td>聚水潭 WMS（出库状态回推）</td></tr>
+      <tr><td><strong>前置条件</strong></td><td>采购计划已生效</td></tr>
+      <tr><td><strong>事件流–主要路径</strong></td><td>① 系统根据生效采购计划自动生成一级销售单（S→B1）和一级采购单（B1→S）→ ② B1 确认收货后，系统自动触发二级销售单（B1→B2）和二级采购单（B2→B1）→ ③ B2 确认收货后，系统自动触发三级销售单（B2→B3）和三级采购单（B3→B2）→ ④ 操作员可点击任意单据查看全链路溯源图 → ⑤ 操作员可点击【同步聚水潭】将出库单推送至 WMS → ⑥ WMS 回传出库状态，订单流转至"已发货"</td></tr>
+      <tr><td><strong>替代流程</strong></td><td>②a. B1 超过 7 天未确认收货，系统自动催确认；②b. 任一交易方可在"待确认"状态下取消订单</td></tr>
+      <tr><td><strong>后置条件</strong></td><td>末段订单完成后，触发财务结算流程</td></tr>
+      <tr><td><strong>业务规则</strong></td><td>① 编号规则：XM/CG/XS + YYYYMMDD + 4位流水；② 自动递归触发时机：上段销售单被买方"确认收货"时触发；③ 各段订单的买卖双方按主体映射规则匹配（见 UC-CONTRACT-001）</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>状态机</strong></p>
+  <div class="state-row">
+    <span class="state-item state-start">待确认</span>
+    <span class="state-arrow">→ 确认 →</span>
+    <span class="state-item state-mid">已确认</span>
+    <span class="state-arrow">→ 出库 →</span>
+    <span class="state-item state-mid">已发货</span>
+    <span class="state-arrow">→ 签收 →</span>
+    <span class="state-item state-mid">已签收</span>
+    <span class="state-arrow">→ 结算 →</span>
+    <span class="state-item state-end">已完成</span>
+    <span class="state-arrow">|</span>
+    <span class="state-item state-err">已取消</span>
+  </div>
+
+  <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+
+  <!-- UC-CONTRACT-001 -->
+  <h4>UC-CONTRACT-001 合同管理</h4>
+  <table>
+    <thead><tr><th style="width:120px">字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>用例名称</strong></td><td>合同管理</td></tr>
+      <tr><td><strong>用例编号</strong></td><td>UC-CONTRACT-001</td></tr>
+      <tr><td><strong>用例简述</strong></td><td>基于采购计划自动生成各段交易合同，支持模板变量填充、在线预览及电子签章</td></tr>
+      <tr><td><strong>主执行者</strong></td><td>B1/B2/B3 业务操作员</td></tr>
+      <tr><td><strong>辅助执行者</strong></td><td>电子签章平台（法大大）</td></tr>
+      <tr><td><strong>前置条件</strong></td><td>采购计划已生效</td></tr>
+      <tr><td><strong>事件流–主要路径</strong></td><td>① 系统根据生效采购计划自动生成各段合同 → ② 系统从企业信息库和采购计划中提取变量填充合同模板 → ③ 操作员点击【预览】在线查看 PDF → ④ 操作员点击【发起签署】推送至法大大 → ⑤ 签署方通过短信/邮件链接完成在线签署 → ⑥ 法大大回传签署结果 → ⑦ 合同状态更新为"已完成"</td></tr>
+      <tr><td><strong>替代流程</strong></td><td>⑤a. 一方拒绝签署 → 合同退回"待修改"状态，通知另一方协商；⑤b. 发起后 3 天未签署 → 自动催签通知；⑤c. 7 天未签署 → 自动失效</td></tr>
+      <tr><td><strong>后置条件</strong></td><td>各段合同签署完成后，触发仓单生成流程</td></tr>
+      <tr><td><strong>业务规则</strong></td><td>① 主体映射：一段-B1(甲方)←S(乙方)；二段-B2(甲方)←B1(乙方)；三段-B3(甲方)←B2(乙方)；② 模板变量：主体信息从企业库、货品信息从采购计划、金额从订单计算；③ 甲方=付款方(买方)，乙方=收款方(卖方)</td></tr>
+    </tbody>
+  </table>
+
+  <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+
+  <!-- UC-EWR-001 -->
+  <h4>UC-EWR-001 电子仓单管理</h4>
+  <table>
+    <thead><tr><th style="width:120px">字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>用例名称</strong></td><td>仓储与电子仓单管理</td></tr>
+      <tr><td><strong>用例编号</strong></td><td>UC-EWR-001</td></tr>
+      <tr><td><strong>用例简述</strong></td><td>管理货物的物权凭证，实现权属在 S→B1→B2→B3 阶梯流转，支持融资锁定及出库核销</td></tr>
+      <tr><td><strong>主执行者</strong></td><td>管理员 (S/B1/B2/B3 仅查看涉及部分)</td></tr>
+      <tr><td><strong>辅助执行者</strong></td><td>聚水潭 WMS</td></tr>
+      <tr><td><strong>前置条件</strong></td><td>① 订单已确认；② 聚水潭入库完成并回传成功</td></tr>
+      <tr><td><strong>事件流–主要路径</strong></td><td>① 聚水潭回传入库成功 → ② 系统生成仓单（Owner: S）→ ③ 一段合同签署完成后，权属过户至 B1 → ④ 二段合同签署完成后，权属过户至 B2 并自动锁定 → ⑤ B3 付款后，权属过户至 B3 并解锁 → ⑥ 操作员点击【推送聚水潭出库】→ ⑦ 聚水潭出库后回传状态 → ⑧ 系统更新仓单状态为"已核销"</td></tr>
+      <tr><td><strong>替代流程</strong></td><td>③a~④a. 非三段模式跳过对应过户步骤；④b. B2 可部分付款按比例解锁部分货权；⑤a. 仓单挂失：管理员操作后仓单作废，需重新入库</td></tr>
+      <tr><td><strong>后置条件</strong></td><td>仓单核销后，触发财务结算流程</td></tr>
+      <tr><td><strong>业务规则</strong></td><td>① 编号规则：EWR + YYYYMMDD + 4位流水；② 每个过户/锁定/解锁操作均需记录操作人、时间戳及关联单据 ID；③ 锁定期间禁止出库；④ 部分过户按数量比例分摊价格（子仓单价 = 原仓单价，加权平均计算）</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>权属流转时序图</strong></p>
+  <div class="mermaid-container">
+    <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant S as 供应商
+    participant B1 as 一级采购商
+    participant B2 as 二级采购商
+    participant B3 as 三级采购商
+    participant EWR as 电子仓单系统
+    participant WMS as WMS/聚水潭
+    Note over S, WMS: 实物入库确权
+    WMS-->>EWR: 入库成功
+    EWR->>EWR: 生成仓单 (Owner: S)
+    Note over S, B1: 一段成交
+    EWR->>EWR: 权属变更 (Owner: B1)
+    Note over B1, B2: 二段成交 (融资锁定)
+    EWR->>EWR: 权属变更 (Owner: B2)
+    Note right of EWR: 状态: 锁定(禁止出库)
+    Note over B2, B3: 三段结算(解锁)
+    B3->>B2: 付款/账期达成
+    EWR->>EWR: 权属变更 (Owner: B3)
+    Note right of EWR: 状态: 待出库(解锁)
+    Note over B3, WMS: 最终发货
+    WMS-->>EWR: 出库核销
+    EWR->>EWR: 状态: 已核销
+    </div>
+  </div>
+
+  <p><strong>状态机</strong></p>
+  <div class="state-row">
+    <span class="state-item state-start">已生成</span>
+    <span class="state-arrow">→ 过户 →</span>
+    <span class="state-item state-mid">已过户</span>
+    <span class="state-arrow">→ 锁定 →</span>
+    <span class="state-item state-mid">已锁定</span>
+    <span class="state-arrow">→ 结算 →</span>
+    <span class="state-item state-mid">已解锁</span>
+    <span class="state-arrow">→ 待出库 →</span>
+    <span class="state-item state-mid">待出库</span>
+    <span class="state-arrow">→ 核销 →</span>
+    <span class="state-item state-end">已核销</span>
+    <span class="state-arrow">|</span>
+    <span class="state-item state-err">已挂失</span>
+  </div>
+
+  <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+
+  <!-- UC-FIN-001 -->
+  <h4>UC-FIN-001 财务管理</h4>
+  <table>
+    <thead><tr><th style="width:120px">字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>用例名称</strong></td><td>财务管理</td></tr>
+      <tr><td><strong>用例编号</strong></td><td>UC-FIN-001</td></tr>
+      <tr><td><strong>用例简述</strong></td><td>管理各段交易的应收/应付账单，执行背对背结算，控制逾期风险，管理发票开立</td></tr>
+      <tr><td><strong>主执行者</strong></td><td>B1/B2/B3 财务操作员</td></tr>
+      <tr><td><strong>前置条件</strong></td><td>订单已完成（已签收状态）</td></tr>
+      <tr><td><strong>事件流–主要路径</strong></td><td>① 系统根据完成订单自动生成各段应收/应付账单 → ② 系统检查背对背状态：B3 付款至 B2 → ③ B2 收齐 B3 回款后，B2 可向 B1 发起付款 → ④ B1 收齐 B2 回款后，B1 可向 S 发起付款 → ⑤ 操作员可查看逾期预警（到期前 7/3/0 天三级预警）→ ⑥ 系统根据采购订单商品信息发送开票通知，要求供应商向指定主体开票</td></tr>
+      <tr><td><strong>替代流程</strong></td><td>②a. B3 超过账期 30 天未付款，B2 可申请强制结算（需风控审批）；③a. B2 可申请部分付款（放行部分货权）</td></tr>
+      <tr><td><strong>后置条件</strong></td><td>全部结算完成后，订单状态变更为"已完成"</td></tr>
+      <tr><td><strong>业务规则</strong></td><td>① 背对背规则：收齐下级货款后上级才可发起付款；② 逾期预警等级：到期前 7 天黄色（站内信）、3 天橙色（邮件+站内信）、到期后红色（短信+邮件+站内信）；③ 开票遵循采购法：各段卖方直接向下一段买方开票</td></tr>
+    </tbody>
+  </table>
+
+  <hr style="margin:24px 0;border:none;border-top:1px solid var(--border)">
+
+  <!-- UC-AFTERSALE-001 -->
+  <h4>UC-AFTERSALE-001 售后管理</h4>
+  <table>
+    <thead><tr><th style="width:120px">字段</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><strong>用例名称</strong></td><td>售后管理</td></tr>
+      <tr><td><strong>用例编号</strong></td><td>UC-AFTERSALE-001</td></tr>
+      <tr><td><strong>用例简述</strong></td><td>处理末端退货需求，系统自动递归生成各级逆向退货单和红字单据，完成全链路结清</td></tr>
+      <tr><td><strong>主执行者</strong></td><td>B3 操作员（发起售后）</td></tr>
+      <tr><td><strong>辅助执行者</strong></td><td>B2/B1/S（各段审核方）</td></tr>
+      <tr><td><strong>前置条件</strong></td><td>订单已完成（已签收状态）</td></tr>
+      <tr><td><strong>事件流–主要路径</strong></td><td>① B3 操作员点击【发起售后申请】，选择原订单、填写退货数量和原因 → ② 系统自动递归生成 TH003（B3→B2）、TH002（B2→B1）、TH001（B1→S）→ ③ B2 审核 TH003 通过 → ④ 实物退回 B2 仓库，B2 操作员入库确认 → ⑤ 触发 TH002，B1 审核通过 → ⑥ 实物退回 B1 仓库，B1 操作员入库确认 → ⑦ 触发 TH001，S 审核通过 → ⑧ 实物退回 S 仓库 → ⑨ 系统自动生成各段红字应收/应付 → ⑩ 操作员点击【一键链路结清】完成</td></tr>
+      <tr><td><strong>替代流程</strong></td><td>③a. B2 驳回售后，B3 可修改后重新提交或终止；⑤a. B1 驳回，B2 协调处理；⑦a. S 驳回，B1 协调处理；3b~7b. 审核方超时 3 天未处理，自动催办</td></tr>
+      <tr><td><strong>后置条件</strong></td><td>链路结清完成，对应原订单的应收/应付被红字冲抵</td></tr>
+      <tr><td><strong>业务规则</strong></td><td>① 编号规则：TH + 段号(001/002/003) + YYYYMMDD + 4位流水；② 价格回溯取原订单单价 × 退货数量；③ 退货数量不可超过原订单未出库数量；④ 红字自动生成逻辑：各级售后单审核通过后自动生成对应红字应收/应付，抵消原正向账单</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>状态机</strong></p>
+  <div class="state-row">
+    <span class="state-item state-start">待审核</span>
+    <span class="state-arrow">→ 通过 →</span>
+    <span class="state-item state-mid">待退货</span>
+    <span class="state-arrow">→ 退回中 →</span>
+    <span class="state-item state-mid">待入库</span>
+    <span class="state-arrow">→ 入库 →</span>
+    <span class="state-item state-mid">待退款</span>
+    <span class="state-arrow">→ 结清 →</span>
+    <span class="state-item state-end">已完成</span>
+    <span class="state-arrow">|</span>
+    <span class="state-item state-err">已驳回</span>
+  </div>
+
+  <h3 id="sec3-2">3.2 接口定义</h3>
+
+  <h4>聚水潭 WMS 接口</h4>
+  <table>
+    <thead><tr><th>接口名称</th><th>方向</th><th>触发时机</th><th>说明</th><th>请求方式</th></tr></thead>
+    <tbody>
+      <tr><td>入库单推送</td><td>本系统 → 聚水潭</td><td>订单确认后</td><td>推送入库单，通知仓库收货</td><td>POST</td></tr>
+      <tr><td>入库状态回推</td><td>聚水潭 → 本系统</td><td>仓库实收入库</td><td>回传入库结果，触发仓单生成</td><td>POST（回调）</td></tr>
+      <tr><td>出库单推送</td><td>本系统 → 聚水潭</td><td>仓单解锁后</td><td>推送出库单通知发货</td><td>POST</td></tr>
+      <tr><td>出库状态回推</td><td>聚水潭 → 本系统</td><td>仓库实出库</td><td>回传出库结果，触发仓单核销</td><td>POST（回调）</td></tr>
+      <tr><td>库存查询</td><td>本系统 → 聚水潭</td><td>按需实时查询</td><td>查询指定商品/仓库实时库存</td><td>GET</td></tr>
+      <tr><td>退货单同步</td><td>本系统 → 聚水潭</td><td>售后入库</td><td>推送退货入库指令</td><td>POST</td></tr>
+      <tr><td>退货状态回推</td><td>聚水潭 → 本系统</td><td>退货入库完成</td><td>回推退货入库结果</td><td>POST（回调）</td></tr>
+    </tbody>
+  </table>
+
+  <blockquote><strong>同步机制</strong>：实时推送（同步调用），超时时间 10s。失败自动重试 3 次，间隔 5 分钟。最终失败写入告警表，运营人员手动触发补推。</blockquote>
+
+  <h4>电子签章平台接口（法大大）</h4>
+  <table>
+    <thead><tr><th>接口名称</th><th>方向</th><th>说明</th><th>请求方式</th></tr></thead>
+    <tbody>
+      <tr><td>合同上传</td><td>本系统 → 签章平台</td><td>上传生成的 PDF 合同文件</td><td>POST</td></tr>
+      <tr><td>签署发起</td><td>本系统 → 签章平台</td><td>指定签署方，发起签署流程</td><td>POST</td></tr>
+      <tr><td>签署链接获取</td><td>本系统 → 签章平台</td><td>获取短信/邮件签署链接</td><td>GET</td></tr>
+      <tr><td>签署状态回调</td><td>签章平台 → 本系统</td><td>签署完成/拒签的回调通知</td><td>POST（回调）</td></tr>
+      <tr><td>合同下载</td><td>本系统 → 签章平台</td><td>下载已签署的合同存档</td><td>GET</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== 四 ==================== -->
+<section id="sec4">
+  <h2>四. 非功能性需求</h2>
+
+  <h3 id="sec4-1">4.1 上线方案</h3>
+
+  <p><strong>初始化数据要求</strong>：</p>
+  <ul>
+    <li>企业信息（S/B1/B2/B3 的公司信息、联系人、资质）需在系统上线前完成录入。</li>
+    <li><strong>商品主数据由 S 统一维护</strong>，上线前需完成首批商品信息的录入（品名、规格、SKU、单位、参考单价）。</li>
+    <li>合同模板需在法大大电子签章平台预先配置，并在本系统建立模板与业务类型的映射关系。</li>
+    <li>聚水潭 WMS 的仓库信息需与本系统同步，建立仓库 ID 映射表。</li>
+  </ul>
+
+  <p><strong>历史数据处理</strong>：</p>
+  <ul>
+    <li>上线前存在的存量交易：不入本系统，走线下流程完成收尾。</li>
+    <li>上线后新交易：全部通过本系统发起，从采购计划开始的全链路管理。</li>
+  </ul>
+
+  <p><strong>分阶段上线建议</strong>：</p>
+  <table>
+    <thead><tr><th>阶段</th><th>范围</th><th>功能要点</th><th>过渡处理</th></tr></thead>
+    <tbody>
+      <tr><td><strong>一期</strong></td><td>核心链路</td><td>采购计划 + 订单管理 + 电子仓单 + 聚水潭出入库</td><td>合同线下签署、财务线下结算</td></tr>
+      <tr><td><strong>二期</strong></td><td>自动化</td><td>合同自动生成 + 电子签章 + 背对背结算 + 开票管理</td><td>售后走线下流程</td></tr>
+      <tr><td><strong>三期</strong></td><td>完善</td><td>售后逆向递归 + 消息通知体系 + 权限精细化 + 监控告警</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec4-2">4.2 兼容性要求</h3>
+  <ul>
+    <li>本系统为 PC 端管理后台，推荐使用 Chrome / Edge 最新版本浏览器访问。</li>
+    <li>页面分辨率适配 1366×768 及以上。</li>
+    <li>导出文件格式支持 Excel (.xlsx) 和 PDF。</li>
+  </ul>
+
+  <h3 id="sec4-3">4.3 性能要求</h3>
+  <table>
+    <thead><tr><th>要求项</th><th>指标</th></tr></thead>
+    <tbody>
+      <tr><td>列表页加载</td><td>≤ 2s</td></tr>
+      <tr><td>详情页加载</td><td>≤ 1.5s</td></tr>
+      <tr><td>并发用户</td><td>≥ 200</td></tr>
+      <tr><td>数据导出</td><td>5 万行 ≤ 10s</td></tr>
+      <tr><td>批量核销</td><td>≥ 1000 条/次</td></tr>
+      <tr><td>仓单查询</td><td>≤ 1.5s（含关联单据）</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec4-4">4.4 监控/埋点需求</h3>
+
+  <p><strong>核心业务监控</strong>：</p>
+  <table>
+    <thead><tr><th>监控点</th><th>触发条件</th><th>告警方式</th><th>接收人</th></tr></thead>
+    <tbody>
+      <tr><td>仓单流转异常</td><td>过户/锁定/解锁操作失败</td><td>站内信 + 邮件</td><td>运营</td></tr>
+      <tr><td>聚水潭接口失败</td><td>重试 3 次后仍失败</td><td>站内信 + 邮件</td><td>运营</td></tr>
+      <tr><td>审批超时</td><td>审批任务超过 48 小时未处理</td><td>站内信 + 邮件 + 短信</td><td>审批人 + 发起人</td></tr>
+      <tr><td>账单逾期</td><td>超过到期日未付款</td><td>站内信 + 邮件 + 短信</td><td>付款方 + 风控</td></tr>
+      <tr><td>合同签署超时</td><td>发起后 7 天未完成签署</td><td>站内信 + 邮件</td><td>签署双方</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>日志审计要求</strong>：</p>
+  <ul>
+    <li>每个核心操作（审批、过户、锁定、解锁、核销、作废）记录操作日志。</li>
+    <li>日志字段：操作人 ID、操作人姓名、操作时间、IP 地址、操作类型、关联单据 ID、操作前状态、操作后状态。</li>
+    <li>日志保留周期：≥ 180 天，支持导出归档。</li>
+  </ul>
+</section>
+
+<!-- ==================== 五 ==================== -->
+<section id="sec5">
+  <h2>五. 风险分析</h2>
+  <table>
+    <thead><tr><th>风险</th><th>可能性</th><th>严重性</th><th>应对策略</th><th>可应对性</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>聚水潭接口不稳定导致出入库同步失败</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-high">高</span></td>
+        <td>自动重试 + 人工补推机制 + 异步告警</td>
+        <td><span class="risk-high">高</span></td>
+      </tr>
+      <tr>
+        <td>电子签章平台签署流程耗时过长</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-mid">中</span></td>
+        <td>合同发起后 3 天催签、7 天失效，避免流程挂起</td>
+        <td><span class="risk-high">高</span></td>
+      </tr>
+      <tr>
+        <td>多级主体中某一方不配合退货</td>
+        <td><span class="risk-low">低</span></td>
+        <td><span class="risk-high">高</span></td>
+        <td>争议工单机制 + 人工介入；运营/客服兜底</td>
+        <td><span class="risk-mid">中</span></td>
+      </tr>
+      <tr>
+        <td>仓单物权纠纷（如重复融资）</td>
+        <td><span class="risk-low">低</span></td>
+        <td><span class="risk-high">极高</span></td>
+        <td>仓单数据哈希链防篡改 + 全链路操作日志审计</td>
+        <td><span class="risk-high">高</span></td>
+      </tr>
+      <tr>
+        <td>背对背结算超期导致上游资金链紧张</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-high">高</span></td>
+        <td>强制结算审批机制 + 逾期预警推送</td>
+        <td><span class="risk-mid">中</span></td>
+      </tr>
+      <tr>
+        <td>审批人缺席导致流程停滞</td>
+        <td><span class="risk-mid">中</span></td>
+        <td><span class="risk-mid">中</span></td>
+        <td>代理人机制 + 超时自动转交上级</td>
+        <td><span class="risk-high">高</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ==================== 六 ==================== -->
+<section id="sec6">
+  <h2>六. 后端/供应链金融专项</h2>
+
+  <h3 id="sec6-1">6.1 业务用例设计（后端视角）</h3>
+  <table>
+    <thead><tr><th>分类</th><th>涉及用例</th><th>操作对象</th></tr></thead>
+    <tbody>
+      <tr><td>采购计划驱动</td><td>UC-PLAN-001</td><td>B1/B2/B3 操作员</td></tr>
+      <tr><td>订单流转</td><td>UC-ORDER-001</td><td>S/B1/B2/B3</td></tr>
+      <tr><td>物权控货</td><td>UC-EWR-001</td><td>S/B1/B2/B3、管理员</td></tr>
+      <tr><td>结算与融资</td><td>UC-FIN-001</td><td>B1/B2/B3、资金方</td></tr>
+      <tr><td>逆向处理</td><td>UC-AFTERSALE-001</td><td>B3/B2/B1/S</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-2">6.2 业务规则</h3>
+
+  <p><strong>全局规则</strong>：</p>
+  <ol>
+    <li>各主体<strong>必须</strong>在系统中完成企业信息注册后方可参与交易。</li>
+    <li><strong>商品主数据由供应商（S）统一维护</strong>，其他主体（B1/B2/B3）可引用但不可修改核心规格。</li>
+    <li>电子仓单<strong>禁止</strong>在锁定状态下执行出库操作。</li>
+    <li>背对背结算<strong>允许</strong>部分付款，但需明确对应解锁的货权比例。</li>
+    <li>售后申请<strong>必须</strong>关联原订单，退款金额<strong>不得</strong>超过原订单金额。</li>
+  </ol>
+
+  <p><strong>局部规则（按模块）</strong>：</p>
+  <table>
+    <thead><tr><th>模块</th><th>规则</th></tr></thead>
+    <tbody>
+      <tr><td>采购计划</td><td>B2 存在时 B1 必须同时存在，禁止跳过一级采购商</td></tr>
+      <tr><td>商品管理</td><td>商品主数据由 S 统一维护，B1/B2/B3 可引用查看但不可修改；价格模型支持加成定价/独立定价</td></tr>
+      <tr><td>订单</td><td>前段销售单确认收货后自动触发后段采购单，不可手动重复生成</td></tr>
+      <tr><td>合同</td><td>各段合同中的金额必须与该段订单金额一致；对接法大大电子签章平台</td></tr>
+      <tr><td>仓单</td><td>每次过户后系统自动记录权属变更日志，不可修改或删除</td></tr>
+      <tr><td>财务</td><td>B1 向 S 付款前必须先确认 B2 已向 B1 付款（或已获得强制结算审批）；融资利率和额度由资金方线下核定后录入系统</td></tr>
+      <tr><td>售后</td><td>红字单据生成后自动冲抵原正向账单，无需人工确认</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-3">6.3 数据设计</h3>
+
+  <h4>核心表关联关系</h4>
+  <div class="mermaid-container">
+    <div class="mermaid">
+erDiagram
+    purchase_plan ||--o{ "order" : contains
+    purchase_plan ||--o{ "contract" : generates
+    "order" ||--|| ewarehouse_receipt : maps_to
+    "order" ||--o{ "bill" : generates
+    "order" ||--o{ after_sale : reverses
+    "order" ||--o{ "order" : parent_child
+    </div>
+  </div>
+
+  <h4>采购计划表 (purchase_plan)</h4>
+  <table>
+    <thead><tr><th>字段名</th><th>类型</th><th>长度</th><th>必填</th><th>默认值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>bigint</td><td>20</td><td>是</td><td>自增</td><td>主键 ID</td></tr>
+      <tr><td>plan_no</td><td>varchar</td><td>32</td><td>是</td><td>—</td><td>计划编号，PD + YYYYMMDD + 4位流水</td></tr>
+      <tr><td>title</td><td>varchar</td><td>200</td><td>是</td><td>—</td><td>项目标题</td></tr>
+      <tr><td>supplier_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>供应商(S) ID，关联企业表</td></tr>
+      <tr><td>buyer1_id</td><td>bigint</td><td>20</td><td>否</td><td>NULL</td><td>一级采购商(B1) ID，一段必填</td></tr>
+      <tr><td>buyer2_id</td><td>bigint</td><td>20</td><td>否</td><td>NULL</td><td>二级采购商(B2) ID，二段必填</td></tr>
+      <tr><td>buyer3_id</td><td>bigint</td><td>20</td><td>否</td><td>NULL</td><td>三级采购商(B3) ID，三段必填</td></tr>
+      <tr><td>stage_type</td><td>tinyint</td><td>4</td><td>是</td><td>—</td><td>判定阶段：1=一段 / 2=二段 / 3=三段</td></tr>
+      <tr><td>total_amount</td><td>decimal</td><td>18,2</td><td>是</td><td>0.00</td><td>预计总额</td></tr>
+      <tr><td>status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>状态：0=草稿 / 1=审批中 / 2=已生效 / 3=执行中 / 4=已完成 / 9=已关闭</td></tr>
+      <tr><td>submitter</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>提交人 ID</td></tr>
+      <tr><td>created_at</td><td>datetime</td><td>—</td><td>是</td><td>CURRENT_TIMESTAMP</td><td>创建时间</td></tr>
+      <tr><td>updated_at</td><td>datetime</td><td>—</td><td>是</td><td>CURRENT_TIMESTAMP ON UPDATE</td><td>更新时间</td></tr>
+    </tbody>
+  </table>
+
+  <h4>订单表 (order)</h4>
+  <table>
+    <thead><tr><th>字段名</th><th>类型</th><th>长度</th><th>必填</th><th>默认值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>bigint</td><td>20</td><td>是</td><td>自增</td><td>主键 ID</td></tr>
+      <tr><td>order_no</td><td>varchar</td><td>32</td><td>是</td><td>—</td><td>订单编号，CG/XS + YYYYMMDD + 4位流水</td></tr>
+      <tr><td>order_type</td><td>tinyint</td><td>4</td><td>是</td><td>—</td><td>类型：1=采购(CG) / 2=销售(XS)</td></tr>
+      <tr><td>plan_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>关联采购计划 ID，外键</td></tr>
+      <tr><td>parent_order_id</td><td>bigint</td><td>20</td><td>否</td><td>NULL</td><td>上级订单 ID，用于全链路关联</td></tr>
+      <tr><td>seller_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>卖方主体 ID</td></tr>
+      <tr><td>buyer_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>买方主体 ID</td></tr>
+      <tr><td>total_quantity</td><td>int</td><td>11</td><td>是</td><td>—</td><td>商品总数</td></tr>
+      <tr><td>total_amount</td><td>decimal</td><td>18,2</td><td>是</td><td>—</td><td>订单总额</td></tr>
+      <tr><td>status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>状态：0=待确认 / 1=已确认 / 2=已发货 / 3=已签收 / 4=已完成 / 9=已取消</td></tr>
+      <tr><td>stage</td><td>tinyint</td><td>4</td><td>是</td><td>—</td><td>所属段：1=一段 / 2=二段 / 3=三段</td></tr>
+      <tr><td>sync_wms</td><td>tinyint</td><td>1</td><td>否</td><td>0</td><td>是否已同步聚水潭：0=否 / 1=是</td></tr>
+      <tr><td>created_at</td><td>datetime</td><td>—</td><td>是</td><td>CURRENT_TIMESTAMP</td><td>创建时间</td></tr>
+    </tbody>
+  </table>
+
+  <h4>电子仓单表 (ewarehouse_receipt)</h4>
+  <table>
+    <thead><tr><th>字段名</th><th>类型</th><th>长度</th><th>必填</th><th>默认值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>bigint</td><td>20</td><td>是</td><td>自增</td><td>主键 ID</td></tr>
+      <tr><td>receipt_no</td><td>varchar</td><td>32</td><td>是</td><td>—</td><td>仓单编号，EWR + YYYYMMDD + 4位流水</td></tr>
+      <tr><td>owner_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>当前权属人 ID</td></tr>
+      <tr><td>warehouse_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>仓库 ID，关联聚水潭仓库映射</td></tr>
+      <tr><td>order_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>关联订单 ID，外键</td></tr>
+      <tr><td>quantity</td><td>decimal</td><td>18,2</td><td>是</td><td>—</td><td>数量/重量</td></tr>
+      <tr><td>lock_status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>锁定状态：0=未锁定 / 1=已锁定</td></tr>
+      <tr><td>status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>状态：0=已生成 / 1=已过户 / 2=已锁定 / 3=已解锁 / 4=待出库 / 5=已核销 / 9=已挂失</td></tr>
+      <tr><td>created_at</td><td>datetime</td><td>—</td><td>是</td><td>CURRENT_TIMESTAMP</td><td>生成时间</td></tr>
+      <tr><td>locked_at</td><td>datetime</td><td>—</td><td>否</td><td>NULL</td><td>锁定时间</td></tr>
+      <tr><td>unlocked_at</td><td>datetime</td><td>—</td><td>否</td><td>NULL</td><td>解锁时间</td></tr>
+      <tr><td>written_off_at</td><td>datetime</td><td>—</td><td>否</td><td>NULL</td><td>核销时间</td></tr>
+    </tbody>
+  </table>
+
+  <h4>账单表 (bill)</h4>
+  <table>
+    <thead><tr><th>字段名</th><th>类型</th><th>长度</th><th>必填</th><th>默认值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>bigint</td><td>20</td><td>是</td><td>自增</td><td>主键 ID</td></tr>
+      <tr><td>bill_no</td><td>varchar</td><td>32</td><td>是</td><td>—</td><td>账单编号，BL + YYYYMMDD + 4位流水</td></tr>
+      <tr><td>order_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>关联订单 ID，外键</td></tr>
+      <tr><td>payer_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>付款方 ID</td></tr>
+      <tr><td>payee_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>收款方 ID</td></tr>
+      <tr><td>amount</td><td>decimal</td><td>18,2</td><td>是</td><td>—</td><td>账单金额</td></tr>
+      <tr><td>due_date</td><td>date</td><td>—</td><td>是</td><td>—</td><td>到期日</td></tr>
+      <tr><td>overdue_days</td><td>int</td><td>11</td><td>否</td><td>0</td><td>逾期天数</td></tr>
+      <tr><td>b2b_status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>背对背状态：0=等待下级 / 1=可付款 / 2=已付款</td></tr>
+      <tr><td>status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>状态：0=待付款 / 1=已付款 / 2=已核销 / 3=已逾期</td></tr>
+      <tr><td>created_at</td><td>datetime</td><td>—</td><td>是</td><td>CURRENT_TIMESTAMP</td><td>创建时间</td></tr>
+    </tbody>
+  </table>
+
+  <h4>售后单表 (after_sale)</h4>
+  <table>
+    <thead><tr><th>字段名</th><th>类型</th><th>长度</th><th>必填</th><th>默认值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>bigint</td><td>20</td><td>是</td><td>自增</td><td>主键 ID</td></tr>
+      <tr><td>return_no</td><td>varchar</td><td>32</td><td>是</td><td>—</td><td>售后单号，TH + 段号 + YYYYMMDD + 4位流水</td></tr>
+      <tr><td>original_order_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>原订单 ID，外键</td></tr>
+      <tr><td>stage</td><td>tinyint</td><td>4</td><td>是</td><td>—</td><td>所属段：1/2/3</td></tr>
+      <tr><td>applicant_id</td><td>bigint</td><td>20</td><td>是</td><td>—</td><td>申请人 ID</td></tr>
+      <tr><td>quantity</td><td>decimal</td><td>18,2</td><td>是</td><td>—</td><td>退货数量</td></tr>
+      <tr><td>amount</td><td>decimal</td><td>18,2</td><td>是</td><td>—</td><td>退款金额</td></tr>
+      <tr><td>reason</td><td>varchar</td><td>500</td><td>是</td><td>—</td><td>退货原因</td></tr>
+      <tr><td>status</td><td>tinyint</td><td>4</td><td>是</td><td>0</td><td>状态：0=待审核 / 1=待退货 / 2=待入库 / 3=待退款 / 4=已完成 / 9=已驳回</td></tr>
+      <tr><td>parent_return_id</td><td>bigint</td><td>20</td><td>否</td><td>NULL</td><td>上级售后单 ID，递归关联</td></tr>
+      <tr><td>created_at</td><td>datetime</td><td>—</td><td>是</td><td>CURRENT_TIMESTAMP</td><td>创建时间</td></tr>
+    </tbody>
+  </table>
+
+  <h4>枚举取值范围一览表</h4>
+  <blockquote>各表 <code>status</code> 字段 0~4 按业务流程正向编排，9 表示异常/取消/关闭/驳回等终止态。</blockquote>
+  <table>
+    <thead><tr><th>枚举字段</th><th>表名</th><th>取值范围</th></tr></thead>
+    <tbody>
+      <tr><td><code>plan.status</code></td><td>purchase_plan</td><td>0=草稿 / 1=审批中 / 2=已生效 / 3=执行中 / 4=已完成 / 9=已关闭</td></tr>
+      <tr><td><code>order.status</code></td><td>order</td><td>0=待确认 / 1=已确认 / 2=已发货 / 3=已签收 / 4=已完成 / 9=已取消</td></tr>
+      <tr><td><code>order.order_type</code></td><td>order</td><td>1=采购(CG) / 2=销售(XS)</td></tr>
+      <tr><td><code>ewr.status</code></td><td>ewarehouse_receipt</td><td>0=已生成 / 1=已过户 / 2=已锁定 / 3=已解锁 / 4=待出库 / 5=已核销 / 9=已挂失</td></tr>
+      <tr><td><code>bill.status</code></td><td>bill</td><td>0=待付款 / 1=已付款 / 2=已核销 / 3=已逾期</td></tr>
+      <tr><td><code>bill.b2b_status</code></td><td>bill</td><td>0=等待下级 / 1=可付款 / 2=已付款</td></tr>
+      <tr><td><code>after_sale.status</code></td><td>after_sale</td><td>0=待审核 / 1=待退货 / 2=待入库 / 3=待退款 / 4=已完成 / 9=已驳回</td></tr>
+      <tr><td><code>stage_type</code></td><td>purchase_plan</td><td>1=一段 / 2=二段 / 3=三段</td></tr>
+    </tbody>
+  </table>
+
+  <h4>数据校验规则</h4>
+  <table>
+    <thead><tr><th>校验场景</th><th>规则</th></tr></thead>
+    <tbody>
+      <tr><td>主体选择</td><td>B2 存在时 B1 必须存在，否则拦截</td></tr>
+      <tr><td>商品数量</td><td>非称重商品不允许录入小数点；称重商品小数最多四位</td></tr>
+      <tr><td>退款金额</td><td>不可超过原订单未结清金额</td></tr>
+      <tr><td>仓单数量</td><td>部分过户时子仓单数量总和不得大于原仓单数量</td></tr>
+      <tr><td>订单单价</td><td>各段合同金额须与该段订单金额一致</td></tr>
+      <tr><td>日期校验</td><td>仓单锁定时间不可晚于解锁时间；到期日不可早于账单生成日</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-4">6.4 异常处理规范</h3>
+  <table>
+    <thead><tr><th>异常类型</th><th>处理逻辑</th><th>日志记录</th></tr></thead>
+    <tbody>
+      <tr><td>聚水潭入库接口调用失败</td><td>自动重试 3 次(间隔 5 分钟)，失败后写入告警表，运营人工补推</td><td>记录订单号、接口名、错误码、错误信息、时间</td></tr>
+      <tr><td>聚水潭出库接口调用失败</td><td>同上，仓单状态保持"待出库"不变</td><td>同上</td></tr>
+      <tr><td>电子签章回调超时</td><td>系统每 30 分钟轮询签章平台签署状态，最多轮询 48 小时</td><td>记录合同号、发起时间、轮询结果</td></tr>
+      <tr><td>审批驳回</td><td>计划回退草稿，数据保留</td><td>记录计划编号、驳回人、驳回原因、时间</td></tr>
+      <tr><td>仓单挂失</td><td>仓单状态变更为"已挂失"，锁定不可操作；重新入库后生成新仓单</td><td>记录仓单号、操作人、挂失原因、时间</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-5">6.5 分阶段实现规范</h3>
+  <table>
+    <thead><tr><th>阶段</th><th>范围</th><th>功能要点</th><th>过渡处理</th></tr></thead>
+    <tbody>
+      <tr><td><strong>一期</strong></td><td>核心链路</td><td>采购计划 + 订单管理 + 电子仓单 + 聚水潭出入库</td><td>合同线下签署、财务线下结算</td></tr>
+      <tr><td><strong>二期</strong></td><td>自动化</td><td>合同自动生成 + 电子签章 + 背对背结算 + 开票管理</td><td>售后走线下流程</td></tr>
+      <tr><td><strong>三期</strong></td><td>完善</td><td>售后逆向递归 + 消息通知体系 + 权限精细化 + 监控告警</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-6">6.6 多端适配规范</h3>
+  <ul>
+    <li>本系统为 <strong>PC 端管理后台</strong>，不涉及 PDA 端适配。</li>
+    <li>所有功能在 Chrome / Edge 浏览器下保持一致的行为和数据校验。</li>
+    <li>导出报表统一为 <code>.xlsx</code> 格式，合同为 <code>.pdf</code> 格式。</li>
+    <li>列表页分页组件支持翻页和页码跳转，筛选条件在页面切换时保留。</li>
+  </ul>
+</section>
+
+<!-- ==================== 七 ==================== -->
+<section id="sec7">
+  <h2>七. 文档维护</h2>
+
+  <h3 id="sec7-1">7.1 遗留问题</h3>
+  <table>
+    <thead><tr><th>编号</th><th>问题描述</th><th>影响范围</th><th>待确认方</th><th>优先级</th><th>状态</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>TODO-01</td>
+        <td>商品主数据的维护入口—由 S 统一维护还是各主体各自维护</td>
+        <td>商品与价格管理</td>
+        <td>业务方</td>
+        <td><span class="tag tag-p1">P1</span></td>
+        <td><span class="tag tag-resolved">已解决</span>：由 S 统一维护，B1/B2/B3 可引用不可修改</td>
+      </tr>
+      <tr>
+        <td>TODO-02</td>
+        <td>融资利率和融资额度计算规则</td>
+        <td>财务管理</td>
+        <td>资金方</td>
+        <td><span class="tag tag-p1">P1</span></td>
+        <td><span class="tag tag-resolved">已解决</span>：资金方线下核定后录入系统</td>
+      </tr>
+      <tr>
+        <td>TODO-03</td>
+        <td>聚水潭对接的具体 API 版本和字段映射</td>
+        <td>集成接口</td>
+        <td>聚水潭实施</td>
+        <td><span class="tag tag-p2">P2</span></td>
+        <td>延期，后续提供具体文档</td>
+      </tr>
+      <tr>
+        <td>TODO-04</td>
+        <td>电子签章平台的选型（e签宝 / 法大大 / 其他）</td>
+        <td>合同管理</td>
+        <td>业务方</td>
+        <td><span class="tag tag-p2">P2</span></td>
+        <td><span class="tag tag-resolved">已解决</span>：选用法大大</td>
+      </tr>
+      <tr>
+        <td>TODO-05</td>
+        <td>各主体内部的部门级权限是否需要系统支持</td>
+        <td>权限管理</td>
+        <td>业务方</td>
+        <td><span class="tag tag-p2">P2</span></td>
+        <td><span class="tag tag-resolved">已确认</span>：不需要，系统不支持部门级权限</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec7-2">7.2 文档更新规范</h3>
+  <ul>
+    <li><strong>触发条件</strong>：功能优化、业务规则变更、接口调整、问题修复后及时更新。</li>
+    <li><strong>更新审核</strong>：修改后需经审批人确认，同步至版本历史章节。</li>
+    <li><strong>版本号规则</strong>：功能优化升次版本号（V1.0 → V1.1），重大重构升主版本号（V1.x → V2.0）。</li>
+  </ul>
+</section>
+
+</div><!-- /main-content -->
+</div><!-- /doc-body -->
+
+<footer class="doc-footer">
+  <p>本文档按照 PRD 规范（prd-q）标准结构撰写，涵盖文档概述、业务概述、系统用例需求、非功能性需求、风险分析、后端专项及文档维护七个部分，可作为系统架构与产品开发的完整逻辑依据。</p>
+  <p style="margin-top:8px">供应链管理系统 (B2B2B2B) 产品需求文档 · V1.1</p>
+</footer>
+
+</body>
+</html>

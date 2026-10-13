@@ -1,0 +1,69 @@
+<view class="page-container fade-in">
+  <view wx:if="{{loading}}" class="loading-state">加载中...</view>
+
+  <view wx:else>
+    <!-- 总览卡片 -->
+    <view class="card overview-card">
+      <view class="overview-row">
+        <view class="overview-item">
+          <text class="ov-num">{{weekTotal}}</text>
+          <text class="ov-label">本周完成</text>
+        </view>
+        <view class="overview-item">
+          <text class="ov-num">{{monthTotal}}</text>
+          <text class="ov-label">本月完成</text>
+        </view>
+        <view class="overview-item">
+          <text class="ov-num">{{weekStars}}</text>
+          <text class="ov-label">本周星星</text>
+        </view>
+        <view class="overview-item">
+          <text class="ov-num">{{streak}}</text>
+          <text class="ov-label">连续天数</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 每日趋势柱状图 -->
+    <view class="card chart-card">
+      <view class="chart-title">📊 本周每日完成数</view>
+      <view class="bar-chart">
+        <view class="bar-column" wx:for="{{daily}}" wx:key="date">
+          <view class="bar-wrapper">
+            <view class="bar-fill" style="height: {{maxCount > 0 ? (item.count / maxCount * 100) : 0}}%;">
+              <text class="bar-value" wx:if="{{item.count > 0}}">{{item.count}}</text>
+            </view>
+          </view>
+          <text class="bar-weekday">{{item.weekday.slice(2)}}</text>
+          <text class="bar-date">{{item.date.slice(5)}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 类别分布 -->
+    <view class="card chart-card">
+      <view class="chart-title">📂 任务类别分布</view>
+      <view class="category-list">
+        <view class="category-item" wx:for="{{categoryDist}}" wx:key="*this">
+          <view class="cat-header">
+            <text class="cat-name">
+              <text wx:if="{{item.key === 'color_shape'}}">🎨 颜色形状</text>
+              <text wx:elif="{{item.key === 'sorting'}}">📦 整理搬运</text>
+              <text wx:elif="{{item.key === 'sound'}}">🔊 声音采集</text>
+              <text wx:elif="{{item.key === 'treasure'}}">🗺️ 寻宝探索</text>
+              <text wx:else>{{item.key}}</text>
+            </text>
+            <text class="cat-count">{{item.value}}个</text>
+          </view>
+          <view class="cat-bar-bg">
+            <view class="cat-bar-fill" style="width: {{categoryMax > 0 ? (item.value / categoryMax * 100) : 0}}%;"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="back-section">
+      <button class="btn-secondary" bindtap="goBack">返回</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "character": "/components/character/character"
+  },
+  "navigationBarTitleText": "家庭大冒险"
+}

@@ -1,0 +1,43 @@
+{
+  "name": "magnetic-tiles-workbench",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "bench": "node scripts/bench-solve.mjs",
+    "bench:snap": "node scripts/bench-snap.mjs",
+    "bench:extract": "node scripts/bench-extract.mjs",
+    "bench:export": "node scripts/bench-export.mjs",
+    "bench:measure": "node scripts/bench-measure.mjs",
+    "bench:lock": "node scripts/bench-lock.mjs",
+    "bench:steps": "node scripts/bench-steps.mjs",
+    "e2e:draft": "bash scripts/e2e/run-draft-e2e.sh",
+    "e2e:build": "bash scripts/e2e/run-build-e2e.sh",
+    "e2e:measure": "bash scripts/e2e/run-measure-e2e.sh",
+    "e2e:steps": "bash scripts/e2e/run-steps-e2e.sh",
+    "e2e:library": "bash scripts/e2e/run-library-e2e.sh"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.1.1",
+    "antd": "^6.3.5",
+    "dayjs": "^1.11.20",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "vite": "^8.0.4"
+  }
+}

@@ -1,0 +1,794 @@
+# 基本信息
+
+目标上线时间：三月底四月初
+
+# 背景
+
+金融中心搭建
+
+# 目标
+
+金融中心一期搭建
+
+
+
+# 流程图
+
+![](https://tcs-devops.aliyuncs.com/storage/113re84378ce2953bfdd895a1f3ef00a44cb?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc3NzQzOTc4OSwiaWF0IjoxNzc2ODM0OTg5LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM3JlODQzNzhjZTI5NTNiZmRkODk1YTFmM2VmMDBhNDRjYiJ9.GBKwJ4OtLd6FqzE_lrOurO-z8Xy2zRMzS-jB3lISSsc&download=image.png "")
+
+
+
+![](https://tcs-devops.aliyuncs.com/storage/113r8498658aacf4b20649422b7b1150fa5a?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc3NzQzOTc4OSwiaWF0IjoxNzc2ODM0OTg5LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM3I4NDk4NjU4YWFjZjRiMjA2NDk0MjJiN2IxMTUwZmE1YSJ9.CoC60nLy4hIxvIHgGJmiiHfIfTYtJcVHtQNsn-LNqxM&download=%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_5f1f1cf3-49ae-4bb8-a332-c2a7bf0e3cfb.png "")
+
+# 相关表设计
+
+## 1. 融资需求
+
+### 1.1 融资需求
+
+```text
+CREATE TABLE `fa_financial_info` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `company_id` bigint NOT NULL COMMENT '企业id',
+  `company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '企业名称',
+  `credit_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '统一社会信用代码',
+  `agreed_amount` decimal(18,4) NOT NULL COMMENT '申请金额',
+  `product_type` tinyint NOT NULL COMMENT '产品类型',
+  `contact` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '联系人',
+  `phone_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '手机号',
+  `product_info` varchar(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '商品信息',
+  `product_quantity` int unsigned NOT NULL COMMENT '商品数量',
+  `apply_date` date NOT NULL COMMENT '申请日期',
+  `create_by` bigint NOT NULL COMMENT '创建人',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` bigint NOT NULL COMMENT '更新者',
+  `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '是否被删除 0 未删除 1 已删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='融资信息';
+
+```
+
+## 2. 客户管理
+
+### 2.1 客户信息
+
+```text
+CREATE TABLE `fa_customer` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `company_id` bigint NOT NULL COMMENT '企业id',
+  `customer_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '客户编号',
+  `credit_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '统一社会信用代码',
+  `company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '企业名称',
+  `short_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '企业简称',
+  `regist_capi` decimal(18,2) DEFAULT '0.00' COMMENT '注册资本 单位(万元)',
+  `customer_type` json DEFAULT NULL COMMENT '企业类型 支持多选，1-资金方 2-核心企业 3-融资企业 4-监管企业 5-仓储企业 6-平台方',
+  `office_address` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '办公地址',
+  `regist_address` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '注册地址',
+  `phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '手机号',
+  `start_date` date DEFAULT NULL COMMENT '成立日期,精确到天，如“2022- 01-01”',
+  `license_url` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '营业执照路径',
+  `main_business` varchar(500) CHARACTER SET utf8mb4 COLLATE 
+utf8mb4_general_ci DEFAULT NULL COMMENT '主营信息',
+  `valid` tinyint(1) DEFAULT NULL COMMENT '是否启用：0-禁用；1-启用',
+  `create_by` bigint NOT NULL COMMENT '创建人',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` bigint NOT NULL COMMENT '更新者',
+  `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '是否被删除 0 未删除 1 已删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户信息';
+
+
+
+
+```
+
+### 2.2  客户关联人员表
+
+```text
+CREATE TABLE `fa_customer_personnel` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `customer_id` bigint NOT NULL COMMENT '客户id',
+  `person_type` tinyint NOT NULL COMMENT '类型 1-法人 2-联系人',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姓名',
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '联系电话',
+  `id_type` tinyint DEFAULT NULL COMMENT '证件类型 1-身份证 2-其他',
+  `id_no` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '证件编号',
+  `front_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '正面照',
+  `reverse_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '反面照',
+  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除 默认0-否 1-是',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `create_by` bigint NOT NULL DEFAULT '0' COMMENT '创建人',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `update_by` bigint NOT NULL DEFAULT '0' COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  KEY `idx_customer_id` (`customer_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户关联人员表';
+
+```
+
+### 2.3 客户财务信息
+
+```text
+CREATE TABLE `fa_customer_bank` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `customer_id` bigint NOT NULL COMMENT '客户id',
+  `company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '企业名称',
+  `account_bank` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '开户银行',
+  `bank_account` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '银行账号',
+  `branch_number` varchar(55) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行号',
+  `defaulted` tinyint(1) DEFAULT '0' COMMENT '是否默认 0 否 1 是',
+  `valid` tinyint(1) DEFAULT NULL COMMENT '是否启用：0-禁用；1-启用',
+  `remark` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_customer_id` (`customer_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户银行信息';
+
+
+
+```
+
+```text
+CREATE TABLE `fa_customer_invoice` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `customer_id` bigint NOT NULL COMMENT '客户id',
+  `company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '企业名称',
+  `invoice_type` tinyint NOT NULL COMMENT '开票类型',
+  `tax_payer_no` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '纳税人识别号',
+  `account_bank` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '开户银行',
+  `bank_account` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '银行账号',
+  `phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '手机号',
+  `address` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '地址',
+  `defaulted` tinyint(1) DEFAULT '0' COMMENT '是否默认 0 否 1 是',
+  `valid` tinyint(1) DEFAULT NULL COMMENT '是否启用：0-禁用；1-启用',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_customer_id` (`customer_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户开票信息';
+
+
+```
+
+
+
+## 3. 客户准入管理
+
+### 3.1 客户准入信息
+
+```text
+CREATE TABLE `fa_customer_admit` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'id',
+  `company_id` bigint NOT NULL COMMENT '企业id',
+  `admit_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '准入编号',
+  `credit_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '统一社会信用代码',
+  `company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '企业名称',
+  `short_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '企业简称',
+  `regist_capi` decimal(18,2) DEFAULT '0.00' COMMENT '注册资本 单位(万元)',
+  `customer_type` varchar(5) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '企业类型 3-融资企业 ',
+
+
+  `office_address` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '办公地址',
+  `regist_address` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '注册地址',
+
+
+  `company_phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '企业联系方式',
+  `start_date` date DEFAULT NULL COMMENT '成立日期,精确到天，如“2022- 01-01”',
+  `is_nl` tinyint(1) DEFAULT NULL COMMENT '是否能良客户：0-否；1-是',
+  `actual_controller` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '实控人',
+  `actual_controller_phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '实控人电话',
+  `actual_controller_share_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '实控人持股比例',
+  `actual_controller_start_date` date DEFAULT NULL COMMENT '实控人从业日期',
+  `industry` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '所属行业',
+  `industry_scale` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行业规模',
+  `business_area` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '经营场地',
+  `capital` decimal(18,2) DEFAULT '0.00' COMMENT '资产总额 单位万元',
+  `debt` decimal(18,2) DEFAULT '0.00' COMMENT '负债总额 单位万元',
+  `trade_income` decimal(18,2) DEFAULT '0.00' COMMENT '营业收入',
+  `employee_num` int DEFAULT NULL COMMENT '员工人数',
+  `trade_opponent` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '主要交易对手',
+  `approve_limit` decimal(18,2) DEFAULT '0.00' COMMENT '申报额度',
+  `loan_purpose` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '贷款用途',
+  `partner` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '合作方',
+
+  `assure_method` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '担保方式',
+  `assure_person` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '担保人',
+  `other_info` varchar(550) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '其他信息',
+  `main_business` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '主营信息',
+  `credit_info` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '信用信息',
+  `repay_ability` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '还款能力',
+  `company_intro` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '企业介绍',
+  `license_url` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '营业执照路径',
+
+  `admit_status` tinyint DEFAULT NULL COMMENT '准入状态',
+  `audit_status` tinyint DEFAULT NULL COMMENT '审批状态',
+
+  `create_by` bigint NOT NULL COMMENT '创建人',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` bigint NOT NULL COMMENT '更新者',
+  `update_time` datetime NOT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '是否被删除 0 未删除 1 已删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='客户准入信息';
+
+```
+
+### 3.2 客户准入-关联人员信息
+
+```text
+CREATE TABLE `fa_customer_admit_personnel` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `admit_id` bigint NOT NULL COMMENT '客户准入id',
+  `person_type` tinyint NOT NULL COMMENT '类型 1-法人 2-联系人',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姓名',
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '联系电话',
+  `id_type` tinyint DEFAULT NULL COMMENT '证件类型 1-身份证 2-其他',
+  `id_no` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '证件编号',
+  `front_url` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '正面照',
+  `reverse_url` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '反面照',
+  `deleted` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除 默认0-否 1-是',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `create_by` bigint NOT NULL DEFAULT '0' COMMENT '创建人',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `update_by` bigint NOT NULL DEFAULT '0' COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  KEY `idx_admit_id` (`admit_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户准入关联人员表';
+
+
+```
+
+### 3.3 客户准入-财务信息
+
+```text
+CREATE TABLE `fa_customer_admit_bank` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `admit_id` bigint NOT NULL COMMENT '客户id',
+  `company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '企业名称',
+  `account_bank` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '开户银行',
+  `bank_account` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '银行账号',
+  `branch_number` varchar(55) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行号',
+  `defaulted` tinyint(1) DEFAULT '0' COMMENT '是否默认 0 否 1 是',
+  `valid` tinyint(1) DEFAULT NULL COMMENT '是否启用：0-禁用；1-启用',
+  `remark` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_admit_id` (`admit_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户准入银行信息';
+
+
+CREATE TABLE `fa_customer_admit_invoice` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `admit_id` bigint NOT NULL COMMENT '客户id',
+  `title_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '抬头名称',
+  `invoice_type` tinyint NOT NULL COMMENT '开票类型',
+  `tax_payer_no` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '纳税人识别号',
+  `account_bank` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '开户银行',
+  `bank_account` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '银行账号',
+  `phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '手机号',
+  `address` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '地址',
+  `defaulted` tinyint(1) DEFAULT '0' COMMENT '是否默认 0 否 1 是',
+  `valid` tinyint(1) DEFAULT NULL COMMENT '是否启用：0-禁用；1-启用',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_admit_id` (`admit_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户准入开票信息';
+
+
+```
+
+## 4. 额度管理
+
+### 4.1 授信额度申请
+
+```text
+CREATE TABLE `fa_credit_apply` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `customer_id` bigint NOT NULL COMMENT '客户id，授信主体',
+`company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信主体名称',
+  `credit_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信申请编号',
+  `credit_funder` bigint NOT NULL COMMENT '授信资金方',
+`funder_company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信资金方名称',
+
+  `product_type` tinyint DEFAULT NULL COMMENT '产品类型 1-醒市白条',
+  `valid_date` date DEFAULT NULL COMMENT '生效日期',
+  `credit_term` int DEFAULT NULL COMMENT '授信期限 月',
+  `is_loop` tinyint DEFAULT NULL COMMENT '是否循环 0-否 1-是',
+  `credit_deadline` date DEFAULT NULL COMMENT '授信截止日期',
+  `channel` tinyint DEFAULT NULL COMMENT '渠道',
+  `limit` decimal(18,2) DEFAULT '0.00' COMMENT '额度',
+  `use_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '使用利率',
+  `tech_service_fee_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '技术服务费利率',
+  `financing_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '融资比例',
+  `interest_free_day` int DEFAULT NULL COMMENT '免息期限 天',
+  `ensure_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '保证金比例',
+  `penalize_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '罚息利率',
+  `credit_status` tinyint DEFAULT NULL COMMENT '授信状态',
+  `audit_status` tinyint DEFAULT NULL COMMENT '审批状态',
+  `funder_audit_status` tinyint DEFAULT NULL COMMENT '资方审核状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_customer_id` (`customer_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='授信申请信息';
+
+```
+
+### 4.2 授信额度管理
+
+```text
+CREATE TABLE `fa_credit` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `customer_id` bigint NOT NULL COMMENT '客户id，授信主体',
+`company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信主体名称',
+  `credit_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信申请编号',
+  `credit_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信编号',
+  `credit_funder` bigint NOT NULL COMMENT '授信资金方',
+`funder_company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信资金方名称',
+  `product_type` tinyint DEFAULT NULL COMMENT '产品类型 1-醒市白条',
+  `valid_date` date DEFAULT NULL COMMENT '生效日期',
+  `credit_term` int DEFAULT NULL COMMENT '授信期限 月',
+  `is_loop` tinyint DEFAULT NULL COMMENT '是否循环 0-否 1-是',
+  `credit_deadline` date DEFAULT NULL COMMENT '授信截止日期',
+  `channel` tinyint DEFAULT NULL COMMENT '渠道',
+  `limit` decimal(18,2) DEFAULT '0.00' COMMENT '额度',
+  `remain_limit` decimal(18,2) DEFAULT '0.00' COMMENT '剩余额度',
+  `use_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '使用利率',
+  `tech_service_fee_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '技术服务费利率',
+  `financing_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '融资比例',
+  `interest_free_day` int DEFAULT NULL COMMENT '免息期限 天',
+  `ensure_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '保证金比例',
+  `penalize_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '罚息利率',
+  `is_valid` tinyint DEFAULT NULL COMMENT '是否生效',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_customer_id` (`customer_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='客户授信信息';
+
+```
+
+## 5. 融资管理
+
+### 5.1 融资申请
+
+```text
+CREATE TABLE `fa_financing` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `financing_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '融资申请编码',
+  `credit_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信编号',
+`company_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '企业名称',
+  `financing_amount` decimal(18,2) DEFAULT '0.00' COMMENT '融资金额',
+`repay_amount` decimal(18,2) DEFAULT '0.00' COMMENT '已还款金额',
+`freeze_amount` decimal(18,2) DEFAULT '0.00' COMMENT '冻结金额',
+`financing_mode` tinyint DEFAULT NULL COMMENT '融资模式 1-赊销模式',
+  `financing_term` int DEFAULT NULL COMMENT '融资期限 月',
+  `keep_warehouse` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '保管仓库',
+  `warehouse_company` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '仓库企业',
+  `demand_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '采购商',
+  `supplier_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '供应商',
+  `pre_interest_date` date DEFAULT NULL COMMENT '预计计息日期',
+  `expire_date` date DEFAULT NULL COMMENT '到期日',
+  `use_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '使用利率',
+  `tech_service_fee_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '技术服务费利率',
+  `financing_rate` decimal(18,2) DEFAULT '0.00' COMMENT '融资比例',
+  `interest_free_day` int DEFAULT NULL COMMENT '免息期限 天',
+  `pre_cal_interest` decimal(18,2) DEFAULT '0.00' COMMENT '预估利息',
+  `ensure_ratio` decimal(18,2) DEFAULT '0.00' COMMENT '保证金比例',
+  `pre_tech_service_fee` decimal(18,2) DEFAULT '0.00' COMMENT '预估技术服务费',
+  `financing_status` tinyint DEFAULT NULL COMMENT '融资状态',
+
+  `platform_audit_status` tinyint DEFAULT NULL COMMENT '平台方审核状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='融资信息';
+
+
+CREATE TABLE `fa_financing_account` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `financing_id` bigint NOT NULL COMMENT '融资id',
+  `account_type` tinyint DEFAULT NULL COMMENT '类型 1-供应商',
+  `account_bank` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '开户银行',
+  `bank_account` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '银行账号',
+  `account_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '户名',
+  `branch_number` varchar(55) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '行号',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='融资账户信息';
+
+
+CREATE TABLE `fa_financing_order` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `financing_id` bigint NOT NULL COMMENT '融资id',
+  `order_code` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '订单编码',
+  `brand` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `total_price` decimal(18,2) DEFAULT '0.00' COMMENT '总金额',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='融资订单信息';
+
+
+CREATE TABLE `fa_financing_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `financing_id` bigint NOT NULL COMMENT '融资id',
+  `financing_order_id` bigint NOT NULL COMMENT '融资订单id',
+  `sku_code` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku编码',
+  `brand` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `category` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品类',
+  `sku_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku名称',
+  `sku` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku规格',
+  `purchase_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '采购数量',
+  `purchase_unit_price` decimal(18,2) DEFAULT '0.00' COMMENT '采购单价',
+  `purchase_total_price` decimal(18,2) DEFAULT '0.00' COMMENT '采购总价',
+  `sale_unit_price` decimal(18,2) DEFAULT '0.00' COMMENT '销售单价',
+  `sale_total_price` decimal(18,2) DEFAULT '0.00' COMMENT '销售总价',
+  `freeze_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '冻结数量',
+  `released_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '已解押数量',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='融资商品信息';
+
+```
+
+## 6. 还款
+
+### 6.1 还款申请
+
+```text
+CREATE TABLE `fa_repay` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `financing_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '融资申请编码',
+  `repay_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '还款申请编号',
+  `repay_amount` decimal(18,2) DEFAULT '0.00' COMMENT '还款金额',
+  `repay_apply_date` date DEFAULT NULL COMMENT '还款申请日期',
+  `day` int DEFAULT NULL COMMENT '天数',
+  `current_pledge_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '当前质押总数量',
+  `current_pledge_goods_amount` decimal(18,2) DEFAULT '0.00' COMMENT '当前质押预估货值',
+  `apply_release_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '申请解押总数量',
+  `apply_release_goods_amount` decimal(18,2) DEFAULT '0.00' COMMENT '申请解押货值',
+  `use_interest` decimal(18,2) DEFAULT '0.00' COMMENT '使用利息',
+  `tech_service_fee` decimal(18,2) DEFAULT '0.00' COMMENT '技术服务费',
+  `penalize_interest` decimal(18,2) DEFAULT '0.00' COMMENT '罚息',
+  `balance_amount` decimal(18,2) DEFAULT '0.00' COMMENT '余额',
+  `repay_status` tinyint DEFAULT NULL COMMENT '还款状态',
+  `platform_audit_status` tinyint DEFAULT NULL COMMENT '平台审核状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='还款信息';
+
+
+
+CREATE TABLE `fa_repay_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `repay_id` bigint NOT NULL COMMENT '还款id',
+  `financing_goods_id` bigint NOT NULL COMMENT '融资商品id',
+  `quantity` int DEFAULT '0' DEFAULT NULL COMMENT '数量',
+  `price` decimal(18,2) DEFAULT '0.00' COMMENT '价格',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='还款商品信息';
+
+```
+
+## 7. 仓储管理
+
+### 7.1 入库管理
+
+```text
+CREATE TABLE `fa_warehouse_in` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+ `wearhouse_in_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '入库编码',
+
+  `warehouse_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '仓库',
+
+  `financing_customer_id` bigint NOT NULL COMMENT '融资企业id',
+  `wearhouse_in_date` date DEFAULT NULL COMMENT '入库日期',
+  
+  `wearhouse_in_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '入库单号',
+  `storage_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '所属仓储企业',
+`wearhouse_in_type` tinyint DEFAULT NULL COMMENT '入库类型 1-其他入库',
+
+  `supplier_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '供应商',
+  
+  `platform_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '平台方',
+  `supervision` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '监管方',
+  `funder` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '资金方',
+  `status` tinyint DEFAULT NULL COMMENT '状态',
+  `platform_check_status` tinyint DEFAULT NULL COMMENT '平台检验状态',
+  `supervision_check_status` tinyint DEFAULT NULL COMMENT '监管方检验状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='入库信息';
+
+
+
+
+CREATE TABLE `fa_warehouse_in_order` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `warehouse_in_id` bigint NOT NULL COMMENT '入库单id',
+
+  `order_code` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '订单编码',
+  `brand` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `total_price` decimal(18,2) DEFAULT '0.00' COMMENT '总金额',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='入库单-订单信息';
+
+
+CREATE TABLE `fa_warehouse_in_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `warehouse_in_id` bigint NOT NULL COMMENT '入库单id',
+  `wearhouse_in_order_id` bigint NOT NULL COMMENT '入库订单id',
+  `sku_code` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku编码',
+  `brand` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `category` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品类',
+  `sku_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku名称',
+  `sku` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku规格',
+  `purchase_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '采购数量',
+  `purchase_unit_price` decimal(18,2) DEFAULT '0.00' COMMENT '采购单价',
+  `purchase_total_price` decimal(18,2) DEFAULT '0.00' COMMENT '采购总价',
+ 
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='入库单商品信息';
+
+```
+
+## 8. 出库单
+
+### 8.1 出库单管理
+
+```text
+CREATE TABLE `fa_warehouse_out` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `warehouse_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '仓库',
+  `storage_company_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '所属仓储企业',
+  `wearhouse_out_date` date DEFAULT NULL COMMENT '出库日期',
+  `wearhouse_out_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '出库单号',
+  `create_wearhouse_out_company` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '生成出库企业',
+  `wearhouse_in_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '入库单号',
+  `wearhouse_out_batch` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '出库批次',
+  `repay_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '还款编码',
+  `financing_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '融资编码',
+  `credit_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '授信编码',
+
+  `status` tinyint DEFAULT NULL COMMENT '状态',
+  `platform_check_status` tinyint DEFAULT NULL COMMENT '平台检验状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='出库信息';
+
+
+CREATE TABLE `fa_wearhouse_out_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `wearhouse_out_id` bigint NOT NULL COMMENT '出库单id',
+  `repay_goods_id` bigint NOT NULL COMMENT '还款商品id',
+  `financing_goods_id` bigint NOT NULL COMMENT '融资商品id',
+  `wearhouse_out_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '出库数量',
+  `wearhouse_out_price` decimal(18,2) DEFAULT '0.00' COMMENT '出库总价',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='出库单商品信息';
+
+```
+
+## 9. 解押
+
+还款申请通过后生成解押数据
+
+```text
+CREATE TABLE `fa_release_pledge` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `repay_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '还款申请编号',
+  `release_pledge_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '解质押编号',
+
+  `financing_apply_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '融资申请编码',
+  `financing_mode` tinyint DEFAULT NULL COMMENT '融资模式 1-赊销模式',
+  `order_code` varchar(50) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '订单号',
+  `pledgee` bigint NOT NULL COMMENT '质权人',
+  `pledgor` bigint NOT NULL COMMENT '出质人',
+  `financing_rate` decimal(18,2) DEFAULT '0.00' COMMENT '融资比例',
+  `financing_apply_time` datetime DEFAULT NULL COMMENT '融资申请时间',
+  `product_type` tinyint DEFAULT NULL COMMENT '产品类型 1-醒市白条',
+
+  `current_pledge_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '当前质押总数量',
+  `current_pledge_goods_amount` decimal(18,2) DEFAULT '0.00' COMMENT '当前质押预估货值',
+  `apply_release_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '申请解押总数量',
+  `apply_release_time` datetime DEFAULT NULL COMMENT '申请解押时间',
+  `apply_release_goods_amount` decimal(18,2) DEFAULT '0.00' COMMENT '申请解押货值',
+  `use_interest` decimal(18,2) DEFAULT '0.00' COMMENT '使用利息',
+  `tech_service_fee` decimal(18,2) DEFAULT '0.00' COMMENT '技术服务费',
+  `penalize_interest` decimal(18,2) DEFAULT '0.00' COMMENT '罚息',
+  `balance_amount` decimal(18,2) DEFAULT '0.00' COMMENT '余额',
+  `status` tinyint DEFAULT NULL COMMENT '状态',
+  `platform_audit_status` tinyint DEFAULT NULL COMMENT '平台审核状态',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='解押信息';
+
+CREATE TABLE `fa_release_pledge_goods` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+   `release_pledge_id` bigint NOT NULL COMMENT '解押单id',
+  `sku_code` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku编码',
+  `brand` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '品牌',
+  `sku_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku名称',
+  `sku` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'sku规格',
+  `purchase_quantity` int DEFAULT '0'DEFAULT NULL COMMENT '采购数量',
+  `purchase_unit_price` decimal(18,2) DEFAULT '0.00' COMMENT '采购单价',
+  `purchase_total_price` decimal(18,2) DEFAULT '0.00' COMMENT '采购总价',
+  `sale_unit_price` decimal(18,2) DEFAULT '0.00' COMMENT '销售单价',
+  `sale_total_price` decimal(18,2) DEFAULT '0.00' COMMENT '销售总价',
+  `released_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '已解押数量',
+  `apply_released_quantity` int DEFAULT '0' DEFAULT NULL COMMENT '申请解押数量',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='解押商品信息';
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 其他
+
+### 上传材料信息
+
+```text
+CREATE TABLE `fa_upload_file` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `file_type` tinyint NOT NULL COMMENT '数据类型',
+  `data_id` bigint NOT NULL COMMENT '对应数据id',
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '文件名称',
+  `url` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '路径',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除'
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_data_id` (`data_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='上传材料信息';
+
+```
+
+### 审批信息
+
+```text
+CREATE TABLE `fa_audit_info` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `audit_type` tinyint NOT NULL COMMENT '审批类型',
+  `data_id` bigint NOT NULL COMMENT '对应数据id',
+  `opera_type` tinyint NOT NULL COMMENT '操作类型',
+  `audit_msg` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '审批内容',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_data_id` (`data_id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='审批信息';
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 问题
+
+| #   | 问题               | 结论          |
+| --- | ---------------- | ----------- |
+| 1   | 描述评审、研发等过程中发现的问题 | 描述最终讨论得出的决定 |
+| 2   |                  |             |
+
+
+
+# 暂不支持
+
+- 描述由于受限团队目标、技术、时间等不支持的功能
+
+
+
+# 附录
+
+[__https://modao.cc/proto/9leQf6bCt9bam0xKi0wiPL/sharing?view_mode=read_only&screen=rbpV9P8ieOcUqTIKn__](https://modao.cc/proto/9leQf6bCt9bam0xKi0wiPL/sharing?view_mode=read_only&screen=rbpV9P8ieOcUqTIKn)

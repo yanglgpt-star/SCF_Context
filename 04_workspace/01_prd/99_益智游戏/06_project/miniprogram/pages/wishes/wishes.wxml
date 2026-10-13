@@ -1,0 +1,41 @@
+<view class="page-container fade-in">
+  <view class="stars-bar">
+    <view class="stars-info">
+      <text class="stars-icon">⭐</text>
+      <text class="stars-count">{{myStars}}</text>
+      <text class="stars-label">颗星星</text>
+    </view>
+  </view>
+
+  <view class="section-title">🎁 我的愿望</view>
+
+  <view wx:if="{{wishes.length === 0}}" class="empty-state">
+    <text class="empty-text">还没有愿望</text>
+    <text class="empty-desc">让爸爸妈妈帮你添加愿望吧</text>
+  </view>
+
+  <view wx:else class="wishes-list">
+    <view class="card wish-item" wx:for="{{wishes}}" wx:key="id">
+      <view class="wish-header">
+        <text class="wish-icon">{{item.icon}}</text>
+        <view class="wish-info">
+          <text class="wish-title">{{item.title}}</text>
+          <text class="wish-cost">需要 {{item.costStars}} ⭐</text>
+        </view>
+      </view>
+      <view class="wish-progress">
+        <text class="wish-status {{item.status}}">
+          {{item.status === 'redeemed' ? '已兑换 ✅' : (myStars >= item.costStars ? '可兑换' : '还差' + (item.costStars - myStars) + '⭐')}}
+        </text>
+        <button wx:if="{{myStars >= item.costStars && item.status !== 'redeemed'}}"
+          class="btn-redeem"
+          bindtap="redeemWish"
+          data-id="{{item._id}}"
+          data-cost-stars="{{item.costStars}}"
+          data-title="{{item.title}}">
+          兑换
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

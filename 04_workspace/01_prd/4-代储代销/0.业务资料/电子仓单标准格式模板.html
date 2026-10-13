@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子仓单 - Electronic Warehouse Receipt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+            color: #fff;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .main-title {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+        
+        .sub-title {
+            font-size: 12px;
+            color: #a0c4e8;
+            margin-top: 5px;
+            letter-spacing: 2px;
+        }
+        
+        .status-badge {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            background: #48bb78;
+        }
+        
+        .status-badge.locked {
+            background: #ed8936;
+        }
+        
+        .status-badge.pledged {
+            background: #9f7aea;
+        }
+        
+        .status-badge.cancelled {
+            background: #a0aec0;
+        }
+        
+        .header-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            font-size: 13px;
+        }
+        
+        .header-info-item {
+            display: flex;
+        }
+        
+        .header-info-label {
+            color: #a0c4e8;
+            min-width: 80px;
+        }
+        
+        .header-info-value {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #f7fafc;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .section-body {
+            padding: 20px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .info-grid.three-col {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #718096;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        
+        .goods-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .goods-table th {
+            background: #edf2f7;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .goods-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2d3748;
+        }
+        
+        .goods-table tr:hover td {
+            background: #f7fafc;
+        }
+        
+        .goods-table .highlight {
+            color: #c53030;
+            font-weight: bold;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border: 2px solid #fc8181;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            color: #742a2a;
+            margin-bottom: 8px;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c53030;
+        }
+        
+        .pledge-alert {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .pledge-alert-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #92400e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .pledge-alert-content {
+            font-size: 13px;
+            color: #78350f;
+            line-height: 1.6;
+        }
+        
+        .verification-section {
+            background: #f0fff4;
+            border: 1px solid #68d391;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        
+        .verification-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .verification-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .verification-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+        
+        .verification-label {
+            color: #276749;
+            min-width: 80px;
+        }
+        
+        .verification-value {
+            color: #22543d;
+            font-family: "Courier New", monospace;
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .qr-code {
+            width: 100px;
+            height: 100px;
+            background: #fff;
+            border: 1px solid #9ae6b4;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #718096;
+            text-align: center;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .qr-code-placeholder {
+            width: 60px;
+            height: 60px;
+            background: repeating-linear-gradient(
+                0deg,
+                #e2e8f0,
+                #e2e8f0 4px,
+                #fff 4px,
+                #fff 8px
+            ),
+            repeating-linear-gradient(
+                90deg,
+                #e2e8f0,
+                #e2e8f0 4px,
+                #fff 4px,
+                #fff 8px
+            );
+            background-blend-mode: multiply;
+        }
+        
+        .footer {
+            background: #f7fafc;
+            padding: 20px 30px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .footer-text {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+        
+        .signature-section {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #cbd5e0;
+        }
+        
+        .signature-item {
+            text-align: center;
+        }
+        
+        .signature-label {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 8px;
+        }
+        
+        .signature-stamp {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #e53e3e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e53e3e;
+            font-size: 10px;
+            transform: rotate(-15deg);
+            margin: 0 auto;
+        }
+        
+        .ca-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            
+            .receipt-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <!-- 头部：基础信息 -->
+        <div class="header">
+            <div class="header-content">
+                <div class="title-section">
+                    <div>
+                        <div class="main-title">电子仓单</div>
+                        <div class="sub-title">ELECTRONIC WAREHOUSE RECEIPT</div>
+                    </div>
+                    <div class="status-badge pledged">质押中</div>
+                </div>
+                <div class="header-info">
+                    <div class="header-info-item">
+                        <span class="header-info-label">仓单编号：</span>
+                        <span class="header-info-value">EWR-20231027-0001</span>
+                    </div>
+                    <div class="header-info-item">
+                        <span class="header-info-label">签发日期：</span>
+                        <span class="header-info-value">2023年10月27日</span>
+                    </div>
+                    <div class="header-info-item">
+                        <span class="header-info-label">有效期至：</span>
+                        <span class="header-info-value">2024年10月26日</span>
+                    </div>
+                    <div class="header-info-item">
+                        <span class="header-info-label">签发机构：</span>
+                        <span class="header-info-value">金融助手平台</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="content">
+            <!-- 主体信息 -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">01</div>
+                    <div class="section-title">主体信息 / PARTIES</div>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid three-col">
+                        <div class="info-item">
+                            <span class="info-label">存货人（货主）</span>
+                            <span class="info-value">某某钢铁贸易有限公司</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">统一社会信用代码</span>
+                            <span class="info-value">91350000M0001ABC12</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">平台ID</span>
+                            <span class="info-value">CUST-202300158</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                        <div class="info-grid three-col">
+                            <div class="info-item">
+                                <span class="info-label">保管人（仓库）</span>
+                                <span class="info-value">华东物流监管仓</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">经营资质编号</span>
+                                <span class="info-value">WH-2021-BJ-0089</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">联系电话</span>
+                                <span class="info-value">400-888-9999</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                        <div class="info-grid three-col">
+                            <div class="info-item">
+                                <span class="info-label">权利人（质权人）</span>
+                                <span class="info-value">金融助手</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">业务模式</span>
+                                <span class="info-value">代储代销</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">监管协议号</span>
+                                <span class="info-value">SUP-2023-1027-001</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 货物明细 -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">02</div>
+                    <div class="section-title">货物明细 / GOODS DETAILS</div>
+                </div>
+                <div class="section-body">
+                    <table class="goods-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">序号</th>
+                                <th style="width: 20%;">货物名称</th>
+                                <th style="width: 22%;">品牌/规格型号</th>
+                                <th style="width: 12%;">计量单位</th>
+                                <th style="width: 12%;">入库数量</th>
+                                <th style="width: 12%;">入库重量</th>
+                                <th style="width: 14%;">等级/质量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>冷轧钢卷</td>
+                                <td>品牌A / 1.5mm×1250mm</td>
+                                <td>吨</td>
+                                <td>100</td>
+                                <td>25.560 MT</td>
+                                <td>一级品</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 15px;">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">批次/炉号</span>
+                                <span class="info-value">Batch-20230915</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">质检报告编号</span>
+                                <span class="info-value">QC-2023-0915-A125</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="summary-label">货物总价值（人民币）</div>
+                        <div class="summary-value">¥450,000.00</div>
+                        <div style="font-size: 12px; color: #9b2c2c; margin-top: 5px;">
+                            评估单价：¥4,500.00/吨 | 评估基准日：2023-10-27
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 仓储与监管信息 -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">03</div>
+                    <div class="section-title">仓储与监管信息 / STORAGE & LOGISTICS</div>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">存放位置</span>
+                            <span class="info-value">A区-03货位</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">入库单号（WMS）</span>
+                            <span class="info-value">IN-20231027-00892</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">保险单号</span>
+                            <span class="info-value">PICC-2023-WH-567890</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">承保公司</span>
+                            <span class="info-value">中国人民财产保险股份有限公司</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">保险有效期</span>
+                            <span class="info-value">2023-10-27 至 2024-10-26</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">保管要求</span>
+                            <span class="info-value">室内存放、防潮、堆码限高3层</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 权利与约束 -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">04</div>
+                    <div class="section-title">权利与约束 / RIGHTS & ENCUMBRANCES</div>
+                </div>
+                <div class="section-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">质押标志</span>
+                            <span class="info-value" style="color: #c53030; font-weight: bold;">是（已质押）</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">质押金额</span>
+                            <span class="info-value" style="color: #c53030; font-weight: bold;">¥315,000.00（70%比例）</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">中登网登记号</span>
+                            <span class="info-value">ZHONGDENG-20231027-001234</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">登记日期</span>
+                            <span class="info-value">2023-10-27</span>
+                        </div>
+                    </div>
+                    <div class="pledge-alert">
+                        <div class="pledge-alert-title">
+                            <span>⚠️</span>
+                            <span>限制说明 / RESTRICTIONS</span>
+                        </div>
+                        <div class="pledge-alert-content">
+                            本仓单已设定质押，未经质权人（金融助手）书面指令，保管人不得办理货物出库、转移、置换等操作。
+                            任何提货申请须经平台审批通过后生效。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 安全与验证 -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">05</div>
+                    <div class="section-title">安全与验证 / AUTHENTICATION</div>
+                </div>
+                <div class="section-body">
+                    <div class="verification-section">
+                        <div class="verification-grid">
+                            <div class="verification-info">
+                                <div class="verification-item">
+                                    <span class="verification-label">电子签章：</span>
+                                    <span class="ca-badge">
+                                        <span>✓</span>
+                                        <span>CA认证有效</span>
+                                    </span>
+                                </div>
+                                <div class="verification-item">
+                                    <span class="verification-label">签章主体：</span>
+                                    <span style="color: #22543d;">华东物流监管仓</span>
+                                </div>
+                                <div class="verification-item">
+                                    <span class="verification-label">区块链哈希：</span>
+                                    <span class="verification-value">0x7f8a9b2c...3d4e5f6a</span>
+                                </div>
+                                <div class="verification-item">
+                                    <span class="verification-label">存证时间：</span>
+                                    <span style="color: #22543d; font-size: 12px;">2023-10-27 14:32:18 UTC+8</span>
+                                </div>
+                            </div>
+                            <div class="qr-code">
+                                <div class="qr-code-placeholder"></div>
+                                <div>扫码验证仓单</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <div class="footer-text">
+                本仓单由金融助手平台依据《民法典》《电子签名法》等法律法规签发，具有法律效力。<br>
+                查询验证请访问：https://www.jinrongzhushou.com/verify
+            </div>
+            <div class="signature-section">
+                <div class="signature-item">
+                    <div class="signature-label">保管人（签章）</div>
+                    <div class="signature-stamp">华东物流<br>监管仓</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-label">平台认证（签章）</div>
+                    <div class="signature-stamp">金融助手<br>平台</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

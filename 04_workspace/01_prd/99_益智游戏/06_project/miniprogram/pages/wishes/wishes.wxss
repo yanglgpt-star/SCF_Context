@@ -1,0 +1,116 @@
+.page-container {
+  min-height: 100vh;
+  padding: 40rpx;
+}
+
+.stars-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+
+.stars-info {
+  display: flex;
+  align-items: center;
+  background: #FFF8E1;
+  padding: 16rpx 40rpx;
+  border-radius: 50rpx;
+}
+
+.stars-icon {
+  font-size: 36rpx;
+}
+
+.stars-count {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #F39C12;
+  margin: 0 8rpx;
+}
+
+.stars-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2D3436;
+  margin-bottom: 20rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 80rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: 24rpx;
+  color: #ccc;
+}
+
+.wish-item {
+  margin-bottom: 20rpx;
+}
+
+.wish-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.wish-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.wish-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.wish-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2D3436;
+}
+
+.wish-cost {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+.wish-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wish-status {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.wish-status.redeemed {
+  color: #2E7D32;
+}
+
+.btn-redeem {
+  font-size: 24rpx;
+  background: #FF9A76;
+  color: #fff;
+  border-radius: 36rpx;
+  padding: 12rpx 36rpx;
+  height: auto;
+  line-height: 1.5;
+}

@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WMS数据对接与货物监管 - 仓储方</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.topbar-right .avatar { width: 28px; height: 28px; border-radius: 50%; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #2563eb; font-weight: 600; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; gap: 0; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; }
+.tab:hover { color: #374151; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #1f2937; display: flex; align-items: center; gap: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #fafbfc; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.btn { padding: 7px 18px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: all .15s; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #059669; color: #fff; }
+.btn-success:hover { background: #047857; }
+.btn-warning { background: #d97706; color: #fff; }
+.btn-warning:hover { background: #b45309; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-ghost { background: transparent; border: 1px solid #d1d5db; color: #6b7280; }
+.btn-ghost:hover { background: #f9fafb; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.warn-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+/* Stat cards */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.stat-card { background: #fff; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 18px; position: relative; }
+.stat-card .stat-icon { font-size: 22px; margin-bottom: 6px; }
+.stat-card .stat-value { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.stat-card .stat-label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.stat-card .stat-sub { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+.stat-card .stat-change { font-size: 11px; margin-top: 2px; }
+.stat-card .stat-change.up { color: #059669; }
+.stat-card .stat-change.warn { color: #d97706; }
+
+/* Filter bar */
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; padding: 12px 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+.filter-bar .filter-label { font-size: 12px; color: #6b7280; font-weight: 500; margin-right: 2px; }
+.filter-bar select, .filter-bar input { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
+.filter-bar select { min-width: 110px; }
+.filter-bar input[type="text"] { min-width: 140px; }
+.filter-bar input[type="date"] { min-width: 120px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; color: #374151; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
+.form-group textarea { resize: vertical; min-height: 64px; font-family: inherit; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.btn-group-left { display: flex; gap: 8px; justify-content: flex-start; margin-top: 16px; }
+
+/* Detail expand */
+.detail-panel { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-top: 8px; }
+.detail-panel .detail-row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 10px; }
+.detail-panel .detail-item { font-size: 13px; }
+.detail-panel .detail-item .label { color: #6b7280; }
+.detail-panel .detail-item .value { font-weight: 500; color: #1f2937; }
+
+/* Instruction cards */
+.instr-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; background: #fff; }
+.instr-card .instr-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.instr-card .instr-id { font-weight: 600; font-size: 14px; color: #1f2937; }
+.instr-card .instr-biz { font-size: 12px; color: #6b7280; margin-top: 2px; display: flex; gap: 16px; flex-wrap: wrap; }
+.instr-card .instr-body { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; font-size: 13px; margin-bottom: 10px; }
+.instr-card .instr-body .ib-item { color: #4b5563; }
+.instr-card .instr-body .ib-item .ib-label { color: #9ca3af; font-size: 11px; }
+.instr-card .instr-goods { background: #f9fafb; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #4b5563; margin-bottom: 10px; }
+.instr-card .instr-actions { display: flex; gap: 8px; }
+.instr-card .countdown { color: #dc2626; font-weight: 600; }
+.instr-card .countdown.warn { color: #d97706; }
+
+/* Chart area */
+.chart-area { position: relative; padding: 10px 0 6px 0; }
+.chart-area .chart-svg { width: 100%; height: 140px; }
+.chart-metrics { display: flex; gap: 32px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f3f4f6; }
+.chart-metrics .cm-item { text-align: center; }
+.chart-metrics .cm-item .cm-val { font-size: 20px; font-weight: 700; }
+.chart-metrics .cm-item .cm-label { font-size: 11px; color: #6b7280; }
+
+/* Photo upload */
+.photo-upload-area { display: flex; gap: 8px; flex-wrap: wrap; }
+.photo-upload-area .photo-slot { width: 72px; height: 72px; border: 2px dashed #d1d5db; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #9ca3af; cursor: pointer; background: #f9fafb; }
+.photo-upload-area .photo-slot:hover { border-color: #60a5fa; color: #60a5fa; }
+.photo-upload-area .photo-slot.has-img { border-style: solid; border-color: #10b981; position: relative; }
+.photo-upload-area .photo-slot.has-img .remove { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: #ef4444; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* Difference handling */
+.diff-section { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-top: 12px; }
+.diff-section .diff-title { font-weight: 600; font-size: 14px; color: #991b1b; margin-bottom: 8px; }
+.diff-section .diff-item { margin-bottom: 6px; font-size: 13px; color: #4b5563; }
+
+/* Sync overview */
+.sync-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.sync-overview .so-item { text-align: center; padding: 10px; background: #f9fafb; border-radius: 8px; }
+.sync-overview .so-item .so-val { font-size: 20px; font-weight: 700; color: #1f2937; }
+.sync-overview .so-item .so-label { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+/* Config form */
+.config-group { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+.config-group:last-child { border-bottom: none; }
+.config-group .cg-label { font-size: 13px; color: #374151; font-weight: 500; min-width: 80px; }
+.config-group .cg-control { flex: 1; }
+.config-group select { padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.config-group .cg-check-group { display: flex; gap: 16px; font-size: 13px; color: #4b5563; }
+.config-group .cg-check-group label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.toggle-switch { display: inline-block; width: 36px; height: 20px; background: #d1d5db; border-radius: 10px; position: relative; cursor: pointer; transition: background .2s; }
+.toggle-switch.on { background: #2563eb; }
+.toggle-switch .toggle-knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left .2s; box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+.toggle-switch.on .toggle-knob { left: 18px; }
+
+/* Responsive table wrapper */
+.table-wrap { overflow-x: auto; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.gap-8 { gap: 8px; }
+.gap-16 { gap: 16px; }
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.items-center { display: flex; align-items: center; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.status-dot.green { background: #10b981; }
+.status-dot.yellow { background: #f59e0b; }
+.status-dot.red { background: #ef4444; }
+
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .sync-overview { grid-template-columns: repeat(2, 1fr); }
+  .instr-card .instr-body { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo"><span>&#x25C6;</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item"><span>&#x1F4CA;</span> 仓储工作台</div>
+    <div class="menu-item active"><span>&#x1F4E1;</span> WMS数据对接</div>
+    <div class="menu-item" style="padding-left:40px;font-size:13px;color:#94a3b8;">对接监控总览</div>
+    <div class="menu-item" style="padding-left:40px;font-size:13px;color:#94a3b8;">入库数据推送</div>
+    <div class="menu-item" style="padding-left:40px;font-size:13px;color:#94a3b8;">出库指令接收</div>
+    <div class="menu-item" style="padding-left:40px;font-size:13px;color:#94a3b8;">库存同步</div>
+    <div class="menu-item" style="padding-left:40px;font-size:13px;color:#94a3b8;">盘点管理</div>
+    <div class="menu-item" style="padding-left:40px;font-size:13px;color:#94a3b8;">异常上报</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">仓储方 / <strong>WMS数据对接与货物监管</strong></span></div>
+    <div class="topbar-right">
+      <span style="cursor:pointer;">&#x1F514;</span>
+      <span class="avatar">李</span>
+      <span>李仓管</span>
+      <span style="cursor:pointer;color:#9ca3af;">退出</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="page-title">&#x1F4E1; WMS数据对接与货物监管操作台</div>
+
+    <!-- ===== Tabs ===== -->
+    <div class="tabs">
+      <div class="tab active" data-tab="overview" onclick="switchTab('overview')">对接监控总览</div>
+      <div class="tab" data-tab="inbound" onclick="switchTab('inbound')">入库数据推送</div>
+      <div class="tab" data-tab="outbound" onclick="switchTab('outbound')">出库指令接收</div>
+      <div class="tab" data-tab="sync" onclick="switchTab('sync')">库存同步</div>
+      <div class="tab" data-tab="stocktake" onclick="switchTab('stocktake')">盘点管理</div>
+      <div class="tab" data-tab="exception" onclick="switchTab('exception')">异常上报</div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: 对接监控总览 -->
+    <!-- ============================================================ -->
+    <div class="tab-content active" id="tab-overview">
+
+      <!-- Stat cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">&#x1F7E2;</div>
+          <div class="stat-value" style="color:#059669;">正常</div>
+          <div class="stat-label">平台连接状态</div>
+          <div class="stat-sub">已连接12天</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">&#x1F552;</div>
+          <div class="stat-value">14:32:05</div>
+          <div class="stat-label">最近同步时间</div>
+          <div class="stat-sub">5秒前</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">&#x1F4E4;</div>
+          <div class="stat-value">156</div>
+          <div class="stat-label">今日数据推送</div>
+          <div class="stat-change up">&#x2191; +23条</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">&#x26A0;&#xFE0F;</div>
+          <div class="stat-value" style="color:#d97706;">3</div>
+          <div class="stat-label">待处理指令</div>
+          <div class="stat-change warn">&#x26A0;&#xFE0F; 1条异常</div>
+        </div>
+      </div>
+
+      <!-- API monitoring chart -->
+      <div class="card">
+        <div class="card-title">&#x1F4E1; 接口调用监控（近24小时）</div>
+        <div class="chart-area">
+          <svg class="chart-svg" viewBox="0 0 600 140" preserveAspectRatio="none">
+            <!-- Grid lines -->
+            <line x1="0" y1="120" x2="600" y2="120" stroke="#e5e7eb" stroke-width="1"/>
+            <line x1="0" y1="90" x2="600" y2="90" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="0" y1="60" x2="600" y2="60" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="0" y1="30" x2="600" y2="30" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4,4"/>
+            <line x1="0" y1="0" x2="600" y2="0" stroke="#e5e7eb" stroke-width="1"/>
+            <!-- Area fill -->
+            <path d="M0,120 L0,95 Q20,90 40,85 Q60,75 80,78 Q100,82 120,70 Q140,55 160,60 Q180,65 200,45 Q220,30 240,35 Q260,40 280,25 Q300,15 320,20 Q340,28 360,18 Q380,12 400,22 Q420,30 440,15 Q460,10 480,20 Q500,25 520,12 Q540,8 560,15 Q580,10 600,18 L600,120 Z" fill="url(#chartGrad)" opacity="0.35"/>
+            <!-- Line -->
+            <path d="M0,95 Q20,90 40,85 Q60,75 80,78 Q100,82 120,70 Q140,55 160,60 Q180,65 200,45 Q220,30 240,35 Q260,40 280,25 Q300,15 320,20 Q340,28 360,18 Q380,12 400,22 Q420,30 440,15 Q460,10 480,20 Q500,25 520,12 Q540,8 560,15 Q580,10 600,18" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Dots -->
+            <circle cx="80" cy="78" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="200" cy="45" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="280" cy="25" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="360" cy="18" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="460" cy="10" r="3" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="540" cy="8" r="4" fill="#2563eb" stroke="#fff" stroke-width="1.5"/>
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#2563eb" stop-opacity="0.02"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="chart-metrics">
+          <div class="cm-item">
+            <div class="cm-val" style="color:#059669;">99.2%</div>
+            <div class="cm-label">成功率</div>
+          </div>
+          <div class="cm-item">
+            <div class="cm-val">45ms</div>
+            <div class="cm-label">平均响应</div>
+          </div>
+          <div class="cm-item">
+            <div class="cm-val" style="color:#d97706;">3次/日</div>
+            <div class="cm-label">失败重试</div>
+          </div>
+          <div class="cm-item" style="margin-left:auto;">
+            <span style="font-size:11px;color:#9ca3af;">00:00 &nbsp; 06:00 &nbsp; 12:00 &nbsp; 18:00 &nbsp; 24:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent exceptions -->
+      <div class="card">
+        <div class="card-title">&#x26A0;&#xFE0F; 近期异常记录</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>时间</th><th>异常类型</th><th>业务编号</th><th>处理状态</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>14:20</td><td>网络超时（推送库存）</td><td>—</td><td><span class="tag tag-yellow"><span class="status-dot yellow"></span>重试中</span></td></tr>
+              <tr><td>11:05</td><td>数据格式不匹配</td><td>B2026001</td><td><span class="tag tag-green"><span class="status-dot green"></span>已处理</span></td></tr>
+              <tr><td>09:30</td><td>签名验证失败</td><td>B2026002</td><td><span class="tag tag-green"><span class="status-dot green"></span>已处理</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: 入库数据推送 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-inbound">
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <span class="filter-label">&#x1F50D; 筛选条件</span>
+        <span style="color:#d1d5db;">|</span>
+        <span class="filter-label">推送状态:</span>
+        <select><option>全部</option><option>已匹配</option><option>待核实</option><option>异常</option></select>
+        <span class="filter-label">业务编号:</span>
+        <input type="text" placeholder="输入业务编号">
+        <span class="filter-label">时间范围:</span>
+        <input type="date" value="2026-04-26">
+        <span style="color:#9ca3af;">—</span>
+        <input type="date" value="2026-04-26">
+        <button class="btn btn-outline btn-sm" onclick="alert('已重置筛选条件')">重置</button>
+        <button class="btn btn-primary btn-sm" onclick="alert('执行查询')">查询</button>
+      </div>
+
+      <!-- Inbound records -->
+      <div class="card">
+        <div class="flex-between mb-12">
+          <div class="card-title" style="margin-bottom:0;">&#x1F4CB; 入库推送记录列表（今日 23 条）</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>推送时间</th><th>业务编号</th><th>货物品类</th><th>数量</th><th>仓库</th><th>匹配状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr onclick="toggleDetail('inbound-detail-1')" style="cursor:pointer;">
+                <td>14:30:22</td><td>B202604001</td><td><span class="tag tag-purple">3C电子</span></td><td>200台</td><td>A1仓</td><td><span class="tag tag-green">&#x1F7E2; 已匹配</span></td>
+                <td><span style="color:#2563eb;font-size:12px;">展开 &or;</span></td>
+              </tr>
+              <tr id="inbound-detail-1" class="detail-row" style="display:none;">
+                <td colspan="7">
+                  <div class="detail-panel">
+                    <div class="detail-row">
+                      <div class="detail-item"><span class="label">推送ID:</span> <span class="value">INB-20260426-001</span></div>
+                      <div class="detail-item"><span class="label">业务编号:</span> <span class="value">B202604001</span></div>
+                      <div class="detail-item"><span class="label">经销商:</span> <span class="value">XX科技有限公司</span></div>
+                      <div class="detail-item"><span class="label">推送时间:</span> <span class="value">2026-04-26 14:30:22</span></div>
+                    </div>
+                    <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:#374151;">货物明细:</div>
+                    <table style="margin-bottom:10px;">
+                      <thead><tr><th>品类</th><th>品牌</th><th>型号</th><th>数量</th><th>单价（元）</th></tr></thead>
+                      <tbody>
+                        <tr><td>3C电子</td><td>Apple</td><td>iPhone 15 Pro</td><td>200台</td><td>&#xa5;6,000</td></tr>
+                      </tbody>
+                    </table>
+                    <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-green">&#x1F7E2; 已匹配</span> 平台匹配结果</div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">匹配说明: 货物信息与融资申请一致，数量在&plusmn;5%误差范围内</div>
+                    <div style="display:flex;gap:8px;">
+                      <button class="btn btn-outline btn-sm" onclick="alert('正在重新推送...')">&#x1F504; 重新推送</button>
+                      <button class="btn btn-ghost btn-sm" onclick="alert('查看平台反馈')">&#x1F4CB; 查看平台反馈</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr onclick="toggleDetail('inbound-detail-2')" style="cursor:pointer;">
+                <td>14:15:10</td><td>B202604002</td><td><span class="tag tag-purple">白酒</span></td><td>500箱</td><td>B2仓</td><td><span class="tag tag-green">&#x1F7E2; 已匹配</span></td>
+                <td><span style="color:#2563eb;font-size:12px;">展开 &or;</span></td>
+              </tr>
+              <tr id="inbound-detail-2" class="detail-row" style="display:none;">
+                <td colspan="7">
+                  <div class="detail-panel">
+                    <div class="detail-row">
+                      <div class="detail-item"><span class="label">推送ID:</span> <span class="value">INB-20260426-002</span></div>
+                      <div class="detail-item"><span class="label">业务编号:</span> <span class="value">B202604002</span></div>
+                      <div class="detail-item"><span class="label">经销商:</span> <span class="value">YY贸易有限公司</span></div>
+                      <div class="detail-item"><span class="label">推送时间:</span> <span class="value">2026-04-26 14:15:10</span></div>
+                    </div>
+                    <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:#374151;">货物明细:</div>
+                    <table style="margin-bottom:10px;">
+                      <thead><tr><th>品类</th><th>品牌</th><th>型号</th><th>数量</th><th>单价（元）</th></tr></thead>
+                      <tbody>
+                        <tr><td>白酒</td><td>茅台</td><td>飞天53度</td><td>500箱</td><td>&#xa5;3,200</td></tr>
+                      </tbody>
+                    </table>
+                    <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-green">&#x1F7E2; 已匹配</span> 平台匹配结果</div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">匹配说明: 货物信息与融资申请一致</div>
+                    <div style="display:flex;gap:8px;">
+                      <button class="btn btn-outline btn-sm" onclick="alert('正在重新推送...')">&#x1F504; 重新推送</button>
+                      <button class="btn btn-ghost btn-sm" onclick="alert('查看平台反馈')">&#x1F4CB; 查看平台反馈</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr onclick="toggleDetail('inbound-detail-3')" style="cursor:pointer;">
+                <td>13:50:05</td><td>B202604003</td><td><span class="tag tag-purple">食品</span></td><td>1000袋</td><td>A2仓</td><td><span class="tag tag-yellow">&#x1F7E1; 待核实</span></td>
+                <td><span style="color:#2563eb;font-size:12px;">展开 &or;</span></td>
+              </tr>
+              <tr id="inbound-detail-3" class="detail-row" style="display:none;">
+                <td colspan="7">
+                  <div class="detail-panel">
+                    <div class="detail-row">
+                      <div class="detail-item"><span class="label">推送ID:</span> <span class="value">INB-20260426-003</span></div>
+                      <div class="detail-item"><span class="label">业务编号:</span> <span class="value">B202604003</span></div>
+                      <div class="detail-item"><span class="label">经销商:</span> <span class="value">ZZ食品有限公司</span></div>
+                      <div class="detail-item"><span class="label">推送时间:</span> <span class="value">2026-04-26 13:50:05</span></div>
+                    </div>
+                    <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:#374151;">货物明细:</div>
+                    <table style="margin-bottom:10px;">
+                      <thead><tr><th>品类</th><th>品牌</th><th>型号</th><th>数量</th><th>单价（元）</th></tr></thead>
+                      <tbody>
+                        <tr><td>食品</td><td>良品铺子</td><td>坚果礼盒</td><td>1000袋</td><td>&#xa5;150</td></tr>
+                      </tbody>
+                    </table>
+                    <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-yellow">&#x1F7E1; 待核实</span> 平台匹配结果</div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">匹配说明: 货物品类与融资申请品类存在差异，需人工核实</div>
+                    <div style="display:flex;gap:8px;">
+                      <button class="btn btn-outline btn-sm" onclick="alert('正在重新推送...')">&#x1F504; 重新推送</button>
+                      <button class="btn btn-ghost btn-sm" onclick="alert('查看平台反馈')">&#x1F4CB; 查看平台反馈</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr onclick="toggleDetail('inbound-detail-4')" style="cursor:pointer;">
+                <td>13:20:18</td><td>B202604004</td><td><span class="tag tag-purple">3C电子</span></td><td>150台</td><td>A1仓</td><td><span class="tag tag-red">&#x1F534; 异常</span></td>
+                <td><span style="color:#2563eb;font-size:12px;">展开 &or;</span></td>
+              </tr>
+              <tr id="inbound-detail-4" class="detail-row" style="display:none;">
+                <td colspan="7">
+                  <div class="detail-panel">
+                    <div class="detail-row">
+                      <div class="detail-item"><span class="label">推送ID:</span> <span class="value">INB-20260426-004</span></div>
+                      <div class="detail-item"><span class="label">业务编号:</span> <span class="value">B202604004</span></div>
+                      <div class="detail-item"><span class="label">经销商:</span> <span class="value">AA数码科技</span></div>
+                      <div class="detail-item"><span class="label">推送时间:</span> <span class="value">2026-04-26 13:20:18</span></div>
+                    </div>
+                    <div style="font-size:13px;font-weight:500;margin-bottom:6px;color:#374151;">货物明细:</div>
+                    <table style="margin-bottom:10px;">
+                      <thead><tr><th>品类</th><th>品牌</th><th>型号</th><th>数量</th><th>单价（元）</th></tr></thead>
+                      <tbody>
+                        <tr><td>3C电子</td><td>Samsung</td><td>Galaxy S24</td><td>150台</td><td>&#xa5;5,200</td></tr>
+                      </tbody>
+                    </table>
+                    <div style="font-size:13px;margin-bottom:4px;"><span class="tag tag-red">&#x1F534; 异常</span> 平台匹配结果</div>
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">匹配说明: 货物品牌与融资申请不一致，数量差异超过&plusmn;5%误差范围</div>
+                    <div style="display:flex;gap:8px;">
+                      <button class="btn btn-primary btn-sm" onclick="alert('正在重新推送...')">&#x1F504; 重新推送</button>
+                      <button class="btn btn-ghost btn-sm" onclick="alert('查看平台反馈')">&#x1F4CB; 查看平台反馈</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex-between mt-12">
+          <span style="font-size:12px;color:#9ca3af;">共 23 条记录，当前第 1 页</span>
+          <div class="flex gap-8">
+            <button class="btn btn-ghost btn-sm" disabled>上一页</button>
+            <button class="btn btn-primary btn-sm" style="min-width:28px;padding:4px 8px;">1</button>
+            <button class="btn btn-ghost btn-sm" style="min-width:28px;padding:4px 8px;">2</button>
+            <button class="btn btn-ghost btn-sm" style="min-width:28px;padding:4px 8px;">3</button>
+            <button class="btn btn-ghost btn-sm">下一页</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 3: 出库指令接收 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-outbound">
+
+      <div class="info-card">&#x1F4A1; 平台下发出库指令后，仓储方需在 <strong>2小时</strong> 内完成扫码核对并执行出库，超时指令自动失效。</div>
+
+      <!-- Pending instructions -->
+      <div class="card">
+        <div class="card-title">&#x1F4E5; 待执行出库指令（3 条）</div>
+
+        <!-- Instruction card 1 -->
+        <div class="instr-card">
+          <div class="instr-header">
+            <div>
+              <div class="instr-id">指令编号: REL-20260426-003</div>
+              <div class="instr-biz">
+                <span>业务编号: B202604001</span>
+                <span>经销商: XX科技有限公司</span>
+              </div>
+            </div>
+            <div class="countdown" id="countdown-1">&#x23F1;&#xFE0F; <span id="timer-1">01:25:00</span></div>
+          </div>
+          <div class="instr-body">
+            <div class="ib-item"><span class="ib-label">授权编号:</span> AUTH-B-20260426-002（银行授权）</div>
+            <div class="ib-item"><span class="ib-label">审批状态:</span> <span class="tag tag-green">&#x1F7E2; 已通过</span> 小额自动审批</div>
+            <div class="ib-item"><span class="ib-label">出库货值:</span> <strong>&#xa5;250,000</strong></div>
+            <div class="ib-item"><span class="ib-label">下发时间:</span> 2026-04-26 14:35:00</div>
+          </div>
+          <div class="instr-goods">
+            &#x1F4E6; 货物明细: 品类: 3C电子 | 品牌: Apple | 型号: iPhone 15 Pro | 数量: 42台
+          </div>
+          <div class="instr-actions">
+            <button class="btn btn-success btn-sm" onclick="alert('扫码核对并出库 - REL-20260426-003')">&#x2714;&#xFE0F; 扫码核对并出库</button>
+            <button class="btn btn-outline btn-sm" onclick="alert('拍照留存 - REL-20260426-003')">&#x1F4F7; 拍照留存</button>
+            <button class="btn btn-danger btn-sm" onclick="alert('异常上报 - REL-20260426-003')">&#x2717;&#xFE0F; 异常上报</button>
+          </div>
+        </div>
+
+        <!-- Instruction card 2 -->
+        <div class="instr-card">
+          <div class="instr-header">
+            <div>
+              <div class="instr-id">指令编号: REL-20260426-004</div>
+              <div class="instr-biz">
+                <span>业务编号: B202604002</span>
+                <span>经销商: YY贸易有限公司</span>
+              </div>
+            </div>
+            <div class="countdown warn" id="countdown-2">&#x23F1;&#xFE0F; <span id="timer-2">01:15:30</span></div>
+          </div>
+          <div class="instr-body">
+            <div class="ib-item"><span class="ib-label">授权编号:</span> AUTH-B-20260426-003（银行授权）</div>
+            <div class="ib-item"><span class="ib-label">审批状态:</span> <span class="tag tag-green">&#x1F7E2; 已通过</span> 人工审批</div>
+            <div class="ib-item"><span class="ib-label">出库货值:</span> <strong>&#xa5;180,000</strong></div>
+            <div class="ib-item"><span class="ib-label">下发时间:</span> 2026-04-26 14:50:00</div>
+          </div>
+          <div class="instr-goods">
+            &#x1F4E6; 货物明细: 品类: 白酒 | 品牌: 茅台 | 型号: 飞天53度 | 数量: 50箱
+          </div>
+          <div class="instr-actions">
+            <button class="btn btn-success btn-sm" onclick="alert('扫码核对并出库 - REL-20260426-004')">&#x2714;&#xFE0F; 扫码核对并出库</button>
+            <button class="btn btn-outline btn-sm" onclick="alert('拍照留存 - REL-20260426-004')">&#x1F4F7; 拍照留存</button>
+            <button class="btn btn-danger btn-sm" onclick="alert('异常上报 - REL-20260426-004')">&#x2717;&#xFE0F; 异常上报</button>
+          </div>
+        </div>
+
+        <!-- Instruction card 3 -->
+        <div class="instr-card">
+          <div class="instr-header">
+            <div>
+              <div class="instr-id">指令编号: REL-20260426-005</div>
+              <div class="instr-biz">
+                <span>业务编号: B202604003</span>
+                <span>经销商: ZZ电子有限公司</span>
+              </div>
+            </div>
+            <div class="countdown" id="countdown-3">&#x23F1;&#xFE0F; <span id="timer-3">01:55:20</span></div>
+          </div>
+          <div class="instr-body">
+            <div class="ib-item"><span class="ib-label">授权编号:</span> AUTH-B-20260426-004（银行授权）</div>
+            <div class="ib-item"><span class="ib-label">审批状态:</span> <span class="tag tag-yellow">&#x1F7E1; 审核中</span> 风控复核</div>
+            <div class="ib-item"><span class="ib-label">出库货值:</span> <strong>&#xa5;320,000</strong></div>
+            <div class="ib-item"><span class="ib-label">下发时间:</span> 2026-04-26 14:10:00</div>
+          </div>
+          <div class="instr-goods">
+            &#x1F4E6; 货物明细: 品类: 3C电子 | 品牌: Apple | 型号: MacBook Pro 14" | 数量: 30台
+          </div>
+          <div class="instr-actions">
+            <button class="btn btn-success btn-sm" onclick="alert('扫码核对并出库 - REL-20260426-005')">&#x2714;&#xFE0F; 扫码核对并出库</button>
+            <button class="btn btn-outline btn-sm" onclick="alert('拍照留存 - REL-20260426-005')">&#x1F4F7; 拍照留存</button>
+            <button class="btn btn-danger btn-sm" onclick="alert('异常上报 - REL-20260426-005')">&#x2717;&#xFE0F; 异常上报</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Execution history -->
+      <div class="card">
+        <div class="card-title">&#x1F4CB; 出库执行记录</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>指令编号</th><th>业务编号</th><th>经销商</th><th>数量</th><th>执行状态</th><th>执行时间</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>REL-001</td><td>B202604001</td><td>XX科技</td><td>42台</td><td><span class="tag tag-green">&#x1F7E2; 已完成</span></td><td>14:40:22</td></tr>
+              <tr><td>REL-002</td><td>B202604002</td><td>YY贸易</td><td>100箱</td><td><span class="tag tag-green">&#x1F7E2; 已完成</span></td><td>13:20:15</td></tr>
+              <tr><td>REL-003</td><td>B202604003</td><td>ZZ电子</td><td>50台</td><td><span class="tag tag-red">&#x1F534; 异常</span></td><td>11:05:30</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 4: 库存同步 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-sync">
+
+      <!-- Pledge overview -->
+      <div class="card">
+        <div class="card-title">&#x1F4CA; 在库质押物总览</div>
+        <div class="sync-overview">
+          <div class="so-item"><div class="so-val">12,580</div><div class="so-label">总在库数量（件）</div></div>
+          <div class="so-item"><div class="so-val">&#xa5;5,862万</div><div class="so-label">总在库货值</div></div>
+          <div class="so-item"><div class="so-val">45</div><div class="so-label">涉及客户（家）</div></div>
+          <div class="so-item"><div class="so-val">128</div><div class="so-label">涉及业务（笔）</div></div>
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:12px;">
+          同步频率: 每5分钟自动推送 &nbsp;|&nbsp; 上次同步: 2026-04-26 14:30:00 <span class="tag tag-green">成功</span>
+        </div>
+
+        <!-- Category distribution -->
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px;color:#374151;">按品类分布:</div>
+        <div class="table-wrap" style="margin-bottom:12px;">
+          <table>
+            <thead><tr><th>品类</th><th>数量</th><th>货值（万）</th><th>占比</th></tr></thead>
+            <tbody>
+              <tr><td><span class="tag tag-purple">3C电子</span></td><td>5,200</td><td>&#xa5;3,120</td><td>53.2%</td></tr>
+              <tr><td><span class="tag tag-purple">白酒</span></td><td>3,800</td><td>&#xa5;1,900</td><td>32.4%</td></tr>
+              <tr><td><span class="tag tag-purple">食品</span></td><td>2,500</td><td>&#xa5;750</td><td>12.8%</td></tr>
+              <tr><td><span class="tag tag-purple">家电</span></td><td>1,080</td><td>&#xa5;432</td><td>7.4%</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex gap-8">
+          <button class="btn btn-primary btn-sm" onclick="alert('正在执行同步...')">&#x1F504; 立即同步</button>
+          <button class="btn btn-outline btn-sm" onclick="alert('查看明细')">&#x1F4CA; 查看明细</button>
+          <button class="btn btn-outline btn-sm" onclick="alert('导出报表')">&#x1F4E5; 导出报表</button>
+        </div>
+      </div>
+
+      <!-- Sync config -->
+      <div class="card">
+        <div class="card-title">&#x1F504; 同步配置</div>
+
+        <div class="config-group">
+          <div class="cg-label">自动同步</div>
+          <div class="cg-control">
+            <span class="toggle-switch on" onclick="this.classList.toggle('on')">
+              <span class="toggle-knob"></span>
+            </span>
+            <span style="font-size:12px;color:#6b7280;margin-left:6px;">已启用</span>
+          </div>
+        </div>
+
+        <div class="config-group">
+          <div class="cg-label">同步频率</div>
+          <div class="cg-control">
+            <select>
+              <option>实时</option>
+              <option selected>每5分钟</option>
+              <option>每15分钟</option>
+              <option>每30分钟</option>
+              <option>每1小时</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="config-group">
+          <div class="cg-label">同步范围</div>
+          <div class="cg-control">
+            <div class="cg-check-group">
+              <label><input type="checkbox" checked> 库存数量</label>
+              <label><input type="checkbox" checked> 货值</label>
+              <label><input type="checkbox" checked> 存储位置</label>
+              <label><input type="checkbox" checked> 货物状态</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-group">
+          <div class="cg-label">异常告警</div>
+          <div class="cg-control">
+            <div class="cg-check-group">
+              <label><input type="checkbox" checked> 同步失败通知</label>
+              <label><input type="checkbox" checked> 数据差异告警</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="alert('配置已保存')">&#x1F4BE; 保存配置</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 5: 盘点管理 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-stocktake">
+
+      <!-- Inventory plan list -->
+      <div class="card">
+        <div class="card-title">&#x1F4CB; 盘点计划列表</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>盘点编号</th><th>仓库</th><th>计划时间</th><th>执行状态</th><th>差异率</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>STK-001</td><td>A1仓</td><td>2026-04-26</td>
+                <td><span class="tag tag-yellow">&#x1F7E1; 待执行</span></td><td>—</td>
+                <td><button class="btn btn-primary btn-sm" onclick="switchTab('stocktake'); startStocktake('STK-001')">开始盘点</button></td>
+              </tr>
+              <tr>
+                <td>STK-002</td><td>B2仓</td><td>2026-04-25</td>
+                <td><span class="tag tag-green">&#x1F7E2; 已完成</span></td><td>1.2%</td>
+                <td><button class="btn btn-outline btn-sm">查看结果</button></td>
+              </tr>
+              <tr>
+                <td>STK-003</td><td>A2仓</td><td>2026-04-24</td>
+                <td><span class="tag tag-green">&#x1F7E2; 已完成</span></td><td>0.5%</td>
+                <td><button class="btn btn-outline btn-sm">查看结果</button></td>
+              </tr>
+              <tr>
+                <td>STK-004</td><td>A1仓</td><td>2026-04-20</td>
+                <td><span class="tag tag-green">&#x1F7E2; 已完成</span></td><td>3.5%</td>
+                <td><button class="btn btn-outline btn-sm" onclick="showDiffSection()">查看差异</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Stocktake execution -->
+      <div class="card" id="stocktake-exec">
+        <div class="card-title">&#x1F4DD; 盘点执行 <span style="font-size:12px;font-weight:400;color:#6b7280;" id="stocktake-info">（点击"开始盘点"进入）</span></div>
+
+        <div id="stocktake-placeholder" style="padding:20px 0;text-align:center;font-size:13px;color:#9ca3af;">
+          请从上方盘点计划列表中点击 "开始盘点" 进入执行界面。
+        </div>
+
+        <div id="stocktake-content" style="display:none;">
+          <div class="flex-between mb-12">
+            <div style="font-size:13px;color:#374151;">
+              <strong id="st-plan-id">盘点编号: STK-001</strong> &nbsp;|&nbsp; 仓库: <span id="st-warehouse">A1仓</span> &nbsp;|&nbsp; 计划盘点: <span id="st-total">1,250</span>件
+            </div>
+          </div>
+
+          <div style="font-size:13px;font-weight:500;margin-bottom:8px;color:#374151;">实盘录入:</div>
+          <div class="table-wrap" style="margin-bottom:12px;">
+            <table>
+              <thead><tr><th>品类</th><th>品牌型号</th><th>账面数</th><th>实盘数</th><th>差异</th></tr></thead>
+              <tbody>
+                <tr><td>3C电子</td><td>iPhone 15 Pro</td><td>500</td><td><input type="number" value="498" style="width:80px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;" oninput="calcDiff(this, 500)"></td><td class="diff-cell" style="font-weight:600;color:#dc2626;">-2</td></tr>
+                <tr><td>3C电子</td><td>iPad Air</td><td>300</td><td><input type="number" value="300" style="width:80px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;" oninput="calcDiff(this, 300)"></td><td class="diff-cell">0</td></tr>
+                <tr><td>食品</td><td>坚果礼包</td><td>450</td><td><input type="number" value="450" style="width:80px;padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;" oninput="calcDiff(this, 450)"></td><td class="diff-cell">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex gap-8">
+            <button class="btn btn-outline btn-sm" onclick="alert('上传盘点照片')">&#x1F4F7; 上传盘点照片</button>
+            <button class="btn btn-success btn-sm" onclick="alert('盘点完成并推送至平台')">&#x2714;&#xFE0F; 完成盘点并推送</button>
+            <button class="btn btn-ghost btn-sm" onclick="alert('保存草稿')">&#x1F4BE; 保存草稿</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Difference handling -->
+      <div class="card" id="stocktake-diff" style="display:none;">
+        <div class="diff-section">
+          <div class="diff-title">&#x26A0;&#xFE0F; 差异处理（差异率 &gt; 2% 时触发）</div>
+          <div style="font-size:13px;margin-bottom:10px;">
+            盘点编号: <strong>STK-004</strong> &nbsp;|&nbsp; 差异率: <strong style="color:#dc2626;">3.5%</strong> &nbsp;|&nbsp; 状态: <span class="tag tag-red">&#x1F534; 待处理</span>
+          </div>
+          <div style="font-size:13px;background:#fff;border-radius:6px;padding:10px;margin-bottom:10px;border:1px solid #fee2e2;">
+            <strong>差异明细:</strong> iPhone 15 Pro: 账面500台 &rarr; 实盘482台（差异 -18台）
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>差异原因（必填）</label><input placeholder="请填写差异原因" style="padding:6px 10px;"></div>
+            <div class="form-group"><label>处理措施</label>
+              <select style="padding:6px 10px;">
+                <option>调整库存</option>
+                <option>报损</option>
+                <option>待核查</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>责任人</label><input placeholder="填写责任人姓名" style="padding:6px 10px;max-width:300px;"></div>
+          <div class="btn-group-left">
+            <button class="btn btn-warning btn-sm" onclick="alert('差异报告已推送至平台')">&#x1F4E4; 推送差异报告到平台</button>
+            <button class="btn btn-outline btn-sm" onclick="alert('生成差异报告')">&#x1F4CB; 生成差异报告</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 6: 异常上报 -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-exception">
+
+      <!-- Report new exception -->
+      <div class="card">
+        <div class="card-title">&#x1F6A8; 上报新异常</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>异常类型 <span style="color:#dc2626;">*</span></label>
+            <select>
+              <option>未经授权出库</option>
+              <option>数量不符</option>
+              <option>存储条件异常</option>
+              <option>货物损坏</option>
+              <option selected>其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>关联业务编号</label>
+            <select>
+              <option>B202604001 - XX科技有限公司</option>
+              <option>B202604002 - YY贸易有限公司</option>
+              <option>B202604003 - ZZ食品有限公司</option>
+              <option>B202604004 - AA数码科技</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>仓库位置</label>
+            <select>
+              <option>A1仓</option>
+              <option>A2仓</option>
+              <option>B1仓</option>
+              <option>B2仓</option>
+              <option>C1仓</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>异常描述 <span style="color:#dc2626;">*</span></label>
+          <textarea placeholder="请详细描述异常情况..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group"><label>涉及数量</label><input placeholder="件数" style="max-width:200px;"></div>
+          <div class="form-group"><label>涉及货值</label><input placeholder="&#xa5;" style="max-width:200px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label>&#x1F4F7; 现场照片（支持JPG/PNG，最多5张）</label>
+          <div class="photo-upload-area">
+            <div class="photo-slot has-img" onclick="alert('查看照片1')">
+              <span style="font-size:10px;color:#10b981;">&#x2705;</span>
+              <div class="remove" onclick="event.stopPropagation();this.parentElement.className='photo-slot'">&times;</div>
+            </div>
+            <div class="photo-slot has-img" onclick="alert('查看照片2')">
+              <span style="font-size:10px;color:#10b981;">&#x2705;</span>
+              <div class="remove" onclick="event.stopPropagation();this.parentElement.className='photo-slot'">&times;</div>
+            </div>
+            <div class="photo-slot" onclick="alert('选择文件')">+</div>
+            <div class="photo-slot" onclick="alert('选择文件')">+</div>
+            <div class="photo-slot" onclick="alert('选择文件')">+</div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-danger" onclick="alert('异常已立即上报至平台')">&#x1F6A8; 立即上报平台</button>
+          <button class="btn btn-outline" onclick="alert('草稿已保存')">&#x1F4BE; 保存草稿</button>
+        </div>
+      </div>
+
+      <!-- Exception history -->
+      <div class="card">
+        <div class="card-title">&#x1F4CB; 异常处理记录</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>上报时间</th><th>异常类型</th><th>业务编号</th><th>状态</th><th>平台反馈</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>14:20:00</td><td>未经授权出库</td><td>B202604001</td>
+                <td><span class="tag tag-yellow">&#x1F7E1; 处理中</span></td>
+                <td style="color:#6b7280;">已冻结出库权限</td>
+              </tr>
+              <tr>
+                <td>11:05:00</td><td>数量不符</td><td>B202604002</td>
+                <td><span class="tag tag-green">&#x1F7E2; 已解决</span></td>
+                <td style="color:#6b7280;">核实为操作失误</td>
+              </tr>
+              <tr>
+                <td>09:30:00</td><td>存储条件异常</td><td>B202604003</td>
+                <td><span class="tag tag-green">&#x1F7E2; 已解决</span></td>
+                <td style="color:#6b7280;">温度已恢复正常</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelector('.tab[data-tab="'+t+'"]').classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+function toggleDetail(id) {
+  var el = document.getElementById(id);
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'table-row' : 'none';
+  }
+}
+
+function startStocktake(id) {
+  var ph = document.getElementById('stocktake-placeholder');
+  var ct = document.getElementById('stocktake-content');
+  var info = document.getElementById('stocktake-info');
+  ph.style.display = 'none';
+  ct.style.display = 'block';
+  info.textContent = '（正在执行: ' + id + '）';
+  document.getElementById('st-plan-id').textContent = '盘点编号: ' + id;
+}
+
+function showDiffSection() {
+  var d = document.getElementById('stocktake-diff');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+  if (d.style.display === 'block') {
+    d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function calcDiff(input, bookVal) {
+  var actual = parseInt(input.value) || 0;
+  var diff = actual - bookVal;
+  var cell = input.parentElement.parentElement.querySelector('td:last-child');
+  if (cell) {
+    cell.textContent = diff >= 0 ? '+' + diff : '' + diff;
+    cell.style.color = diff === 0 ? '#6b7280' : (diff < 0 ? '#dc2626' : '#059669');
+  }
+}
+
+// Countdown timer simulation (one-time update for demo)
+(function() {
+  function updateTimer(id, remaining) {
+    var el = document.getElementById('timer-' + id);
+    if (!el) return;
+    var parts = remaining.split(':').map(Number);
+    var h = parts[0], m = parts[1], s = parts[2];
+    if (s > 0) s--; else if (m > 0) { m--; s = 59; } else if (h > 0) { h--; m = 59; s = 59; }
+    var str = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    el.textContent = str;
+    if (h > 0 || m > 0 || s > 0) {
+      setTimeout(function() { updateTimer(id, str); }, 1000);
+    } else {
+      el.parentElement.textContent = '&#x23F1;&#xFE0F; 已超时';
+      el.parentElement.style.color = '#9ca3af';
+    }
+  }
+  updateTimer(1, '01:25:00');
+  updateTimer(2, '01:15:30');
+  updateTimer(3, '01:55:20');
+})();
+</script>
+</body>
+</html>

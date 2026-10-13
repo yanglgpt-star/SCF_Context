@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>业务审批与放款管理 - 银行端</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.topbar-right .icon-btn { cursor: pointer; font-size: 16px; }
+.topbar-right .logout { cursor: pointer; color: #ef4444; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-cyan { background: #cffafe; color: #155e75; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.warn-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-bar select, .filter-bar input { padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.filter-bar .filter-label { font-size: 12px; color: #6b7280; font-weight: 500; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; text-align: center; }
+.stat-card .num { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.stat-card .trend { font-size: 11px; margin-top: 2px; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 24px; width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+/* Dashboard quick entry */
+.quick-entry { display: flex; gap: 12px; flex-wrap: wrap; }
+.quick-entry .qe-btn { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; cursor: pointer; font-size: 13px; color: #374151; font-weight: 500; }
+.quick-entry .qe-btn:hover { background: #eff6ff; border-color: #60a5fa; color: #2563eb; }
+/* Chart */
+.chart-container { padding: 8px 0; }
+/* Detail sub-card */
+.sub-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+.sub-card-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #374151; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; font-size: 13px; }
+.info-grid .info-item { padding: 3px 0; }
+.info-grid .info-item .info-label { color: #6b7280; }
+.info-grid .info-item .info-value { color: #1f2937; font-weight: 500; }
+/* Radio group */
+.radio-group { display: flex; gap: 24px; margin-bottom: 16px; }
+.radio-group label { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; color: #374151; }
+.radio-group input[type="radio"] { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
+/* Detail section toggle */
+.detail-section { display: none; }
+.detail-section.show { display: block; }
+/* Risk score display */
+.risk-score { display: inline-flex; align-items: center; gap: 8px; }
+.risk-score .score-num { font-size: 28px; font-weight: 700; }
+.risk-score .score-label { font-size: 13px; }
+/* Pagination */
+.pagination { display: flex; align-items: center; gap: 6px; justify-content: center; margin-top: 12px; font-size: 13px; }
+.pagination span { padding: 4px 10px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; color: #374151; }
+.pagination span.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.pagination span:hover:not(.active) { background: #f3f4f6; }
+/* Auth rule cards */
+.rule-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; font-size: 13px; }
+/* Progress steps */
+.progress-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.step { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9ca3af; }
+.step.done { color: #10b981; }
+.step.current { color: #2563eb; font-weight: 600; }
+.step .dot { width: 16px; height: 16px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+.step.done .dot { background: #10b981; color: #fff; }
+.step.current .dot { background: #2563eb; color: #fff; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item active">🏠 工作台</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">业务审批与放款</div>
+    <div class="menu-item">📦 出库授权</div>
+    <div class="menu-item">💰 对账管理</div>
+    <div class="menu-item">📋 报表中心</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">🏦 银行端 / <strong>业务审批与放款管理</strong></span></div>
+    <div class="topbar-right">
+      <span class="icon-btn">🔔</span>
+      <span>🏦 XX银行</span>
+      <span>👤 张经理</span>
+      <span class="logout">退出</span>
+    </div>
+  </div>
+  <div class="content">
+    <div class="page-title">业务审批与放款管理</div>
+
+    <!-- ==================== 工作台/首页 2.1 ==================== -->
+    <!-- 4 Stat Cards -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="num" style="color:#2563eb;">12</div>
+        <div class="label">待审批业务</div>
+        <div class="trend" style="color:#10b981;">↑ +3</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#f59e0b;">¥3,200万</div>
+        <div class="label">本月放款金额</div>
+        <div class="trend" style="color:#10b981;">↑ +15%</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#6b7280;">45</div>
+        <div class="label">在途业务数</div>
+        <div class="trend" style="color:#9ca3af;">→ 持平</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:#ef4444;">8</div>
+        <div class="label">待授权出库</div>
+        <div class="trend" style="color:#ef4444;">↓ -2</div>
+      </div>
+    </div>
+
+    <!-- Quick Entry -->
+    <div class="card">
+      <div class="card-title">📋 快捷入口</div>
+      <div class="quick-entry">
+        <button class="qe-btn" onclick="switchTab('approve')">🔍 业务审批</button>
+        <button class="qe-btn" onclick="switchTab('lend')">💰 放款管理</button>
+        <button class="qe-btn" onclick="switchTab('auth')">📤 出库授权</button>
+        <button class="qe-btn">📊 业务监控</button>
+      </div>
+    </div>
+
+    <!-- Monthly Lending Trend Chart -->
+    <div class="card">
+      <div class="card-title">📈 本月放款趋势</div>
+      <div class="chart-container">
+        <svg viewBox="0 0 640 220" style="width:100%;max-width:640px;display:block;margin:0 auto;">
+          <!-- Y-axis grid lines -->
+          <line x1="50" y1="20" x2="600" y2="20" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="50" y1="60" x2="600" y2="60" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="50" y1="100" x2="600" y2="100" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="50" y1="140" x2="600" y2="140" stroke="#f3f4f6" stroke-width="1"/>
+          <line x1="50" y1="180" x2="600" y2="180" stroke="#e5e7eb" stroke-width="1"/>
+          <!-- Y-axis labels -->
+          <text x="44" y="24" text-anchor="end" font-size="11" fill="#9ca3af">800</text>
+          <text x="44" y="64" text-anchor="end" font-size="11" fill="#9ca3af">600</text>
+          <text x="44" y="104" text-anchor="end" font-size="11" fill="#9ca3af">400</text>
+          <text x="44" y="144" text-anchor="end" font-size="11" fill="#9ca3af">200</text>
+          <text x="44" y="184" text-anchor="end" font-size="11" fill="#9ca3af">0</text>
+          <!-- Y-axis title -->
+          <text x="18" y="110" text-anchor="middle" font-size="11" fill="#9ca3af" transform="rotate(-90,18,110)">金额(万)</text>
+          <!-- X-axis labels -->
+          <text x="90" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">1日</text>
+          <text x="175" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">5日</text>
+          <text x="260" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">10日</text>
+          <text x="345" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">15日</text>
+          <text x="430" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">20日</text>
+          <text x="515" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">25日</text>
+          <text x="590" y="198" text-anchor="middle" font-size="11" fill="#9ca3af">30日</text>
+          <!-- Area under line -->
+          <polygon points="90,130 175,110 260,40 345,70 430,24 515,100 590,120 590,180 90,180" fill="rgba(37,99,235,0.08)"/>
+          <!-- Line -->
+          <polyline points="90,130 175,110 260,40 345,70 430,24 515,100 590,120" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+          <!-- Dots -->
+          <circle cx="90" cy="130" r="3.5" fill="#2563eb"/>
+          <circle cx="175" cy="110" r="3.5" fill="#2563eb"/>
+          <circle cx="260" cy="40" r="3.5" fill="#2563eb"/>
+          <circle cx="345" cy="70" r="3.5" fill="#2563eb"/>
+          <circle cx="430" cy="24" r="3.5" fill="#2563eb"/>
+          <circle cx="515" cy="100" r="3.5" fill="#2563eb"/>
+          <circle cx="590" cy="120" r="3.5" fill="#2563eb"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Pending Reminders Table -->
+    <div class="card">
+      <div class="card-title">⚠️ 待处理提醒（按紧急程度排序）</div>
+      <table>
+        <thead><tr><th>类型</th><th>内容</th><th>截止时间</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag tag-yellow">审批</span></td>
+            <td>经销商A 申请¥80万</td>
+            <td><span style="color:#ef4444;font-weight:600;">剩余2小时</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="switchTab('approve')">去审批</button></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-blue">授权</span></td>
+            <td>业务B 出库授权待确认</td>
+            <td><span style="color:#f59e0b;font-weight:600;">剩余4小时</span></td>
+            <td><button class="btn btn-primary btn-sm" onclick="switchTab('auth')">去授权</button></td>
+          </tr>
+          <tr>
+            <td><span class="tag tag-purple">对账</span></td>
+            <td>4月25日流水待核对</td>
+            <td><span style="color:#ef4444;font-weight:600;">今日</span></td>
+            <td><button class="btn btn-outline btn-sm">去对账</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ==================== Tabs ==================== -->
+    <div class="tabs">
+      <div class="tab active" data-tab="approve" onclick="switchTab('approve')">业务审批</div>
+      <div class="tab" data-tab="lend" onclick="switchTab('lend')">放款确认</div>
+      <div class="tab" data-tab="auth" onclick="switchTab('auth')">出库授权</div>
+    </div>
+
+    <!-- ==================== Tab1: 业务审批 2.2 ==================== -->
+    <div class="tab-content active" id="tab-approve">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <span class="filter-label">审批状态:</span>
+        <select style="width:110px;"><option>全部</option><option>待审批</option><option>已通过</option><option>已驳回</option></select>
+        <span class="filter-label">申请金额:</span>
+        <input placeholder="最低" style="width:80px;"> <span style="color:#9ca3af;font-size:12px;">-</span>
+        <input placeholder="最高" style="width:80px;"> <span style="font-size:12px;color:#9ca3af;">万元</span>
+        <span class="filter-label">质押品类:</span>
+        <select style="width:100px;"><option>全部</option><option>3C电子</option><option>白酒</option><option>食品</option><option>家电</option></select>
+        <span class="filter-label">申请时间:</span>
+        <input type="date" style="width:130px;"> <span style="color:#9ca3af;font-size:12px;">-</span>
+        <input type="date" style="width:130px;">
+        <button class="btn btn-outline btn-sm">重置筛选</button>
+        <button class="btn btn-primary btn-sm">应用筛选</button>
+      </div>
+
+      <!-- Approve List Table -->
+      <div class="card">
+        <div class="card-title">📋 业务审批列表（共 12 条）</div>
+        <table>
+          <thead><tr><th>业务编号</th><th>经销商</th><th>申请金额</th><th>品类</th><th>平台初审结果</th><th>综合风险评分</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>B202604001</td><td>XX科技</td><td>¥80万</td><td>3C电子</td>
+              <td><span class="tag tag-green">已通过</span></td>
+              <td><span style="color:#10b981;font-weight:600;">88分</span></td>
+              <td><span class="tag tag-yellow">待审批</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showApproveDetail('B202604001')">审批</button></td>
+            </tr>
+            <tr>
+              <td>B202604002</td><td>YY贸易</td><td>¥120万</td><td>白酒</td>
+              <td><span class="tag tag-green">已通过</span></td>
+              <td><span style="color:#f59e0b;font-weight:600;">75分</span></td>
+              <td><span class="tag tag-yellow">待审批</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showApproveDetail('B202604002')">审批</button></td>
+            </tr>
+            <tr>
+              <td>B202604003</td><td>ZZ电子</td><td>¥50万</td><td>3C电子</td>
+              <td><span class="tag tag-green">已通过</span></td>
+              <td><span style="color:#10b981;font-weight:600;">92分</span></td>
+              <td><span class="tag tag-green">已通过</span></td>
+              <td><button class="btn btn-outline btn-sm">查看</button></td>
+            </tr>
+            <tr>
+              <td>B202604004</td><td>AA商贸</td><td>¥200万</td><td>食品</td>
+              <td><span class="tag tag-yellow">需补充</span></td>
+              <td><span style="color:#9ca3af;">—</span></td>
+              <td><span class="tag tag-red">已驳回</span></td>
+              <td><button class="btn btn-outline btn-sm">查看</button></td>
+            </tr>
+            <tr>
+              <td>B202604005</td><td>BB家电</td><td>¥150万</td><td>家电</td>
+              <td><span class="tag tag-green">已通过</span></td>
+              <td><span style="color:#10b981;font-weight:600;">85分</span></td>
+              <td><span class="tag tag-yellow">待审批</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showApproveDetail('B202604005')">审批</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <!-- Pagination -->
+        <div class="pagination">
+          <span>上一页</span>
+          <span class="active">1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>...</span>
+          <span>10</span>
+          <span>下一页</span>
+        </div>
+      </div>
+
+      <!-- ============ 审批详情 2.3 (hidden by default) ============ -->
+      <div class="detail-section" id="approveDetail">
+        <div class="card" style="border-left:4px solid #2563eb;">
+          <div class="card-title">📄 审批详情：<span id="detailBizId">B202604001</span></div>
+
+          <!-- 融资申请信息 -->
+          <div class="sub-card">
+            <div class="sub-card-title">📋 融资申请信息</div>
+            <div class="info-grid">
+              <div class="info-item"><span class="info-label">业务编号：</span><span class="info-value">B202604001</span></div>
+              <div class="info-item"><span class="info-label">经销商：</span><span class="info-value">XX科技有限公司</span></div>
+              <div class="info-item"><span class="info-label">统一社会信用代码：</span><span class="info-value">9111XXXXXXXXXXXXXX</span></div>
+              <div class="info-item"><span class="info-label">申请金额：</span><span class="info-value">¥800,000</span></div>
+              <div class="info-item"><span class="info-label">融资期限：</span><span class="info-value">90天</span></div>
+              <div class="info-item"><span class="info-label">资金用途：</span><span class="info-value">采购原材料</span></div>
+              <div class="info-item"><span class="info-label">还款来源：</span><span class="info-value">销售收入回款</span></div>
+              <div class="info-item"><span class="info-label">核心企业：</span><span class="info-value">XX集团（S级）</span></div>
+            </div>
+          </div>
+
+          <!-- 质押物明细表 -->
+          <div class="sub-card">
+            <div class="sub-card-title">📦 质押物明细</div>
+            <table>
+              <thead><tr><th>品类</th><th>品牌</th><th>型号</th><th>数量</th><th>货值</th><th>质押率上限</th><th>入库日期</th></tr></thead>
+              <tbody>
+                <tr><td>3C电子</td><td>Apple</td><td>iPhone 15 Pro</td><td>200台</td><td>¥1,200,000</td><td>70%</td><td>2026-04-28</td></tr>
+                <tr><td>3C电子</td><td>Apple</td><td>iPad Air</td><td>50台</td><td>¥250,000</td><td>70%</td><td>2026-04-28</td></tr>
+                <tr><td>3C电子</td><td>Apple</td><td>AirPods Pro</td><td>300台</td><td>¥150,000</td><td>70%</td><td>2026-04-28</td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:8px;font-size:12px;color:#6b7280;text-align:right;">质押物总货值: ¥1,600,000 &nbsp;|&nbsp; 质押覆盖率: 200%</div>
+          </div>
+
+          <!-- 平台审批记录 -->
+          <div class="sub-card">
+            <div class="sub-card-title">🔍 平台审批记录</div>
+            <table>
+              <thead><tr><th>节点</th><th>审批人</th><th>时间</th><th>结果/意见</th></tr></thead>
+              <tbody>
+                <tr><td><span class="tag tag-green">初审</span></td><td>李初审员</td><td>04-26 10:00</td><td>通过，资料齐全</td></tr>
+                <tr><td><span class="tag tag-blue">风控</span></td><td>王风控</td><td>04-26 11:30</td><td>通过，风险评分88分，建议额度80万</td></tr>
+                <tr><td><span class="tag tag-purple">终审</span></td><td>刘总监</td><td>04-26 14:00</td><td>通过，同意放款</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 综合风险评分 -->
+          <div class="sub-card">
+            <div class="sub-card-title">📊 综合风险评分</div>
+            <div style="display:flex;align-items:center;gap:24px;margin-bottom:12px;">
+              <div class="risk-score">
+                <span class="score-num" style="color:#10b981;">88</span>
+                <span class="score-label" style="color:#10b981;font-weight:600;">分（低风险）</span>
+              </div>
+              <div style="width:1px;height:40px;background:#e5e7eb;"></div>
+              <div class="info-grid" style="flex:1;grid-template-columns:1fr 1fr 1fr;">
+                <div class="info-item"><span class="info-label">客户等级：</span><span class="info-value"><span class="tag tag-green">A级</span></span></div>
+                <div class="info-item"><span class="info-label">核心企业等级：</span><span class="info-value"><span class="tag tag-purple">S级</span></span></div>
+                <div class="info-item"><span class="info-label">推荐质量：</span><span class="info-value">95分</span></div>
+                <div class="info-item"><span class="info-label">历史逾期率：</span><span class="info-value" style="color:#10b981;">0%</span></div>
+                <div class="info-item"><span class="info-label">累计融资：</span><span class="info-value">¥500万</span></div>
+                <div class="info-item"><span class="info-label">征信状态：</span><span class="info-value"><span class="tag tag-green">正常</span></span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 银行审批决策 -->
+          <div class="sub-card" style="border-color:#bfdbfe;background:#fafcff;">
+            <div class="sub-card-title">✅ 银行审批决策</div>
+            <div class="radio-group">
+              <label><input type="radio" name="approveDecision" value="approve" checked> 同意放款</label>
+              <label><input type="radio" name="approveDecision" value="conditional"> 有条件同意</label>
+              <label><input type="radio" name="approveDecision" value="reject"> 拒绝</label>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>放款金额确认 <span style="color:#ef4444;">*</span></label>
+                <input value="800000" style="width:100%;"> <span style="font-size:11px;color:#9ca3af;">（可修改，不超过申请金额）</span>
+              </div>
+              <div class="form-group">
+                <label>放款利率（年化）<span style="color:#ef4444;">*</span></label>
+                <input value="6.5" placeholder="%">
+              </div>
+              <div class="form-group">
+                <label>融资期限（天）</label>
+                <input value="90" readonly style="background:#f9fafb;">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>审批意见 <span style="color:#ef4444;">*</span></label>
+              <textarea placeholder="请输入银行审批意见..." style="min-height:50px;"></textarea>
+            </div>
+            <div class="btn-group" style="justify-content:flex-start;">
+              <button class="btn btn-success">✓ 确认审批</button>
+              <button class="btn btn-outline">✗ 退回补充资料</button>
+              <button class="btn btn-outline">💾 暂存草稿</button>
+              <span style="flex:1;"></span>
+              <button class="btn btn-outline btn-sm" onclick="hideApproveDetail()">收起详情</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== Tab2: 放款确认 2.4 ==================== -->
+    <div class="tab-content" id="tab-lend">
+      <div class="card">
+        <div class="card-title">💳 放款指令列表</div>
+        <div class="info-card">💡 点击"确认放款"将弹出确认窗口，二次确认后执行放款操作</div>
+        <table>
+          <thead><tr><th>指令编号</th><th>业务编号</th><th>经销商</th><th>金额</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>L202604001</td><td>B202604001</td><td>XX科技</td><td>¥80万</td>
+              <td><span class="tag tag-yellow">待确认</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showLendConfirm()">确认放款</button></td>
+            </tr>
+            <tr>
+              <td>L202604002</td><td>B202604002</td><td>YY贸易</td><td>¥120万</td>
+              <td><span class="tag tag-yellow">待确认</span></td>
+              <td><button class="btn btn-primary btn-sm" onclick="showLendConfirm()">确认放款</button></td>
+            </tr>
+            <tr>
+              <td>L202604003</td><td>B202604003</td><td>ZZ电子</td><td>¥50万</td>
+              <td><span class="tag tag-green">已放款</span></td>
+              <td><button class="btn btn-outline btn-sm">查看详情</button></td>
+            </tr>
+            <tr>
+              <td>L202604004</td><td>B202604004</td><td>AA商贸</td><td>¥200万</td>
+              <td><span class="tag tag-red">失败</span></td>
+              <td><button class="btn btn-outline btn-sm">查看详情</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== Tab3: 出库授权 2.5 ==================== -->
+    <div class="tab-content" id="tab-auth">
+      <!-- Send Authorization Form -->
+      <div class="card">
+        <div class="card-title">📤 发送出库授权</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>业务编号 <span style="color:#ef4444;">*</span></label>
+            <select><option>B202604001 - XX科技</option><option>B202604002 - YY贸易</option><option>B202604005 - BB家电</option></select>
+          </div>
+          <div class="form-group">
+            <label>经销商</label>
+            <input value="XX科技有限公司" readonly style="background:#f9fafb;">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>还款金额（元）<span style="color:#ef4444;">*</span></label>
+            <input value="200000">
+          </div>
+          <div class="form-group">
+            <label>授权释放货值（元）<span style="color:#ef4444;">*</span></label>
+            <input value="250000">
+            <span style="font-size:11px;color:#f59e0b;">与还款金额差异&gt;5%将标记异常</span>
+          </div>
+          <div class="form-group">
+            <label>有效期 <span style="color:#ef4444;">*</span></label>
+            <select><option>24 小时</option><option>48 小时</option><option>72 小时</option><option>7 天</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>备注</label>
+          <textarea placeholder="请输入备注信息..." style="min-height:50px;"></textarea>
+        </div>
+        <div class="btn-group" style="justify-content:flex-start;">
+          <button class="btn btn-primary">📤 发送授权</button>
+          <button class="btn btn-outline">💾 保存草稿</button>
+        </div>
+      </div>
+
+      <!-- Authorization Records Table -->
+      <div class="card">
+        <div class="card-title">📋 授权记录列表</div>
+        <table>
+          <thead><tr><th>授权编号</th><th>业务编号</th><th>经销商</th><th>释放货值</th><th>状态</th><th>时间</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>AUTH-001</td><td>B202604001</td><td>XX科技</td><td>¥25万</td>
+              <td><span class="tag tag-green">已使用</span></td>
+              <td>04-26 10:00</td>
+            </tr>
+            <tr>
+              <td>AUTH-002</td><td>B202604001</td><td>XX科技</td><td>¥30万</td>
+              <td><span class="tag tag-yellow">有效中</span></td>
+              <td>04-26 14:00</td>
+            </tr>
+            <tr>
+              <td>AUTH-003</td><td>B202604002</td><td>YY贸易</td><td>¥50万</td>
+              <td><span class="tag tag-red">已过期</span></td>
+              <td>04-25 09:00</td>
+            </tr>
+            <tr>
+              <td>AUTH-004</td><td>B202604005</td><td>BB家电</td><td>¥20万</td>
+              <td><span class="tag tag-yellow">有效中</span></td>
+              <td>04-27 08:30</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 放款确认弹窗 Modal ==================== -->
+<div class="modal-overlay" id="lendModal">
+  <div class="modal">
+    <div class="modal-title">💳 放款确认</div>
+    <div class="warn-card" style="margin-bottom:16px;">
+      ⚠️ 请确认以下信息无误，确认后将执行放款操作
+    </div>
+    <div style="font-size:13px;color:#4b5563;">
+      <div style="background:#f0fdf4;border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;">
+        <div style="font-size:12px;color:#6b7280;">放款金额</div>
+        <div style="font-size:28px;font-weight:700;color:#065f46;">¥800,000.00</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        <div><strong>指令编号：</strong>L202604001</div>
+        <div><strong>业务编号：</strong>B202604001</div>
+        <div><strong>经销商：</strong>XX科技有限公司</div>
+        <div><strong>收款账户：</strong>6222XXXXXXXXXXXXXX (中国工商银行XX支行)</div>
+        <div><strong>批复利率：</strong>6.5% 年化</div>
+        <div><strong>放款日期：</strong>2026-04-27</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#6b7280;background:#f9fafb;border-radius:6px;padding:10px;margin-bottom:16px;">
+      放款结果反馈：平台将自动接收放款结果并更新业务状态
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-outline" onclick="document.getElementById('lendModal').classList.remove('show')">✗ 取消</button>
+      <button class="btn btn-success" onclick="document.getElementById('lendModal').classList.remove('show');alert('放款已确认并执行！')">✓ 确认并执行放款</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(e) { e.classList.remove('active'); });
+  document.querySelector('.tab[data-tab="'+t+'"]').classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+  // Scroll to tabs area
+  document.querySelector('.tabs').scrollIntoView({behavior:'smooth'});
+}
+
+function showApproveDetail(id) {
+  document.getElementById('detailBizId').textContent = id;
+  document.getElementById('approveDetail').classList.add('show');
+  document.getElementById('approveDetail').scrollIntoView({behavior:'smooth'});
+}
+
+function hideApproveDetail() {
+  document.getElementById('approveDetail').classList.remove('show');
+}
+
+function showLendConfirm() {
+  document.getElementById('lendModal').classList.add('show');
+}
+
+// Quick entry buttons also switch tabs
+</script>
+</body>
+</html>

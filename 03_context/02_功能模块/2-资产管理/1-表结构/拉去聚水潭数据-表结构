@@ -1,0 +1,168 @@
+采购单，已发货可以开始拣货，拣货完成之后变成已收货
+
+![](https://tcs-devops.aliyuncs.com/storage/113t540024731c60abae0609f1b0d3b9c9f0?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc3NzQzOTg5NywiaWF0IjoxNzc2ODM1MDk3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM3Q1NDAwMjQ3MzFjNjBhYmFlMDYwOWYxYjBkM2I5YzlmMCJ9.gRUJoQzSqCp8LeC2pW3uAQIB-4eN7iROWtP9JIK-0XQ&download=image.png "")
+
+# 背景
+
+资产管理-二期资产监控
+
+# 目标
+
+资产监控
+
+
+
+# 流程图
+
+分别拉取入库数据，出库数据，以及库存数据
+
+
+
+
+
+# 相关逻辑
+
+## 1. 入库数据
+
+调用聚水潭采购入库查询接口，获取入库数据
+
+
+
+1.采购数量=采购单对应入库数量总和，不在拉采购单对应入库单数据
+
+2.当前日期大于提货结束日期，不在拉采购单对应入库单数据
+
+3.当前日期大于采购单完成日期+1（天），不在拉采购单对应的入库单数据
+
+![](https://tcs-devops.aliyuncs.com/storage/113t8829a8485248c934dc1c3dbde561b01c?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9hcHBJZCI6IjVlNzQ4MmQ2MjE1MjJiZDVjN2Y5YjMzNSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTc3NzQzOTg5NywiaWF0IjoxNzc2ODM1MDk3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExM3Q4ODI5YTg0ODUyNDhjOTM0ZGMxYzNkYmRlNTYxYjAxYyJ9.1wnPgMz0FA84N7s29_k-oN3ubQ2fGDvy373CPlU4KMU&download=%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_17758065578371.png "")
+
+### 基础数据：采购管理里的订单数据
+
+### 改动点
+
+1. 采购单(fa_purchase_agreement_order)新增字段：入库数量，采购单完成日期， 入库状态：是否已完成入库
+
+1. 定时任务：拉取未完成入库的采购单数据，先查询订单erp创建记录表o_erp_create_purchase_record，查询到jstOrderCode(对应聚水潭po_id), 再批量调用聚水潭接口拉取入库信息，已存在的入库单号+入库子单号忽略不保存，不存在才落库保存，并且更新入库数量，当满足上述三个条件点之一，则把入库状态改为已入库完成
+
+### 表
+
+```text
+CREATE TABLE `fa_purchase_order_stock_in` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '采购单号（唯一）',
+  `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '关联协议编号',
+  `stock_in_code` int DEFAULT NULL COMMENT '入库单号',
+  `stock_in_sub_code` int DEFAULT NULL COMMENT '入库子单号',
+  `jst_order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '聚水潭采购单号',
+  `stock_in_date` datetime DEFAULT NULL COMMENT '入库日期',
+  `warehouse_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '仓库名称',
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '进仓类型',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品编号',
+  `common_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品名称',
+  `supplier_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '供应商名称',
+  `stock_in_quantity` int DEFAULT '0' COMMENT '入库数量',
+  `wms_co_id` int NOT NULL COMMENT '分仓编号',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` int DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` int DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_agreement_no` (`agreement_no`),
+  KEY `idx_order_code` (`order_code`) USING BTREE,
+  KEY `idx_jst_order_code` (`jst_order_code`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='采购订单入库数据表';
+
+
+
+```
+
+
+
+## 2. 出库数据
+
+
+
+### 基础数据：销售管理里的分销订单数据
+
+### 改动点
+
+1. 分销订单表(fa_sales_order)新增字段： 出库状态：是否已出库，
+
+1. 定时任务：拉取未出库的订单数据，先调用分销查询聚水潭线上单号，然后再批量调用聚水潭接口拉取出库信息，拉取到直接落库，并且把状态改为已出库
+
+### 表
+
+```text
+CREATE TABLE `fa_sales_order_stock_out` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+ `agreement_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '协议编号',
+  `order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '采购单号',
+  `sales_demand_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '需求单号',
+  `sales_order_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '销售订单编号',
+   `stock_out_id` int DEFAULT NULL COMMENT '出库单号',
+
+
+
+`wms_co_id` int DEFAULT NULL COMMENT '分仓编号',
+
+ `erp_original_order_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '聚水潭线上单号',
+
+`stock_out_date` datetime DEFAULT NULL COMMENT '入库日期',
+  `warehouse_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '仓库名称',
+
+ `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品编号',
+  `common_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品名称',
+
+  `stock_out_quantity` int DEFAULT '0' COMMENT '出库数量',
+
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` int DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` int DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_agreement_no` (`agreement_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='销售订单出库数据表';
+
+```
+
+## 3. 库存数据
+
+
+
+基础数据：入库数据
+
+### 逻辑
+
+1. 生成入库数据的时候，按照分仓编号+商品编码维度同步生成库存数据，实际库存数据为入库数量。
+
+1. 定时任务：拉取实际库存大于0的数据，再批量调用聚水潭接口拉取库存信息，更新实际库存
+
+### 表
+
+```text
+CREATE TABLE `fa_purchase_order_stock` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `wms_co_id` int NOT NULL COMMENT '分仓编号',
+  `warehouse_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '仓库名称',
+  `common_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品编号',
+  `common_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '商品名称',
+  `stock_quantity` int DEFAULT '0' COMMENT '实际库存数',
+  `deleted` tinyint DEFAULT '0' COMMENT '删除状态',
+  `create_by` int DEFAULT '0' COMMENT '创建人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_by` int DEFAULT '0' COMMENT '修改人',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_agreement_no` (`agreement_no`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='采购订单库存数据表';
+
+```
+
+
+
+## 附录
+
+
+

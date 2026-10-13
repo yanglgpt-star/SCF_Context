@@ -1,0 +1,1 @@
+<view class="orientation-mask {{deviceType}}" wx:if="{{portrait}}"><view class="rotate">↻</view><view class="title">请把设备横过来</view><view class="text">横着玩，画面更大，操作也更舒服</view></view>

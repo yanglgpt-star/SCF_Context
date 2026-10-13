@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子仓单 - 列表</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            color: #262626;
+        }
+        
+        /* 顶部导航 */
+        .header {
+            background: #fff;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 20px; font-weight: 600; color: #1e3a5f; margin-right: 48px; }
+        .nav-menu { display: flex; gap: 32px; flex: 1; }
+        .nav-item { color: #595959; font-size: 14px; cursor: pointer; }
+        .nav-item.active { color: #1e3a5f; font-weight: 500; }
+        .user-info { display: flex; align-items: center; gap: 8px; color: #595959; font-size: 14px; }
+        .avatar { width: 32px; height: 32px; background: #1e3a5f; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+        
+        /* 主内容区 */
+        .main { padding: 88px 24px 24px; }
+        .page-header { margin-bottom: 24px; }
+        .page-title { font-size: 20px; font-weight: 600; color: #262626; margin-bottom: 8px; }
+        .breadcrumb { font-size: 14px; color: #8c8c8c; }
+        .breadcrumb span { color: #1e3a5f; }
+        
+        /* 统计卡片 */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .stat-card.active { border: 2px solid #1e3a5f; }
+        .stat-label { font-size: 14px; color: #8c8c8c; margin-bottom: 8px; }
+        .stat-value { font-size: 32px; font-weight: 600; color: #262626; }
+        .stat-card:nth-child(1) .stat-value { color: #1e3a5f; }
+        .stat-card:nth-child(2) .stat-value { color: #9f7aea; }
+        .stat-card:nth-child(3) .stat-value { color: #ed8936; }
+        .stat-card:nth-child(4) .stat-value { color: #48bb78; }
+        
+        /* 筛选区 */
+        .filter-section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-label { font-size: 14px; color: #595959; white-space: nowrap; }
+        .filter-input, .filter-select {
+            height: 32px;
+            padding: 0 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 160px;
+        }
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #1e3a5f;
+        }
+        .btn {
+            height: 32px;
+            padding: 0 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary { background: #1e3a5f; color: #fff; }
+        .btn-default { background: #fff; color: #595959; border: 1px solid #d9d9d9; }
+        .btn-reset { margin-left: auto; }
+        
+        /* 表格 */
+        .table-section {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .table-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-title { font-size: 16px; font-weight: 500; }
+        .table-ops { display: flex; gap: 8px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th {
+            background: #fafafa;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            color: #595959;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #262626;
+        }
+        tr:hover td { background: #fafafa; }
+        
+        .link { color: #1e3a5f; cursor: pointer; }
+        .link:hover { text-decoration: underline; }
+        
+        /* 状态标签 */
+        .status-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-draft { background: #f5f5f5; color: #8c8c8c; }
+        .status-normal { background: #e6f7ff; color: #1890ff; }
+        .status-pledged { background: #f3e8ff; color: #722ed1; }
+        .status-partial { background: #fff7e6; color: #fa8c16; }
+        .status-completed { background: #f6ffed; color: #52c41a; }
+        
+        .amount { font-family: "SF Mono", monospace; text-align: right; }
+        
+        .action-btns { display: flex; gap: 8px; }
+        .action-btn {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            color: #595959;
+        }
+        .action-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* 分页 */
+        .pagination {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .page-btn:hover { border-color: #1e3a5f; color: #1e3a5f; }
+        .page-btn.active { background: #1e3a5f; color: #fff; border-color: #1e3a5f; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* 空状态 */
+        .empty-state {
+            padding: 80px 0;
+            text-align: center;
+            display: none;
+        }
+        .empty-icon {
+            width: 120px;
+            height: 120px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #bfbfbf;
+        }
+        .empty-text { font-size: 16px; color: #8c8c8c; margin-bottom: 16px; }
+            /* 分页样式 */
+        .pagination { display: flex; justify-content: flex-end; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #f0f0f0; }
+        .pagination-total { font-size: 13px; color: #8c8c8c; margin-right: 12px; }
+        .pagination-page { display: flex; gap: 4px; }
+        .pagination-item { min-width: 32px; height: 32px; padding: 0 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; color: #595959; cursor: pointer; transition: all 0.3s; background: #fff; }
+        .pagination-item:hover { border-color: #1890ff; color: #1890ff; }
+        .pagination-item.active { background: #1890ff; border-color: #1890ff; color: #fff; }
+        .pagination-item.disabled { color: #d9d9d9; cursor: not-allowed; border-color: #d9d9d9; }
+        .pagination-jump { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #595959; margin-left: 12px; }
+        .pagination-jump input { width: 48px; height: 32px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 6px; text-align: center; font-size: 14px; }
+        .data-table th, .data-table td { white-space: nowrap; }
+        .table-scroll { overflow-x: auto; width: 100%; margin-bottom: 16px; }
+        .table-scroll .data-table { width: auto; min-width: 100%; }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="logo">金融助手</div>
+        <div class="nav-menu">
+            <div class="nav-item">首页</div>
+            <div class="nav-item">供应商管理</div>
+            <div class="nav-item active">资产管理</div>
+            <div class="nav-item">订单管理</div>
+            <div class="nav-item">财务管理</div>
+            <div class="nav-item">系统设置</div>
+        </div>
+        <div class="user-info">
+            <div class="avatar">管</div>
+            <span>管理员</span>
+        </div>
+    </div>
+    
+    <!-- 主内容 -->
+    <div class="main">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h1 class="page-title">电子仓单管理</h1>
+            <div class="breadcrumb">首页 / 资产管理 / <span>电子仓单</span></div>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="stats-cards">
+            <div class="stat-card active">
+                <div class="stat-label">总仓单数</div>
+                <div class="stat-value">1,286</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">质押中</div>
+                <div class="stat-value">486</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">部分释放</div>
+                <div class="stat-value">128</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">已核销</div>
+                <div class="stat-value">672</div>
+            </div>
+        </div>
+        
+        <!-- 筛选区 -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <span class="filter-label">仓单编号</span>
+                    <input type="text" class="filter-input" placeholder="请输入仓单编号">
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">仓单状态</span>
+                    <select class="filter-select">
+                        <option>全部</option>
+                        <option>待审</option>
+                        <option>普通存单</option>
+                        <option>已质押</option>
+                        <option>部分释放</option>
+                        <option>已核销</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">存货人</span>
+                    <input type="text" class="filter-input" placeholder="请输入供应商名称">
+                </div>
+                <div class="filter-item">
+                    <span class="filter-label">签发日期</span>
+                    <input type="text" class="filter-input" placeholder="开始日期" style="width: 120px;">
+                    <span>至</span>
+                    <input type="text" class="filter-input" placeholder="结束日期" style="width: 120px;">
+                </div>
+                <button class="btn btn-primary">查询</button>
+                <button class="btn btn-default btn-reset">重置</button>
+            </div>
+        </div>
+        
+        <!-- 表格 -->
+        <div class="table-section">
+            <div class="table-header">
+                <span class="table-title">仓单列表</span>
+                <div class="table-ops">
+                    <button class="btn btn-default">导出Excel</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>仓单编号</th>
+                        <th>状态</th>
+                        <th>存货人</th>
+                        <th>货物名称</th>
+                        <th style="text-align: right;">入库数量</th>
+                        <th style="text-align: right;">质押金额</th>
+                        <th>签发日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="link" onclick="location.href='02-仓单详情-已质押.html'">EWR-20231027-0001</span></td>
+                        <td><span class="status-tag status-pledged">已质押</span></td>
+                        <td>某某钢铁贸易有限公司</td>
+                        <td>冷轧钢卷</td>
+                        <td class="amount">100 吨</td>
+                        <td class="amount">¥315,000.00</td>
+                        <td>2023-10-27</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn" onclick="location.href='02-仓单详情-已质押.html'">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link" onclick="location.href='03-仓单详情-部分释放.html'">EWR-20231026-0089</span></td>
+                        <td><span class="status-tag status-partial">部分释放</span></td>
+                        <td>华东金属材料有限公司</td>
+                        <td>热轧钢板等2种</td>
+                        <td class="amount">200 吨</td>
+                        <td class="amount">¥560,000.00</td>
+                        <td>2023-10-26</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn" onclick="location.href='03-仓单详情-部分释放.html'">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link">EWR-20231025-0156</span></td>
+                        <td><span class="status-tag status-normal">普通存单</span></td>
+                        <td>广发钢材供应链公司</td>
+                        <td>镀锌钢卷</td>
+                        <td class="amount">50 吨</td>
+                        <td class="amount">-</td>
+                        <td>2023-10-25</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link">EWR-20231024-0034</span></td>
+                        <td><span class="status-tag status-completed">已核销</span></td>
+                        <td>恒通钢铁集团有限公司</td>
+                        <td>不锈钢板</td>
+                        <td class="amount">150 吨</td>
+                        <td class="amount">¥420,000.00</td>
+                        <td>2023-10-24</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link">EWR-20231023-0092</span></td>
+                        <td><span class="status-tag status-pledged">已质押</span></td>
+                        <td>鑫源金属制品厂</td>
+                        <td>冷轧钢卷</td>
+                        <td class="amount">80 吨</td>
+                        <td class="amount">¥224,000.00</td>
+                        <td>2023-10-23</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link">EWR-20231022-0078</span></td>
+                        <td><span class="status-tag status-draft">待审核</span></td>
+                        <td>宏达钢材贸易有限公司</td>
+                        <td>螺纹钢</td>
+                        <td class="amount">120 吨</td>
+                        <td class="amount">-</td>
+                        <td>2023-10-22</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn">查看</button>
+                                <button class="action-btn" disabled>下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link">EWR-20231021-0045</span></td>
+                        <td><span class="status-tag status-completed">已核销</span></td>
+                        <td>强盛钢铁有限公司</td>
+                        <td>彩涂钢板</td>
+                        <td class="amount">60 吨</td>
+                        <td class="amount">¥168,000.00</td>
+                        <td>2023-10-21</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="link">EWR-20231020-0012</span></td>
+                        <td><span class="status-tag status-partial">部分释放</span></td>
+                        <td>伟业金属材料公司</td>
+                        <td>合金钢管等3种</td>
+                        <td class="amount">300 吨</td>
+                        <td class="amount">¥840,000.00</td>
+                        <td>2023-10-20</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="action-btn">查看</button>
+                                <button class="action-btn">下载</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn" disabled>&lt;</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">5</button>
+                <span>...</span>
+                <button class="page-btn">65</button>
+                <button class="page-btn">&gt;</button>
+                <span style="margin-left: 16px; color: #8c8c8c; font-size: 14px;">共 1286 条</span>
+            </div>
+            
+            <!-- 空状态 -->
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <div class="empty-text">暂无仓单记录</div>
+                <button class="btn btn-primary">去创建</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>费率参数配置 - 配置中心</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-divider { height: 1px; background: #334155; margin: 8px 12px; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; gap: 20px; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.main-area { flex: 1; min-width: 0; }
+.side-card { width: 260px; flex-shrink: 0; }
+.tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+.tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-warning { background: #f59e0b; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.info-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 16px; }
+.info-card.yellow { background: #fefce8; border-color: #fde68a; color: #92400e; }
+.info-card.red { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; font-size: 12px; }
+.param-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+.param-row .val { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">📊 工作台</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item">📦 货权管理</div>
+    <div class="menu-item">⚠️ 风险监控</div>
+    <div class="menu-item">📋 贷后管理</div>
+    <div class="menu-item">🧾 结算管理</div>
+    <div class="menu-divider"></div>
+    <div class="menu-item active">⚙️ 系统管理</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#fff;font-weight:600;">费率参数配置</div>
+  </div>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left"><span class="breadcrumb">系统管理 / 配置中心 / <strong>费率参数管理</strong></span></div>
+    <div class="topbar-right"><span>👤 运营专员</span><span>退出</span></div>
+  </div>
+  <div class="content">
+    <div class="main-area">
+      <div class="page-title">费率参数配置中心</div>
+      <div class="tabs">
+        <div class="tab active" data-tab="fee" onclick="switchTab('fee')">服务费费率</div>
+        <div class="tab" data-tab="overdue" onclick="switchTab('overdue')">逾期利率</div>
+        <div class="tab" data-tab="profit" onclick="switchTab('profit')">分润规则</div>
+        <div class="tab" data-tab="pledge" onclick="switchTab('pledge')">品类质押率</div>
+      </div>
+
+      <!-- Tab1: 服务费费率 -->
+      <div class="tab-content active" id="tab-fee">
+        <div class="card">
+          <div class="card-title">基础费率（按客户等级）</div>
+          <table>
+            <thead><tr><th>客户等级</th><th>年化费率</th><th>生效日期</th><th>失效日期</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td><span class="tag tag-green">A级</span></td><td><strong>3.000%</strong></td><td>2026-01-01</td><td>—</td><td><span class="tag tag-green">生效中</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-blue">B级</span></td><td><strong>4.000%</strong></td><td>2026-01-01</td><td>—</td><td><span class="tag tag-green">生效中</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-gray">C级</span></td><td><strong>5.000%</strong></td><td>2026-01-01</td><td>—</td><td><span class="tag tag-green">生效中</span></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">分段计费调整</div>
+          <table>
+            <thead><tr><th>金额区间（万元）</th><th>金额下限</th><th>金额上限</th><th>费率调整</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>≤ 50 万</td><td>0</td><td>500,000</td><td><strong>+0%</strong></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>50 - 100 万</td><td>500,000</td><td>1,000,000</td><td><strong>-0.5%</strong></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>&gt; 100 万</td><td>1,000,000</td><td>-1（无上限）</td><td><strong>-1.0%</strong></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">期限调整</div>
+          <table>
+            <thead><tr><th>期限范围（天）</th><th>天数下限</th><th>天数上限</th><th>费率调整</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>≤ 30 天</td><td>1</td><td>30</td><td><strong>+0.5%</strong></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>31 - 90 天</td><td>31</td><td>90</td><td><strong>+0%</strong></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>&gt; 90 天</td><td>91</td><td>-1（无上限）</td><td><strong>-0.5%</strong></td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="info-card yellow">⚠️ 费率参数修改需"运营配置 + 财务复核"双岗操作后方可生效</div>
+        <div class="btn-group"><button class="btn btn-primary">保存配置</button><button class="btn btn-outline">重置</button></div>
+      </div>
+
+      <!-- Tab2: 逾期利率 -->
+      <div class="tab-content" id="tab-overdue">
+        <div class="card">
+          <div class="card-title">逾期阶段利率配置</div>
+          <table>
+            <thead><tr><th>逾期阶段</th><th>逾期天数</th><th>日利率</th><th>年化利率</th><th>计算基数</th><th>年化上限</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td><span class="tag tag-gray">M0（宽限期）</span></td><td>1-3天</td><td><strong>0%</strong></td><td>0%</td><td>不计息</td><td>—</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-yellow">M1</span></td><td>4-15天</td><td><strong>0.0300%</strong></td><td>10.95%</td><td>逾期本金</td><td>14.80%</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-orange" style="background:#fed7aa;color:#9a3412;">M2</span></td><td>16-30天</td><td><strong>0.0400%</strong></td><td>14.60%</td><td>逾期本金+已产生逾期利息</td><td>14.80%</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-red">M3+</span></td><td>&gt;30天</td><td><strong>0.0400%</strong></td><td>14.60%</td><td>逾期本金+已产生逾期利息</td><td>14.80%</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">宽限期配置</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="form-group"><label>宽限期天数</label><input value="3" style="width:120px;"></div>
+            <div class="form-group"><label>宽限期是否计息</label><select style="width:160px;"><option>计正常利息</option><option>不计息</option></select></div>
+          </div>
+        </div>
+        <div class="info-card red">🚫 系统硬约束：逾期利率年化上限不得超过 LPR × 4 = 14.80%。尝试配置 M1 日利率 0.0500%（年化 18.25%）将被拦截。</div>
+        <div class="btn-group"><button class="btn btn-primary">保存配置</button><button class="btn btn-outline">重置</button></div>
+      </div>
+
+      <!-- Tab3: 分润规则 -->
+      <div class="tab-content" id="tab-profit">
+        <div class="card">
+          <div class="card-title">分润类型配置</div>
+          <table>
+            <thead><tr><th>分润类型</th><th>编码</th><th>分润费率</th><th>结算周期</th><th>明细生成日</th><th>确认截止日</th><th>付款日</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>首笔推荐</td><td>FIRST</td><td><strong>0.1000%</strong></td><td>月度</td><td>5日</td><td>12日</td><td>15日</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>后续推荐</td><td>SUBSEQUENT</td><td><strong>0.0500%</strong></td><td>月度</td><td>5日</td><td>12日</td><td>15日</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>催收协同</td><td>COLLECTION</td><td><strong>0.2000%</strong></td><td>季度</td><td>10日</td><td>20日</td><td>25日</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>回购分润</td><td>REPURCHASE</td><td><strong>1.0000%</strong></td><td>季度</td><td>10日</td><td>20日</td><td>25日</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">质量系数（按核心企业等级）</div>
+          <table>
+            <thead><tr><th>核心企业等级</th><th>质量系数</th><th>说明</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td><span class="tag tag-purple">S级</span></td><td><strong>1.5</strong></td><td>基础分润 × 1.5</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-blue">A级</span></td><td><strong>1.2</strong></td><td>基础分润 × 1.2</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-gray">B级</span></td><td><strong>1.0</strong></td><td>基础分润 × 1.0</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td><span class="tag tag-yellow">C级</span></td><td><strong>0.8</strong></td><td>基础分润 × 0.8</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="btn-group"><button class="btn btn-primary">保存配置</button><button class="btn btn-outline">重置</button></div>
+      </div>
+
+      <!-- Tab4: 品类质押率 -->
+      <div class="tab-content" id="tab-pledge">
+        <div class="filter-bar">
+          <button class="btn btn-primary btn-sm">+ 新增品类</button>
+          <button class="btn btn-outline btn-sm">复制模板</button>
+        </div>
+        <div class="card">
+          <div class="card-title">品类质押率配置</div>
+          <table>
+            <thead><tr><th>品类编码</th><th>品类名称</th><th>质押率上限</th><th>警戒阈值（相对）</th><th>超标阈值（相对）</th><th>紧急阈值（相对）</th><th>价格更新频率</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>3C</td><td>3C电子</td><td><strong>70.00%</strong></td><td>100%</td><td>115%</td><td>&gt;115%</td><td>每日（促销季每4h）</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>LIQUOR</td><td>白酒</td><td><strong>80.00%</strong></td><td>100%</td><td>115%</td><td>&gt;115%</td><td>每周</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>FOOD</td><td>食品</td><td><strong>75.00%</strong></td><td>100%</td><td>115%</td><td>&gt;115%</td><td>每周</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+              <tr><td>APPLIANCE</td><td>家电</td><td><strong>80.00%</strong></td><td>100%</td><td>115%</td><td>&gt;115%</td><td>每日</td><td><button class="btn btn-outline btn-sm">编辑</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-title">品类特有监控项配置</div>
+          <pre>{
+  "3C电子": {
+    "新品发布监控": { "ratio_down_adjustment": "10%", "monitor_window": "发布前30天" },
+    "促销季监控": { "ratio_down_adjustment": "5%", "price_frequency": "每4小时" }
+  },
+  "白酒": {
+    "串货监控": { "cross_region_ratio_threshold": "10%", "data_source": "核心企业推送" }
+  },
+  "食品": {
+    "保质期监控": { "entry_threshold": "剩余>2/3", "临界阈值": "剩余<90天", "处置阈值": "剩余<60天" },
+    "存储条件监控": { "temp_max": 30, "humidity_max": 75 }
+  }
+}</pre>
+        </div>
+        <div class="btn-group"><button class="btn btn-primary">保存配置</button><button class="btn btn-outline">重置</button></div>
+      </div>
+    </div>
+    <div class="side-card">
+      <div class="card">
+        <div class="card-title">当前版本信息</div>
+        <div class="param-row"><span>版本号</span><span class="val">v20260426</span></div>
+        <div class="param-row"><span>生效时间</span><span class="val">2026-04-26 00:00</span></div>
+        <div class="param-row"><span>最后修改人</span><span class="val">运营专员</span></div>
+        <div class="param-row"><span>修改时间</span><span class="val">2026-04-26 10:30</span></div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-outline btn-sm" style="width:100%;">查看历史版本</button>
+          <button class="btn btn-outline btn-sm" style="width:100%;margin-top:4px;">版本对比</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+</script>
+</body>
+</html>

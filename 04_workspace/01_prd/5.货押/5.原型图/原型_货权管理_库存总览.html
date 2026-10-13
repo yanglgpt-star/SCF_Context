@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>库存总览 - 货权管理</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f3f4f6; color: #1f2937; display: flex; min-height: 100vh; }
+
+/* ===== Sidebar ===== */
+.sidebar { width: 220px; background: #1e293b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar .logo { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #334155; }
+.sidebar .logo span { color: #60a5fa; }
+.sidebar .menu { padding: 12px 0; flex: 1; }
+.sidebar .menu-item { padding: 10px 20px; cursor: pointer; font-size: 14px; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+.sidebar .menu-item.active { background: #334155; color: #fff; border-left: 3px solid #60a5fa; }
+.sidebar .menu-item.sub-active { color: #fff; font-weight: 600; padding-left: 36px; font-size: 13px; }
+
+/* ===== Main Layout ===== */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar { height: 56px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+.topbar-left { display: flex; align-items: center; gap: 8px; }
+.topbar-left .breadcrumb { font-size: 13px; color: #6b7280; }
+.topbar-left .breadcrumb strong { color: #1f2937; }
+.topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+.badge-dot { width: 18px; height: 18px; background: #ef4444; border-radius: 50%; color: #fff; font-size: 10px; display: inline-flex; align-items: center; justify-content: center; position: absolute; top: -6px; right: -8px; }
+.content { flex: 1; padding: 20px 24px; overflow-y: auto; }
+.page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.refresh-badge { font-size: 11px; font-weight: 400; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; }
+
+/* ===== Card ===== */
+.card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 16px 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; display: flex; justify-content: space-between; align-items: center; }
+
+/* ===== KPI Cards ===== */
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 14px 16px; cursor: pointer; transition: box-shadow 0.15s; }
+.kpi-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.kpi-card .kpi-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.kpi-card .kpi-value { font-size: 22px; font-weight: 700; line-height: 1.2; }
+.kpi-card .kpi-change { font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 2px; }
+.kpi-card .kpi-change.up { color: #10b981; }
+.kpi-card .kpi-change.down { color: #ef4444; }
+.kpi-card .kpi-sub { font-size: 11px; color: #9ca3af; margin-left: 2px; }
+.kpi-card .kpi-detail { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+/* ===== Tags ===== */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-gray { background: #f3f4f6; color: #6b7280; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-red { background: #fee2e2; color: #991b1b; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.tag-purple { background: #f3e8ff; color: #6b21a8; }
+
+/* ===== Buttons ===== */
+.btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-outline { background: #fff; border: 1px solid #d1d5db; color: #374151; }
+.btn-outline:hover { background: #f9fafb; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+
+/* ===== Filter Bar ===== */
+.filter-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.filter-group { display: flex; align-items: center; gap: 4px; }
+.filter-group label { font-size: 12px; color: #6b7280; white-space: nowrap; }
+.filter-group select, .filter-group input { padding: 5px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
+.filter-group input { width: 160px; }
+.filter-actions { display: flex; gap: 8px; margin-left: auto; }
+
+/* ===== Sub Tabs ===== */
+.sub-tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 16px; }
+.sub-tab { padding: 8px 16px; font-size: 13px; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.sub-tab:hover { color: #374151; }
+.sub-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 500; }
+
+/* ===== Table ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+tr:hover td { background: #f9fafb; }
+.table-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+.pagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 13px; color: #6b7280; margin-top: 12px; }
+.pagination .page-btns { display: flex; gap: 2px; }
+.pagination .page-btn { padding: 4px 10px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-size: 12px; background: #fff; color: #374151; }
+.pagination .page-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.pagination .page-btn:hover:not(.active) { background: #f3f4f6; }
+
+/* ===== Charts ===== */
+.chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-box { background: #f9fafb; border-radius: 8px; padding: 20px; text-align: center; min-height: 200px; }
+.chart-box .ch-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 16px; text-align: center; }
+
+/* Pie */
+.chart-pie-wrap { display: flex; align-items: center; justify-content: center; gap: 28px; }
+.pie { width: 130px; height: 130px; border-radius: 50%; background: conic-gradient(#2563eb 0% 45%, #10b981 45% 65%, #f59e0b 65% 85%, #ef4444 85% 100%); flex-shrink: 0; }
+.pie-legend { font-size: 12px; text-align: left; }
+.pie-legend .item { margin: 5px 0; display: flex; align-items: center; gap: 6px; }
+.pie-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* Histogram */
+.histogram { height: 130px; display: flex; align-items: flex-end; justify-content: center; gap: 20px; padding: 0 20px; }
+.histogram .bar-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.histogram .bar { width: 48px; border-radius: 4px 4px 0 0; min-height: 4px; position: relative; }
+.histogram .bar .bar-val { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #374151; font-weight: 500; white-space: nowrap; }
+.histogram .bar-label { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+/* ===== Warehouse Grid ===== */
+.warehouse-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.warehouse-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.15s; }
+.warehouse-card:hover { border-color: #2563eb; }
+.warehouse-card .wh-name { font-weight: 600; font-size: 14px; }
+.warehouse-card .wh-addr { font-size: 11px; color: #6b7280; margin: 4px 0; }
+.warehouse-card .wh-stats { font-size: 12px; color: #374151; }
+.warehouse-card .wh-status { font-size: 11px; margin-top: 6px; }
+
+/* ===== TOP10 Table ===== */
+.top-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.top-table th { background: #f9fafb; padding: 8px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+.top-table td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+.top-table tr:hover td { background: #f9fafb; }
+.rank-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: 600; }
+.rank-1 { background: #fef3c7; color: #92400e; }
+.rank-2 { background: #f3f4f6; color: #6b7280; }
+.rank-3 { background: #fef3c7; color: #92400e; }
+.rank-other { color: #9ca3af; }
+
+/* ===== Trend ===== */
+.trend-chart { display: flex; align-items: flex-end; justify-content: center; gap: 16px; height: 150px; padding-top: 20px; }
+.trend-chart .col { width: 50px; border-radius: 4px 4px 0 0; text-align: center; position: relative; }
+.trend-chart .col .val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #374151; font-weight: 500; white-space: nowrap; }
+.trend-chart .col .lbl { font-size: 11px; color: #6b7280; margin-top: 6px; }
+
+/* ===== Utility ===== */
+.text-link { color: #2563eb; cursor: pointer; }
+.text-link:hover { text-decoration: underline; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.ml-auto { margin-left: auto; }
+.flex-center { display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ========== Sidebar ========== -->
+<div class="sidebar">
+  <div class="logo"><span>◈</span> 货押平台</div>
+  <div class="menu">
+    <div class="menu-item">🏠 首页</div>
+    <div class="menu-item">👥 客户管理</div>
+    <div class="menu-item">💰 融资业务</div>
+    <div class="menu-item active">📦 货权管理</div>
+    <div class="menu-item sub-active">—— 库存总览</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#94a3b8;">质押物清单</div>
+    <div class="menu-item" style="padding-left:36px;font-size:13px;color:#94a3b8;">仓库分布</div>
+    <div class="menu-item">📋 风险监控</div>
+    <div class="menu-item">🧾 结算管理</div>
+  </div>
+</div>
+
+<!-- ========== Main ========== -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="breadcrumb">🏠 货权管理 / <strong>库存总览</strong></span>
+    </div>
+    <div class="topbar-right">
+      <span style="position:relative;cursor:pointer;">🔔 <span class="badge-dot">4</span></span>
+      <span style="cursor:pointer;">👤 张监控员</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ===== Page Title ===== -->
+    <div class="page-title">
+      库存总览
+      <span class="refresh-badge">每5分钟自动刷新</span>
+    </div>
+
+    <!-- ===== KPI Cards ===== -->
+    <div class="kpi-grid">
+
+      <!-- 总在库货值 -->
+      <div class="kpi-card" onclick="alert('下钻：库存明细列表')">
+        <div class="kpi-label">总在库货值</div>
+        <div class="kpi-value" style="color:#2563eb;">¥3,250万</div>
+        <div class="kpi-change up">▲ +5.2% <span class="kpi-sub">较昨日</span></div>
+      </div>
+
+      <!-- 总在库数量 -->
+      <div class="kpi-card" onclick="alert('下钻：库存明细列表')">
+        <div class="kpi-label">总在库数量</div>
+        <div class="kpi-value" style="color:#10b981;">12,580件</div>
+        <div class="kpi-change up">▲ +120 <span class="kpi-sub">较昨日</span></div>
+      </div>
+
+      <!-- 平均质押率 -->
+      <div class="kpi-card">
+        <div class="kpi-label">平均质押率</div>
+        <div class="kpi-value" style="color:#f59e0b;">72.5%</div>
+        <div class="kpi-change down">▼ -1.2% <span class="kpi-sub">较昨日</span></div>
+      </div>
+
+      <!-- 质押率超标业务数 -->
+      <div class="kpi-card" onclick="alert('跳转：风险监控-预警列表')">
+        <div class="kpi-label">质押率超标业务数</div>
+        <div class="kpi-value" style="color:#ef4444;">23笔</div>
+        <div class="kpi-change up">▲ +3笔 <span class="kpi-sub">较昨日</span></div>
+      </div>
+
+      <!-- 今日出入库笔数 -->
+      <div class="kpi-card" onclick="alert('下钻：出入库记录列表')">
+        <div class="kpi-label">今日出入库笔数</div>
+        <div class="kpi-value" style="color:#8b5cf6;">43笔</div>
+        <div class="kpi-detail">入库 28笔 &nbsp;|&nbsp; 出库 15笔</div>
+        <div class="kpi-change up">▲ +8笔 <span class="kpi-sub">较昨日</span></div>
+      </div>
+
+      <!-- 仓库数量 -->
+      <div class="kpi-card">
+        <div class="kpi-label">仓库数量</div>
+        <div class="kpi-value" style="color:#6b7280;">12个</div>
+        <div class="kpi-detail">覆盖 5 城市</div>
+      </div>
+
+    </div>
+
+    <!-- ===== 5-Dimension Sub Tabs ===== -->
+    <div class="card">
+
+      <!-- Sub Tab Nav -->
+      <div class="sub-tabs">
+        <div class="sub-tab active" data-sub="list" onclick="switchSub('list',this)">质押物清单</div>
+        <div class="sub-tab" data-sub="chart" onclick="switchSub('chart',this)">图表分析</div>
+        <div class="sub-tab" data-sub="warehouse" onclick="switchSub('warehouse',this)">仓库分布</div>
+        <div class="sub-tab" data-sub="trend" onclick="switchSub('trend',this)">趋势变化</div>
+        <div class="sub-tab" data-sub="top" onclick="switchSub('top',this)">TOP10排名</div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Sub Tab: 质押物清单                                          -->
+      <!-- ============================================================ -->
+      <div class="sub-content" id="sub-list">
+
+        <!-- Multi-dimension Filters -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>品类</label>
+            <select><option>全部品类</option><option>3C电子</option><option>白酒</option><option>食品</option><option>家电</option></select>
+          </div>
+          <div class="filter-group">
+            <label>品牌</label>
+            <select><option>全部品牌</option><option>Apple</option><option>华为</option><option>茅台</option><option>格力</option></select>
+          </div>
+          <div class="filter-group">
+            <label>仓库</label>
+            <select style="width:130px;"><option>全部仓库</option><option>深圳前海仓</option><option>上海外高桥仓</option><option>北京亦庄仓</option><option>成都青白江仓</option><option>杭州下沙仓</option></select>
+          </div>
+          <div class="filter-group">
+            <label>客户</label>
+            <input placeholder="请输入客户名称...">
+          </div>
+          <div class="filter-group">
+            <label>核心企业</label>
+            <select><option>全部</option><option>核心A</option><option>核心B</option><option>核心C</option></select>
+          </div>
+          <div class="filter-group">
+            <label>风险状态</label>
+            <select><option>全部</option><option>正常</option><option>关注</option><option>警戒</option><option>超标</option><option>紧急</option></select>
+          </div>
+          <div class="filter-group">
+            <label>时间范围</label>
+            <select><option>近7天</option><option>近30天</option><option>近90天</option><option>自定义</option></select>
+          </div>
+          <div class="filter-actions">
+            <button class="btn btn-outline btn-sm" onclick="alert('筛选条件已重置')">重置</button>
+            <button class="btn btn-primary btn-sm" onclick="alert('搜索中...')">🔍 搜索</button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="table-actions">
+          <button class="btn btn-outline btn-sm" onclick="alert('导出报表：Excel/PDF')">📤 导出报表</button>
+          <button class="btn btn-danger btn-sm" onclick="alert('弹出盘点任务创建对话框')">🔄 触发盘点</button>
+          <span style="font-size:12px;color:#9ca3af;margin-left:8px;">勾选业务后点击"触发盘点"创建盘点任务</span>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:28px;"><input type="checkbox" onclick="toggleAll(this)"></th>
+                <th>客户名称</th>
+                <th>品类</th>
+                <th>品牌型号</th>
+                <th>数量</th>
+                <th>在库货值</th>
+                <th>质押率</th>
+                <th>相对质押率</th>
+                <th>风险状态</th>
+                <th>最后更新时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户A</td>
+                <td>3C电子</td>
+                <td>iPhone 15 Pro</td>
+                <td>200台</td>
+                <td>¥200万</td>
+                <td>65.0%</td>
+                <td>92.9%</td>
+                <td><span class="tag tag-yellow">🟡 警戒</span></td>
+                <td>10:05</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户B</td>
+                <td>白酒</td>
+                <td>茅台飞天</td>
+                <td>500瓶</td>
+                <td>¥150万</td>
+                <td>70.0%</td>
+                <td>87.5%</td>
+                <td><span class="tag tag-yellow">🟡 警戒</span></td>
+                <td>10:02</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户C</td>
+                <td>食品</td>
+                <td>进口奶粉</td>
+                <td>1,000箱</td>
+                <td>¥80万</td>
+                <td>55.0%</td>
+                <td>73.3%</td>
+                <td><span class="tag tag-green">🟢 正常</span></td>
+                <td>09:58</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户D</td>
+                <td>家电</td>
+                <td>格力空调</td>
+                <td>300台</td>
+                <td>¥90万</td>
+                <td>75.0%</td>
+                <td>93.8%</td>
+                <td><span class="tag tag-yellow">🟡 警戒</span></td>
+                <td>09:55</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户E</td>
+                <td>3C电子</td>
+                <td>华为Mate 60</td>
+                <td>150台</td>
+                <td>¥105万</td>
+                <td>85.0%</td>
+                <td>121.4%</td>
+                <td><span class="tag tag-purple">🟣 紧急</span></td>
+                <td>09:50</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户F</td>
+                <td>白酒</td>
+                <td>五粮液</td>
+                <td>400瓶</td>
+                <td>¥72万</td>
+                <td>80.0%</td>
+                <td>100.0%</td>
+                <td><span class="tag tag-red">🔴 超标</span></td>
+                <td>09:45</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户G</td>
+                <td>家电</td>
+                <td>美的冰箱</td>
+                <td>180台</td>
+                <td>¥54万</td>
+                <td>45.0%</td>
+                <td>56.3%</td>
+                <td><span class="tag tag-green">🟢 正常</span></td>
+                <td>09:40</td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td class="text-link" onclick="alert('下钻：客户维度视图')">客户H</td>
+                <td>食品</td>
+                <td>金龙鱼食用油</td>
+                <td>800桶</td>
+                <td>¥48万</td>
+                <td>60.0%</td>
+                <td>80.0%</td>
+                <td><span class="tag tag-blue">🔵 关注</span></td>
+                <td>09:35</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <span>共 156 条记录</span>
+          <div class="page-btns">
+            <span class="page-btn">&lt;</span>
+            <span class="page-btn active">1</span>
+            <span class="page-btn">2</span>
+            <span class="page-btn">3</span>
+            <span class="page-btn">4</span>
+            <span class="page-btn">5</span>
+            <span class="page-btn">...</span>
+            <span class="page-btn">16</span>
+            <span class="page-btn">&gt;</span>
+          </div>
+          <span>每页 20 条</span>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Sub Tab: 图表分析                                           -->
+      <!-- ============================================================ -->
+      <div class="sub-content" id="sub-chart" style="display:none;">
+
+        <div class="chart-grid-2">
+
+          <!-- Pie: 品类货值分布 -->
+          <div class="chart-box">
+            <div class="ch-title">品类货值分布</div>
+            <div class="chart-pie-wrap">
+              <div class="pie"></div>
+              <div class="pie-legend">
+                <div class="item"><span class="dot" style="background:#2563eb;"></span>3C电子 <strong>45%</strong>  ¥1,462.5万</div>
+                <div class="item"><span class="dot" style="background:#10b981;"></span>白酒 <strong>20%</strong>  ¥650万</div>
+                <div class="item"><span class="dot" style="background:#f59e0b;"></span>食品 <strong>20%</strong>  ¥650万</div>
+                <div class="item"><span class="dot" style="background:#ef4444;"></span>家电 <strong>15%</strong>  ¥487.5万</div>
+                <div class="item" style="margin-top:6px;font-size:11px;color:#9ca3af;">悬停/点击扇区可查看详情</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Histogram: 质押率分布 -->
+          <div class="chart-box">
+            <div class="ch-title">质押率分布</div>
+            <div class="histogram">
+              <div class="bar-group">
+                <div class="bar" style="height:80px;background:#10b981;">
+                  <span class="bar-val">40笔</span>
+                </div>
+                <span class="bar-label">&lt;60%</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height:110px;background:#2563eb;">
+                  <span class="bar-val">55笔</span>
+                </div>
+                <span class="bar-label">60-70%</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height:90px;background:#f59e0b;">
+                  <span class="bar-val">45笔</span>
+                </div>
+                <span class="bar-label">70-80%</span>
+              </div>
+              <div class="bar-group">
+                <div class="bar" style="height:50px;background:#ef4444;">
+                  <span class="bar-val">25笔</span>
+                </div>
+                <span class="bar-label">&gt;80%</span>
+              </div>
+            </div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:8px;">悬停查看区间详情</div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Sub Tab: 仓库分布                                          -->
+      <!-- ============================================================ -->
+      <div class="sub-content" id="sub-warehouse" style="display:none;">
+
+        <div style="font-size:13px;color:#374151;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
+          <span><strong>12</strong> 个仓库 · 覆盖 <strong>5</strong> 城市</span>
+          <span style="display:flex;align-items:center;gap:10px;font-size:11px;">
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#10b981;vertical-align:middle;margin-right:2px;"></span> 正常</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;vertical-align:middle;margin-right:2px;"></span> 有预警</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ef4444;vertical-align:middle;margin-right:2px;"></span> 有超标</span>
+          </span>
+        </div>
+
+        <div class="warehouse-grid">
+          <div class="warehouse-card">
+            <div class="wh-name">🏭 深圳前海仓</div>
+            <div class="wh-addr">深圳市南山区前海</div>
+            <div class="wh-stats"><strong>¥1,200万</strong> · 3笔预警</div>
+            <div class="wh-status"><span class="tag tag-yellow">有预警</span></div>
+          </div>
+          <div class="warehouse-card">
+            <div class="wh-name">🏭 上海外高桥仓</div>
+            <div class="wh-addr">上海市浦东新区</div>
+            <div class="wh-stats"><strong>¥800万</strong> · 1笔预警</div>
+            <div class="wh-status"><span class="tag tag-yellow">有预警</span></div>
+          </div>
+          <div class="warehouse-card">
+            <div class="wh-name">🏭 北京亦庄仓</div>
+            <div class="wh-addr">北京市大兴区</div>
+            <div class="wh-stats"><strong>¥500万</strong> · 0预警</div>
+            <div class="wh-status"><span class="tag tag-green">正常</span></div>
+          </div>
+          <div class="warehouse-card">
+            <div class="wh-name">🏭 成都青白江仓</div>
+            <div class="wh-addr">成都市青白江区</div>
+            <div class="wh-stats"><strong>¥300万</strong> · 0预警</div>
+            <div class="wh-status"><span class="tag tag-green">正常</span></div>
+          </div>
+          <div class="warehouse-card">
+            <div class="wh-name">🏭 杭州下沙仓</div>
+            <div class="wh-addr">杭州市钱塘区</div>
+            <div class="wh-stats"><strong>¥450万</strong> · 2笔超标</div>
+            <div class="wh-status"><span class="tag tag-red">有超标</span></div>
+          </div>
+          <div class="warehouse-card">
+            <div class="wh-name">🏭 广州黄埔仓</div>
+            <div class="wh-addr">广州市黄埔区</div>
+            <div class="wh-stats"><strong>¥280万</strong> · 0预警</div>
+            <div class="wh-status"><span class="tag tag-green">正常</span></div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:10px;">点击仓库卡片查看详细信息</div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Sub Tab: 趋势变化                                          -->
+      <!-- ============================================================ -->
+      <div class="sub-content" id="sub-trend" style="display:none;">
+
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+          <span style="font-size:13px;font-weight:600;color:#374151;">在库货值趋势</span>
+          <select style="padding:4px 8px;border:1px solid #d1d5db;border-radius:4px;font-size:12px;">
+            <option>近6个月</option>
+            <option>近3个月</option>
+            <option>近1年</option>
+          </select>
+        </div>
+        <div class="chart-box">
+          <div class="trend-chart">
+            <div class="col" style="height:60px;background:#93c5fd;">
+              <span class="val">¥2,800万</span>
+              <span class="lbl">11月</span>
+            </div>
+            <div class="col" style="height:68px;background:#93c5fd;">
+              <span class="val">¥3,100万</span>
+              <span class="lbl">12月</span>
+            </div>
+            <div class="col" style="height:55px;background:#93c5fd;">
+              <span class="val">¥2,600万</span>
+              <span class="lbl">1月</span>
+            </div>
+            <div class="col" style="height:72px;background:#60a5fa;">
+              <span class="val">¥3,300万</span>
+              <span class="lbl">2月</span>
+            </div>
+            <div class="col" style="height:78px;background:#3b82f6;">
+              <span class="val">¥3,500万</span>
+              <span class="lbl">3月</span>
+            </div>
+            <div class="col" style="height:85px;background:#2563eb;">
+              <span class="val">¥3,800万</span>
+              <span class="lbl">4月</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;">
+          <div class="chart-box" style="min-height:auto;padding:12px;">
+            <div style="font-size:12px;color:#6b7280;">月均增长率</div>
+            <div style="font-size:20px;font-weight:700;color:#10b981;">+6.3%</div>
+          </div>
+          <div class="chart-box" style="min-height:auto;padding:12px;">
+            <div style="font-size:12px;color:#6b7280;">最高月货值</div>
+            <div style="font-size:20px;font-weight:700;color:#2563eb;">¥3,800万</div>
+            <div style="font-size:11px;color:#9ca3af;">4月</div>
+          </div>
+          <div class="chart-box" style="min-height:auto;padding:12px;">
+            <div style="font-size:12px;color:#6b7280;">当前月环比</div>
+            <div style="font-size:20px;font-weight:700;color:#10b981;">▲ +8.6%</div>
+            <div style="font-size:11px;color:#9ca3af;">较上月</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- Sub Tab: TOP10排名                                        -->
+      <!-- ============================================================ -->
+      <div class="sub-content" id="sub-top" style="display:none;">
+
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:12px;">高质押率业务 TOP10</div>
+
+        <div class="table-wrap">
+          <table class="top-table">
+            <thead>
+              <tr>
+                <th style="width:60px;">排名</th>
+                <th>客户名称</th>
+                <th>业务编号</th>
+                <th>质押率</th>
+                <th>风险状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="rank-num rank-1">1</span></td>
+                <td>客户A</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B001')">B001</td>
+                <td style="color:#ef4444;font-weight:600;">95.2%</td>
+                <td><span class="tag tag-yellow">🟡 警戒</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-2">2</span></td>
+                <td>客户B</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B002')">B002</td>
+                <td style="color:#ef4444;font-weight:600;">92.8%</td>
+                <td><span class="tag tag-yellow">🟡 警戒</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-3">3</span></td>
+                <td>客户C</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B003')">B003</td>
+                <td style="color:#f59e0b;font-weight:600;">89.5%</td>
+                <td><span class="tag tag-blue">🔵 关注</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">4</span></td>
+                <td>客户D</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B004')">B004</td>
+                <td style="color:#f59e0b;font-weight:600;">87.3%</td>
+                <td><span class="tag tag-blue">🔵 关注</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">5</span></td>
+                <td>客户E</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B005')">B005</td>
+                <td>85.0%</td>
+                <td><span class="tag tag-purple">🟣 紧急</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">6</span></td>
+                <td>客户F</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B006')">B006</td>
+                <td>82.1%</td>
+                <td><span class="tag tag-red">🔴 超标</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">7</span></td>
+                <td>客户G</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B007')">B007</td>
+                <td>78.5%</td>
+                <td><span class="tag tag-yellow">🟡 警戒</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">8</span></td>
+                <td>客户H</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B008')">B008</td>
+                <td>76.2%</td>
+                <td><span class="tag tag-blue">🔵 关注</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">9</span></td>
+                <td>客户I</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B009')">B009</td>
+                <td>74.0%</td>
+                <td><span class="tag tag-green">🟢 正常</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td><span class="rank-num rank-other">10</span></td>
+                <td>客户J</td>
+                <td class="text-link" onclick="alert('跳转业务详情 B010')">B010</td>
+                <td>72.8%</td>
+                <td><span class="tag tag-green">🟢 正常</span></td>
+                <td><span class="text-link" onclick="alert('跳转业务详情')">查看详情</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:8px;">点击行可跳转业务详情页</div>
+      </div>
+
+    </div><!-- /card -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+function switchSub(tab, el) {
+  document.querySelectorAll('.sub-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.sub-content').forEach(function(c) { c.style.display = 'none'; });
+  el.classList.add('active');
+  document.getElementById('sub-' + tab).style.display = 'block';
+}
+
+function toggleAll(master) {
+  var checked = master.checked;
+  document.querySelectorAll('#sub-list table tbody input[type="checkbox"]').forEach(function(cb) {
+    cb.checked = checked;
+  });
+}
+</script>
+
+</body>
+</html>

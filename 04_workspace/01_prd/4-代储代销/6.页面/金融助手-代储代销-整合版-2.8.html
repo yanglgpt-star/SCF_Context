@@ -48,6 +48,46 @@
         .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #595959; }
         .btn-default:hover { border-color: #1890ff; color: #1890ff; }
         .btn-sm { padding: 5px 12px; font-size: 13px; }
+        /* ---------- 批量销售 ---------- */
+        .row-check { width: 16px; height: 16px; cursor: pointer; accent-color: #1890ff; vertical-align: middle; }
+        .row-check:disabled { cursor: not-allowed; opacity: 0.4; }
+        .data-table th.col-check, .data-table td.col-check { width: 44px; text-align: center; padding-left: 16px; padding-right: 8px; }
+        .data-table tr.row-selected, .data-table tr.row-selected:hover { background: #e6f7ff; }
+        .data-table tr.row-locked td { color: #bfbfbf; }
+        .data-table tr.row-locked td .wh-badge { opacity: 0.55; }
+        .data-table tr.row-locked .action-link { color: #bfbfbf; cursor: not-allowed; }
+        .wh-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; background: #f0f5ff; color: #2f54eb; border: 1px solid #d6e4ff; white-space: nowrap; }
+        .wh-badge.multi { background: #fff7e6; color: #d46b08; border-color: #ffd591; }
+        .selection-tip { font-size: 13px; color: #595959; display: flex; align-items: center; }
+        .selection-tip b { color: #1890ff; margin: 0 2px; }
+        .batch-no-preview { font-size: 13px; font-weight: 400; color: #8c8c8c; font-family: "SF Mono", monospace; margin-left: 10px; }
+        .batch-table { min-width: 100%; }
+        /* 列较多（14 列），需提高选择器权重覆盖下方 .data-table th/td 的默认内边距 */
+        .data-table.batch-table th { padding: 11px 9px; }
+        .data-table.batch-table td { padding: 12px 9px; }
+        .batch-table .form-input { padding: 6px 8px; font-size: 13px; width: 92px; }
+        .form-input.input-error { border-color: #ff4d4f; background: #fff2f0; }
+        .form-input.input-error:focus { border-color: #ff4d4f; box-shadow: 0 0 0 3px rgba(255,77,79,0.1); }
+        .cell-error-tip { color: #ff4d4f; font-size: 12px; margin-top: 4px; white-space: nowrap; }
+        .batch-summary { background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px; padding: 18px 20px; margin-top: 16px; }
+        .batch-summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+        .batch-summary-item { text-align: center; }
+        .batch-summary-label { font-size: 12px; color: #1890ff; margin-bottom: 6px; }
+        .batch-summary-value { font-size: 17px; font-weight: 600; color: #1890ff; font-family: "SF Mono", monospace; }
+        .batch-summary-value.crit { color: #cf1322; }
+        .data-table tr.batch-group td { background: #f0f8ff; }
+        .data-table tr.batch-group:hover td { background: #e0f2ff; }
+        .data-table tr.batch-group-start td { border-top: 2px solid #91d5ff; }
+        .data-table tr.batch-group-end td { border-bottom: 2px solid #91d5ff; }
+        .batch-no-tag { font-family: "SF Mono", monospace; font-size: 12px; color: #1890ff; cursor: pointer; }
+        /* .modal 的 width 为 min(90vw, 800px)，max-width 无法放宽，批次弹窗需显式覆盖 width */
+        .modal.xwide { width: min(96vw, 1360px); max-width: 1360px; }
+        @media (max-width: 900px) {
+            .batch-summary-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 600px) {
+            .batch-summary-grid { grid-template-columns: 1fr !important; }
+        }
         .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 24px; }
         .toolbar-left, .toolbar-right { display: flex; gap: 12px; }
         .data-table { border-collapse: collapse; font-size: 14px; width: 100%; }
@@ -500,58 +540,84 @@
                             <button class="btn btn-primary" onclick="handleQuery()">查询</button>
                             <button class="btn btn-default" onclick="handleReset()">重置</button>
                         </div>
-                        <div class="toolbar" style="padding: 0 24px 16px;"><div class="toolbar-right"><button class="btn btn-default" onclick="handleExport()">导出</button></div></div>
+                        <!-- 【PERM-SALE-001】「批量销售」按钮仅销售管理员角色可见 -->
+                        <div class="toolbar" style="padding: 0 24px 16px;">
+                            <div class="toolbar-left">
+                                <button class="btn btn-primary" id="btn-batch-sale" disabled onclick="openBatchSaleFromSelection()">批量销售</button>
+                                <button class="btn btn-default" id="btn-clear-selection" disabled onclick="clearOrderSelection()">取消选择</button>
+                                <span class="selection-tip" id="batch-selection-tip">已选 <b>0</b> 条 / 可售合计 <b>0</b> 台</span>
+                            </div>
+                            <div class="toolbar-right"><button class="btn btn-default" onclick="handleExport()">导出</button></div>
+                        </div>
                         <div class="table-scroll">
                             <table class="data-table">
-                                <thead><tr><th>订单编号</th><th>供应商</th><th>货物信息</th><th>货物数量</th><th>实际入库货值</th><th>保证金比例</th><th>拨付金额</th><th>拨付状态</th><th>入库日期</th><th>操作</th></tr></thead>
-                                <tbody>
+                                <thead><tr><th class="col-check"><input type="checkbox" class="row-check" id="order-check-all" onclick="toggleAllOrders(this)"></th><th>订单编号</th><th>供应商</th><th>货物信息</th><th>货物数量</th><th>可售库存</th><th>实际入库货值</th><th>保证金比例</th><th>拨付金额</th><th>仓库</th><th>业务归属人</th><th>拨付状态</th><th>入库日期</th><th>操作</th></tr></thead>
+                                <tbody id="order-tbody">
                                     <!-- 【PERM-ORDER-001】权限：仅销售管理员角色可见"销售"按钮，待拨付状态隐藏"销售"按钮 -->
-                                    <!-- 订单状态：已拨付（可销售） -->
-                                    <tr><td>DC20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td>100</td><td>¥880,000.00</td><td>70%</td><td>¥616,000.00</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909001', '能良科技', 'iPhone 15 Pro', '100')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250909001')">详情</span></div></td></tr>
-                                    <!-- 订单状态：已拨付（可销售） -->
-                                    <tr><td>DC20250909002</td><td>无锡科技</td><td>华为 Mate 60</td><td>50</td><td>¥345,000.00</td><td>70%</td><td>¥241,500.00</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909002', '无锡科技', '华为 Mate 60', '50')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250909002')">详情</span></div></td></tr>
-                                    <!-- 订单状态：销售中（已拨付，已创建销售订单XS20250909003，不可再次销售） -->
-                                    <tr><td>DC20250908003</td><td>深圳数码</td><td>iPad Air</td><td>30</td><td>¥156,000.00</td><td>70%</td><td>¥109,200.00</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250908003')">详情</span></div></td></tr>
-                                    <!-- 订单状态：已完结（已拨付，全部销售完成并结算） -->
-                                    <tr><td>DC20250907004</td><td>华东科技</td><td>小米14</td><td>80</td><td>¥320,000.00</td><td>70%</td><td>¥224,000.00</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-07</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250907004')">详情</span></div></td></tr>
-                                    <!-- 订单状态：待入库（待拨付，货物尚未入库） -->
-                                    <tr><td>DC20250906005</td><td>北京电子</td><td>OPPO Find X7</td><td>40</td><td>¥200,000.00</td><td>70%</td><td>-</td><td><span class="tag tag-warning">待拨付</span></td><td>2026-09-06</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250906005')">详情</span></div></td></tr>
-                                    <!-- 订单状态：已入库（待拨付，货物已入库等待拨付确认） -->
-                                    <tr><td>DC20250905006</td><td>南方通讯</td><td>vivo X100</td><td>60</td><td>¥270,000.00</td><td>70%</td><td>-</td><td><span class="tag tag-warning">待拨付</span></td><td>2026-09-05</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250905006')">详情</span></div></td></tr>
+                                    <!-- 勾选规则：拨付状态=已拨付 且 该代储订单不存在未付款销售单，才可勾选；不可勾选行加 row-locked 并在 title 中说明原因 -->
+                                    <!-- 订单状态：已拨付，但存在未付款销售单 XS20250909002，按规则不可再发起销售（勾选禁用，"销售"按钮同步隐藏） -->
+                                    <tr class="row-locked" title="存在未付款销售单 XS20250909002，需付款完成后才能再次发起销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td>100</td><td>85</td><td>¥880,000.00</td><td>70%</td><td>¥616,000.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250909001')">详情</span></div></td></tr>
+                                    <!-- 订单状态：已拨付（可销售、可批量勾选，已有销售单 XS20250909003 且已支付，不构成阻塞） -->
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250909002" data-available="42" onclick="toggleOrderCheckbox(this)"></td><td>DC20250909002</td><td>无锡科技</td><td>华为 Mate 60</td><td>50</td><td>42</td><td>¥345,000.00</td><td>70%</td><td>¥241,500.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909002', '无锡科技', '华为 Mate 60', '42')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250909002')">详情</span></div></td></tr>
+                                    <!-- 订单状态：销售中（已拨付，尚有可售库存 10 台，按规则仍可勾选） -->
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250908003" data-available="10" onclick="toggleOrderCheckbox(this)"></td><td>DC20250908003</td><td>深圳数码</td><td>iPad Air</td><td>30</td><td>10</td><td>¥156,000.00</td><td>70%</td><td>¥109,200.00</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250908003')">详情</span></div></td></tr>
+                                    <!-- 订单状态：已拨付（尚有可售库存 35 台，但存在未付款销售单 XS20250908005，不可勾选） -->
+                                    <tr class="row-locked" title="存在未付款销售单 XS20250908005，需付款完成后才能再次发起销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250907004</td><td>华东科技</td><td>小米14</td><td>80</td><td>35</td><td>¥320,000.00</td><td>70%</td><td>¥224,000.00</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-07</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250907004')">详情</span></div></td></tr>
+                                    <!-- 订单状态：待入库（待拨付，不可勾选） -->
+                                    <tr class="row-locked" title="拨付状态为待拨付，不可销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250906005</td><td>北京电子</td><td>OPPO Find X7</td><td>40</td><td>-</td><td>¥200,000.00</td><td>70%</td><td>-</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-warning">待拨付</span></td><td>2026-09-06</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250906005')">详情</span></div></td></tr>
+                                    <!-- 订单状态：已入库（待拨付，不可勾选） -->
+                                    <tr class="row-locked" title="拨付状态为待拨付，不可销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250905006</td><td>南方通讯</td><td>vivo X100</td><td>60</td><td>-</td><td>¥270,000.00</td><td>70%</td><td>-</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-warning">待拨付</span></td><td>2026-09-05</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250905006')">详情</span></div></td></tr>
+                                    <!-- 订单状态：已拨付（可销售、可批量勾选，尚无销售单） -->
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250909007" data-available="120" onclick="toggleOrderCheckbox(this)"></td><td>DC20250909007</td><td>杭州电子</td><td>荣耀 Magic6</td><td>120</td><td>120</td><td>¥480,000.00</td><td>70%</td><td>¥336,000.00</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909007', '杭州电子', '荣耀 Magic6', '120')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250909007')">详情</span></div></td></tr>
+                                    <!-- 订单状态：已拨付（可销售、可批量勾选，尚无销售单） -->
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250908008" data-available="90" onclick="toggleOrderCheckbox(this)"></td><td>DC20250908008</td><td>南京数码</td><td>三星 Galaxy S24</td><td>90</td><td>90</td><td>¥450,000.00</td><td>70%</td><td>¥315,000.00</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250908008', '南京数码', '三星 Galaxy S24', '90')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250908008')">详情</span></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="pagination"><span class="pagination-total">共 6 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">2</span><span class="pagination-item">3</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
+                        <div class="pagination"><span class="pagination-total">共 8 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">2</span><span class="pagination-item">3</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
                         <!--
                         【PRD-ORDER-001】代储订单销售规则
-                        1. 销售前提：订单拨付状态 = 已拨付
+                        1. 销售前提：订单拨付状态 = 已拨付，且该代储订单不存在未付款的销售订单
                         2. 销售渠道：市场助手（一期），分销平台/购机通（二期）
                         3. 销售单价限制：
-                           - 最低销售单价 = max(评估单价 × 保证金比例 × (1 + 服务费率), 保证金金额 × 仓储天数 × 服务费率) + 仓储费
+                           - 单台服务费 = 评估单价 × 保证金比例 × 服务费率 ×（下单付款日期 − 保证金拨付日期 + 1）
+                           - 单台仓储费 = 仓储费单价 ×（下单付款日期 − 保证金拨付日期 + 1）
+                           - 单台最低销售单价 = max(评估单价 × 保证金比例 × (1 + 服务费率), 评估单价 × 保证金比例 + 单台服务费 + 单台仓储费)，保留两位小数，向上取
+                           - 保证金比例 / 服务费率 / 仓储费单价 均逐行取该代储订单字段值（fa_storage_order.deposit_rate / service_rate / storage_fee），不使用全局常量
                            - 销售单价不得低于最低销售单价，前端校验+后端拦截
-                        4. 销售数量限制：销售数量 ≤ 库存数量
-                        5. 接口调用：确认下单后 POST /api/sale/create，同步至市场助手
-                        6. 权限控制：仅销售管理员角色可见"销售"按钮
+                        4. 销售数量限制：销售数量 ≤ 可售库存（入库数量 − 历史已销售/已占用）
+                        5. 接口调用：定向销售 POST /api/sale/create；批量销售 POST /api/sale/batch-create（入参 = 批次抬头 + 明细数组，返回批次号与 N 个订单号），同步至市场助手
+                        6. 权限控制：仅销售管理员角色可见"销售"与"批量销售"按钮，权限标记 PERM-SALE-001
+                        7. 批量销售：勾选多条代储订单 → 同一采购商 → 一次提交生成 N 张销售订单，共享销售批次号（XSP + YYYYMMDD + 3 位流水号）
                         -->
                                                 <div class="alert-info" style="margin: 0 24px 24px; padding: 12px 16px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px; color: #1890ff;">
                             <strong>说明：</strong>
                             <br>代储订单销售规则
-                            <br>1.销售前提：订单拨付状态 = 已拨付
+                            <br>1.销售前提：订单拨付状态 = 已拨付，且该代储订单不存在未付款的销售订单
                             <br>2.销售渠道：市场助手（一期），分销平台/购机通（二期）
                             <br>3.销售单价限制：
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;-单台服务费=评估单价*保证金比例*服务费率*（下单付款日期（当前日期）-保证金拨付日期+1）
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;-单台仓储费=仓储费单价*（下单付款日期（当前日期）-保证金拨付日期+1）
-                            <br>&nbsp;&nbsp;&nbsp;&nbsp;-单台最低销售单价=max（评估单价*保证金比例*（1+0.2%),评估单价*保证金比例+单台服务费+单台仓储费）；保留两位小数，向上取
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;-单台最低销售单价=max（评估单价*保证金比例*（1+服务费率）,评估单价*保证金比例+单台服务费+单台仓储费）；保留两位小数，向上取
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;- 销售单价不得低于最低销售单价，前端校验+后端拦截
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- 保证金比例、服务费率、仓储费单价均逐行取该代储订单的字段值，不写死常量（详见第 8 条，费率口径待统一）
                             <br>4.拨付划扣：
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;- 本次划扣保证金：
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   1. 未全部销售完：本次划扣保证金=评估单价*保证金比例*销售数量
-                            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   2. 全部销售完：本次划扣保证金=拨付保证金总额-已收保证金（已付款销售单+未付款销售单）；注：前面有订单没有付款完成前，不能在发起销售单
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   2. 全部销售完：本次划扣保证金=拨付保证金总额-已收保证金（仅统计已付款的销售单，本批生成的待支付单不计入）
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;-本次仓储费=单台仓储费*销售数量
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;-本次服务费=单台最低销售价*销售数量-本次划扣保证金-本次仓储费
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;-剩余金额=实际销售单价*销售数量-单台最低销售单价*销售数量
-                            <br>5.销售数量限制：销售数量 ≤ 库存数量
-                            <br>6.接口调用：确认下单后 调用接口，同步至市场助手
+                            <br>5.销售数量限制：销售数量 ≤ 可售库存
+                            <br>6.接口调用：定向销售 确认下单后调用 POST /api/sale/create；批量销售调用 POST /api/sale/batch-create，同步至市场助手
+                            <br>7.权限控制：仅销售管理员角色可见"销售"与"批量销售"按钮（PERM-SALE-001）
+                            <br>8.批量销售（多条代储订单 → 同一采购商）：
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- 勾选条件：拨付状态=已拨付 且 该代储订单不存在未付款的销售订单；待拨付、已存在未付款单的行不可勾选
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- 抬头只收采购商侧信息（销售渠道、提货方式、采购商、收件地址），一次填写
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- 所在仓库、业务归属人随勾选的代储订单逐行带出、只读，不可手工修改；费率同样逐行取值
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- 一次提交生成 N 张销售订单，共享销售批次号（XSP+YYYYMMDD+3位流水号），批次号仅用于追溯，不改变单据粒度
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- N 张单后续各自独立走支付、出库指令、清结算流程，互不阻塞
+                            <br>&nbsp;&nbsp;&nbsp;&nbsp;- 明细包含多个仓库时，汇总区提示将拆分生成多个出库指令与提货码
                         </div>
                     </div>
                 </div>
@@ -561,6 +627,7 @@
                     <div class="card">
                         <div class="search-area">
                             <div class="search-item"><label class="form-label">销售订单编号</label><input type="text" class="form-input" id="sale-search-order-no" placeholder="请输入销售订单编号"></div>
+                            <div class="search-item"><label class="form-label">销售批次号</label><input type="text" class="form-input" id="sale-search-batch-no" placeholder="请输入销售批次号"></div>
                             <div class="search-item"><label class="form-label">采购商</label><input type="text" class="form-input" id="sale-search-buyer" placeholder="请输入采购商名称"></div>
                             <div class="search-item"><label class="form-label">订单状态</label><select class="form-input" id="sale-search-status"><option value="">全部</option><option value="PENDING_PAY">待支付</option><option value="PAID">已支付</option><option value="PENDING_SHIP">待发货</option><option value="SHIPPED">已发货</option><option value="COMPLETED">已完成</option></select></div>
                             <button class="btn btn-primary" onclick="handleSaleQuery()">查询</button>
@@ -568,19 +635,20 @@
                         </div>
                         <div class="table-scroll">
                             <table class="data-table">
-                                <thead><tr><th>销售订单编号</th><th>代储订单编号</th><th>采购商</th><th>供应商</th><th>货物信息</th><th style="text-align: right;">货物数量</th><th style="text-align: right;">销售单价</th><th style="text-align: right;">实付金额</th><th>支付状态</th><th>订单状态</th><th>下单时间</th><th>支付时间</th></tr></thead>
-                                <tbody>
-                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250909001')">XS20250909001</span></td><td>DC20250909001</td><td>买家科技</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align: right;">10</td><td style="text-align: right;">¥8,999.00</td><td style="text-align: right;">¥89,990.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-ship">待发货</span></td><td>2026-09-09 14:30</td><td>2026-09-09 14:35</td></tr>
-                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250909002')">XS20250909002</span></td><td>DC20250909001</td><td>华东采购</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align: right;">5</td><td style="text-align: right;">¥8,999.00</td><td style="text-align: right;">-</td><td><span class="tag tag-pay-pending">待支付</span></td><td><span class="tag tag-order-pending">待支付</span></td><td>2026-09-09 15:00</td><td>-</td></tr>
-                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250909003')">XS20250909003</span></td><td>DC20250909002</td><td>深圳数码</td><td>无锡科技</td><td>华为 Mate 60</td><td style="text-align: right;">8</td><td style="text-align: right;">¥6,999.00</td><td style="text-align: right;">¥55,992.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-shipped">已发货</span></td><td>2026-09-09 10:20</td><td>2026-09-09 10:25</td></tr>
-                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250908004')">XS20250908004</span></td><td>DC20250908003</td><td>北京科技</td><td>深圳数码</td><td>iPad Air</td><td style="text-align: right;">20</td><td style="text-align: right;">¥4,799.00</td><td style="text-align: right;">¥95,980.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-completed">已完成</span></td><td>2026-09-08 16:00</td><td>2026-09-08 16:05</td></tr>
-                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250908005')">XS20250908005</span></td><td>DC20250907004</td><td>上海贸易</td><td>华东科技</td><td>小米14</td><td style="text-align: right;">15</td><td style="text-align: right;">¥3,999.00</td><td style="text-align: right;">-</td><td><span class="tag tag-pay-pending">待支付</span></td><td><span class="tag tag-order-pending">待支付</span></td><td>2026-09-08 09:30</td><td>-</td></tr>
-                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250907006')">XS20250907006</span></td><td>DC20250907004</td><td>广州电子</td><td>华东科技</td><td>小米14</td><td style="text-align: right;">30</td><td style="text-align: right;">¥3,999.00</td><td style="text-align: right;">¥119,970.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-completed">已完成</span></td><td>2026-09-07 11:00</td><td>2026-09-07 11:10</td></tr>
+                                <thead><tr><th>销售订单编号</th><th>销售批次号</th><th>代储订单编号</th><th>采购商</th><th>供应商</th><th>货物信息</th><th style="text-align: right;">货物数量</th><th style="text-align: right;">销售单价</th><th style="text-align: right;">实付金额</th><th>支付状态</th><th>订单状态</th><th>下单时间</th><th>支付时间</th></tr></thead>
+                                <tbody id="sale-tbody">
+                                    <!-- 同批次行连续排列并加 batch-group 浅色底纹：首行 batch-group-start，末行 batch-group-end -->
+                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250909001')">XS20250909001</span></td><td>-</td><td>DC20250909001</td><td>买家科技</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align: right;">10</td><td style="text-align: right;">¥8,999.00</td><td style="text-align: right;">¥89,990.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-ship">待发货</span></td><td>2026-09-09 14:30</td><td>2026-09-09 14:35</td></tr>
+                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250909002')">XS20250909002</span></td><td>-</td><td>DC20250909001</td><td>华东采购</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align: right;">5</td><td style="text-align: right;">¥8,999.00</td><td style="text-align: right;">-</td><td><span class="tag tag-pay-pending">待支付</span></td><td><span class="tag tag-order-pending">待支付</span></td><td>2026-09-09 15:00</td><td>-</td></tr>
+                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250909003')">XS20250909003</span></td><td>-</td><td>DC20250909002</td><td>深圳数码</td><td>无锡科技</td><td>华为 Mate 60</td><td style="text-align: right;">8</td><td style="text-align: right;">¥6,999.00</td><td style="text-align: right;">¥55,992.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-shipped">已发货</span></td><td>2026-09-09 10:20</td><td>2026-09-09 10:25</td></tr>
+                                    <tr class="batch-group batch-group-start"><td><span class="link" onclick="showSaleDetail('XS20250908004')">XS20250908004</span></td><td><span class="batch-no-tag" onclick="filterByBatchNo('XSP20260908001')">XSP20260908001</span></td><td>DC20250908003</td><td>北京科技</td><td>深圳数码</td><td>iPad Air</td><td style="text-align: right;">20</td><td style="text-align: right;">¥4,799.00</td><td style="text-align: right;">¥95,980.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-completed">已完成</span></td><td>2026-09-08 16:00</td><td>2026-09-08 16:05</td></tr>
+                                    <tr class="batch-group batch-group-end"><td><span class="link" onclick="showSaleDetail('XS20250908005')">XS20250908005</span></td><td><span class="batch-no-tag" onclick="filterByBatchNo('XSP20260908001')">XSP20260908001</span></td><td>DC20250907004</td><td>北京科技</td><td>华东科技</td><td>小米14</td><td style="text-align: right;">15</td><td style="text-align: right;">¥3,999.00</td><td style="text-align: right;">-</td><td><span class="tag tag-pay-pending">待支付</span></td><td><span class="tag tag-order-pending">待支付</span></td><td>2026-09-08 09:30</td><td>-</td></tr>
+                                    <tr><td><span class="link" onclick="showSaleDetail('XS20250907006')">XS20250907006</span></td><td>-</td><td>DC20250907004</td><td>广州电子</td><td>华东科技</td><td>小米14</td><td style="text-align: right;">30</td><td style="text-align: right;">¥3,999.00</td><td style="text-align: right;">¥119,970.00</td><td><span class="tag tag-pay-paid">已支付</span></td><td><span class="tag tag-order-completed">已完成</span></td><td>2026-09-07 11:00</td><td>2026-09-07 11:10</td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="pagination"><span class="pagination-total">共 8 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">2</span><span class="pagination-item">3</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
-                        <div class="alert-info" style="margin: 0 24px 24px;"><strong>说明：</strong>销售订单数据来自市场助手系统，本页面仅做查询展示。订单状态变化：定向销售创建→待支付→采购商支付→已支付/待发货→出库指令发布→已发货→确认收货→已完成。<br>待支付状态的订单，实付金额和支付时间显示"-"。</div>
+                        <div class="pagination"><span class="pagination-total" id="sale-total">共 8 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">2</span><span class="pagination-item">3</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
+                        <div class="alert-info" style="margin: 0 24px 24px;"><strong>说明：</strong>销售订单数据来自市场助手系统，本页面仅做查询展示。订单状态变化：定向销售/批量销售创建→待支付→采购商支付→已支付/待发货→出库指令发布→已发货→确认收货→已完成。<br>待支付状态的订单，实付金额和支付时间显示"-"。<br><strong>批量销售批次：</strong>一次批量提交生成的多张销售订单共享同一销售批次号（XSP+YYYYMMDD+3位流水号），批次号仅用于追溯与整批对账，不改变单据粒度——批次内每张单仍各自独立走支付、出库指令与清结算，互不阻塞。同批次单据在列表中连续排列并带浅色底纹分组，点击批次号可筛选出该批全部单据。</div>
                     </div>
                 </div>
 
@@ -947,13 +1015,59 @@
                     <!-- 【VALID-SALE-002】校验：必填；选择已有地址或点击"添加地址"新增；地址需包含省市区+详细地址 -->
                     <div class="form-group" style="flex: 1;"><label class="form-label"><span style="color: #ff4d4f;">*</span> 收件地址</label><div style="display: flex; gap: 10px;"><select class="form-input" style="flex: 1;"><option value="">请选择收件地址</option><option value="addr1">上海市浦东新区世纪大道128号</option></select><button class="btn btn-default" onclick="showToast('添加地址功能开发中', 'info')" style="white-space: nowrap;">添加地址</button></div></div>
                 </div>
-                <!-- 【VALID-SALE-003】校验：必填；从业务员列表中选择 -->
-                <div class="form-row" style="margin-bottom: 20px;"><div class="form-group" style="flex: 1;"><label class="form-label"><span style="color: #ff4d4f;">*</span> 业务归属人</label><select class="form-input" style="width: 100%;"><option value="">请选择业务归属人</option><option value="person1">张三</option><option value="person2">李四</option></select></div><div class="form-group" style="flex: 1;"><label class="form-label"><span style="color: #ff4d4f;">*</span> 仓库选择</label><select class="form-input" style="width: 100%;"><option value="">请选择仓库</option><option value="shanghai">醒市仓储-上海仓</option><option value="shenzhen">醒市仓储-深圳仓</option><option value="beijing">醒市仓储-北京仓</option></select></div></div>
-                <div style="margin-top: 24px;"><div style="font-weight: 600; color: #262626; margin-bottom: 12px; padding-left: 12px; border-left: 4px solid #1890ff;">商品信息</div><table class="data-table" style="margin-bottom: 16px;"><thead><tr><th>品类</th><th>品牌</th><th>产品型号</th><th>规格</th><th>产品说明</th><th>评估单价</th><th>库存数量</th><th>销售单价</th><th>销售数量</th></tr></thead><tbody><tr><td>手机</td><td>苹果</td><td id="sale-product-name">iPhone 15 Pro</td><td>128GB 黑色</td><td>原箱 原封</td><td>8,800.00</td><td>100</td><!-- 【VALID-SALE-004】校验：必填；数值类型；最低销售单价=max(评估单价×保证金比例×(1+服务费率), 保证金金额×仓储天数×服务费率)+仓储费；前端标红提示+后端拦截 --><td><input type="text" class="form-input" placeholder="请输入" style="width: 100px;"></td><!-- 【VALID-SALE-005】校验：必填；正整数；销售数量≤库存数量；前端校验+后端拦截 --><td><input type="text" class="form-input" placeholder="请输入" style="width: 100px;"></td></tr></tbody></table></div>
-                <div class="info-card blue" style="margin-top: 20px;"><div class="info-card-title">订单信息</div><div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">代储订单编号</div><div class="info-value" id="sale-order-no" style="color: #1890ff; font-weight: 600;">DC20250909001</div></div><div class="form-group"><div class="info-label">供应商</div><div class="info-value" id="sale-supplier">能良科技</div></div><div class="form-group"><div class="info-label">库存总数量</div><div class="info-value" id="sale-stock">100</div></div></div></div>
+                <!-- 【VALID-SALE-003】仓库与业务归属人不再由运营手工选择：二者是代储订单自身属性（fa_storage_order.warehouse_name / business_owner_id），随所选代储订单带出、只读 -->
+                <div style="margin-top: 24px;"><div style="font-weight: 600; color: #262626; margin-bottom: 12px; padding-left: 12px; border-left: 4px solid #1890ff;">商品信息</div><div style="overflow-x: auto;"><table class="data-table" style="margin-bottom: 16px;"><thead><tr><th>品类</th><th>品牌</th><th>产品型号</th><th>规格</th><th>产品说明</th><th>评估单价</th><th>可售库存</th><th>销售单价</th><th>销售数量</th></tr></thead><tbody><tr><td>手机</td><td>苹果</td><td id="sale-product-name">iPhone 15 Pro</td><td>128GB 黑色</td><td>原箱 原封</td><td id="sale-eval-price">8,800.00</td><td id="sale-available-stock">85</td><!-- 【VALID-SALE-004】校验：必填；数值类型；单台服务费=评估单价×保证金比例×服务费率×(下单付款日期−保证金拨付日期+1)，单台仓储费=仓储费单价×(下单付款日期−保证金拨付日期+1)，最低销售单价=max(评估单价×保证金比例×(1+服务费率), 评估单价×保证金比例+单台服务费+单台仓储费)保留两位小数向上取；保证金比例/服务费率/仓储费单价逐行取该代储订单字段值；前端标红提示+后端拦截 --><td><input type="text" class="form-input" placeholder="请输入" style="width: 100px;"></td><!-- 【VALID-SALE-005】校验：必填；正整数；销售数量≤可售库存；前端校验+后端拦截 --><td><input type="text" class="form-input" placeholder="请输入" style="width: 100px;"></td></tr></tbody></table></div></div>
+                <div class="info-card blue" style="margin-top: 20px;"><div class="info-card-title">订单信息（随所选代储订单带出，只读）</div><div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">代储订单编号</div><div class="info-value" id="sale-order-no" style="color: #1890ff; font-weight: 600;">DC20250909002</div></div><div class="form-group"><div class="info-label">供应商</div><div class="info-value" id="sale-supplier">无锡科技</div></div><div class="form-group"><div class="info-label">所在仓库</div><div class="info-value" id="sale-warehouse"><span class="wh-badge">上海监管仓</span></div></div></div><div class="form-row" style="margin-bottom: 0; margin-top: 12px;"><div class="form-group"><div class="info-label">业务归属人</div><div class="info-value" id="sale-owner">张三</div></div><div class="form-group"><div class="info-label">保证金比例</div><div class="info-value" id="sale-deposit-rate">70%</div></div><div class="form-group"><div class="info-label">服务费率 / 仓储费单价</div><div class="info-value" id="sale-fee-rate">0.25% / 12.00 元·台/天</div></div></div></div>
             </div>
             <!-- 【PERM-SALE-001】权限：仅销售管理员角色可操作"确认下单" -->
             <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-direct-sale')">取消</button><button class="btn btn-primary" onclick="confirmSale()">确认下单</button></div>
+        </div>
+    </div>
+
+    <!-- 弹窗: 批量销售（多条代储订单 → 同一采购商） -->
+    <div class="modal-overlay" id="modal-batch-sale" onclick="if(event.target===this)closeModal('modal-batch-sale')">
+        <div class="modal xwide">
+            <div class="modal-header"><div class="modal-title">批量销售<span class="batch-no-preview" id="batch-no-preview">XSP20260914001</span></div><div class="modal-close" onclick="closeModal('modal-batch-sale')">×</div></div>
+            <div class="modal-body">
+                <!-- 抬头：只收全批共用的采购商侧信息；仓库与业务归属人逐行带出，不在此处 -->
+                <div class="form-row" style="margin-bottom: 20px;">
+                    <div class="form-group" style="flex: 1;"><label class="form-label">销售渠道</label><div class="radio-group"><label class="radio-label active"><input type="radio" name="batch-channel" value="market" checked><span>市场助手</span></label><label class="radio-label disabled"><input type="radio" name="batch-channel" value="distribution" disabled><span>分销平台</span></label><label class="radio-label disabled"><input type="radio" name="batch-channel" value="purchase" disabled><span>购机通</span></label></div></div>
+                    <div class="form-group" style="flex: 1;"><label class="form-label">提货方式</label><div class="radio-group"><label class="radio-label active"><input type="radio" name="batch-delivery" value="express" checked onchange="recalcBatchSummary()"><span>快递物流</span></label><label class="radio-label"><input type="radio" name="batch-delivery" value="self" onchange="recalcBatchSummary()"><span>档口自提</span></label></div></div>
+                </div>
+                <div class="form-row" style="margin-bottom: 20px;">
+                    <!-- 【VALID-BATCH-001】校验：必填；从客户列表中选择，不可手动输入 -->
+                    <div class="form-group" style="flex: 1;"><label class="form-label"><span style="color: #ff4d4f;">*</span> 采购商</label><select class="form-input" id="batch-buyer" style="width: 100%;" onchange="onBatchBuyerChange()"><option value="">请选择采购商</option><option value="buyer1">买家科技</option><option value="buyer2">华东采购</option><option value="buyer3">深圳数码</option><option value="buyer4">北京科技</option></select></div>
+                    <!-- 【VALID-BATCH-002】校验：必填；随采购商联动；需含省市区+详细地址 -->
+                    <div class="form-group" style="flex: 1;"><label class="form-label"><span style="color: #ff4d4f;">*</span> 收件地址</label><div style="display: flex; gap: 10px;"><select class="form-input" id="batch-address" style="flex: 1;"><option value="">请先选择采购商</option></select><button class="btn btn-default" onclick="showToast('添加地址功能开发中', 'info')" style="white-space: nowrap;">添加地址</button></div></div>
+                </div>
+
+                <div style="font-weight: 600; color: #262626; margin-bottom: 12px; padding-left: 12px; border-left: 4px solid #1890ff;">本次下单明细<span class="batch-no-preview" id="batch-detail-tip">（已选 0 条代储订单）</span></div>
+                <div class="table-scroll" style="margin: 0 0 16px; width: 100%;">
+                    <table class="data-table batch-table">
+                        <thead><tr><th>代储订单编号</th><th>供应商</th><th>品类</th><th>品牌</th><th>产品型号</th><th>规格</th><th>所在仓库</th><th>业务归属人</th><th style="text-align: right;">评估单价</th><th style="text-align: right;">保证金比例</th><th style="text-align: right;">可售库存</th><th style="text-align: right;">销售单价</th><th style="text-align: right;">销售数量</th><th style="text-align: right;">小计</th></tr></thead>
+                        <tbody id="batch-sale-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="alert-info" id="batch-split-tip" style="display: none; margin: 0 0 4px;"></div>
+
+                <!-- 汇总区本期暂不展示（保留结构，恢复时去掉 display:none 即可） -->
+                <div class="batch-summary" style="display: none;">
+                    <div class="batch-summary-grid">
+                        <div class="batch-summary-item"><div class="batch-summary-label">明细条数 / 分配总数量</div><div class="batch-summary-value" id="batch-sum-count">0 条 / 0 台</div></div>
+                        <div class="batch-summary-item"><div class="batch-summary-label">涉及仓库数</div><div class="batch-summary-value" id="batch-sum-warehouse">0 个</div></div>
+                        <div class="batch-summary-item"><div class="batch-summary-label">销售总额</div><div class="batch-summary-value" id="batch-sum-amount">¥0.00</div></div>
+                        <div class="batch-summary-item"><div class="batch-summary-label">本次划扣保证金</div><div class="batch-summary-value" id="batch-sum-margin">¥0.00</div></div>
+                        <div class="batch-summary-item"><div class="batch-summary-label">本次仓储费</div><div class="batch-summary-value" id="batch-sum-storage">¥0.00</div></div>
+                    </div>
+                    <div class="batch-summary-grid" style="margin-top: 16px; grid-template-columns: repeat(2, 1fr);">
+                        <div class="batch-summary-item"><div class="batch-summary-label">本次服务费</div><div class="batch-summary-value" id="batch-sum-service">¥0.00</div></div>
+                        <div class="batch-summary-item"><div class="batch-summary-label">剩余金额</div><div class="batch-summary-value" id="batch-sum-remain">¥0.00</div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- 【PERM-SALE-001】权限：仅销售管理员角色可操作"确认下单" -->
+            <!-- 【API】提交调用 POST /api/sale/batch-create，入参 = 批次抬头 + 明细数组，返回批次号与生成的 N 个订单号 -->
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-batch-sale')">取消</button><button class="btn btn-primary" onclick="submitBatchSale()">确认下单</button></div>
         </div>
     </div>
 
@@ -977,7 +1091,7 @@
         <div class="modal" style="max-width: 720px;">
             <div class="modal-header"><div class="modal-title">销售订单详情</div><div class="modal-close" onclick="closeModal('modal-sale-detail')">×</div></div>
             <div class="modal-body">
-                <div class="info-card blue"><div class="info-card-title">基本信息</div><div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">销售订单编号</div><div class="info-value" id="sale-detail-order-no" style="color: #1890ff; font-weight: 600;">-</div></div><div class="form-group"><div class="info-label">代储订单编号</div><div class="info-value" id="sale-detail-storage-order">-</div></div><div class="form-group"><div class="info-label">采购商</div><div class="info-value" id="sale-detail-buyer">-</div></div><div class="form-group"><div class="info-label">供应商</div><div class="info-value" id="sale-detail-supplier">-</div></div></div></div>
+                <div class="info-card blue"><div class="info-card-title">基本信息</div><div class="form-row" style="margin-bottom: 0;"><div class="form-group"><div class="info-label">销售订单编号</div><div class="info-value" id="sale-detail-order-no" style="color: #1890ff; font-weight: 600;">-</div></div><div class="form-group"><div class="info-label">销售批次号</div><div class="info-value" id="sale-detail-batch-no">-</div></div><div class="form-group"><div class="info-label">采购商</div><div class="info-value" id="sale-detail-buyer">-</div></div></div><div class="form-row" style="margin-bottom: 0; margin-top: 12px;"><div class="form-group"><div class="info-label">代储订单编号</div><div class="info-value" id="sale-detail-storage-order">-</div></div><div class="form-group"><div class="info-label">供应商</div><div class="info-value" id="sale-detail-supplier">-</div></div></div></div>
                 <div style="font-weight: 600; color: #262626; margin: 24px 0 16px; padding-left: 12px; border-left: 4px solid #1890ff;">货物信息</div>
                 <table class="data-table" style="margin-bottom: 20px;"><thead><tr><th>货物信息</th><th>数量</th><th>销售单价</th><th>实付金额</th></tr></thead><tbody><tr><td id="sale-detail-goods">-</td><td id="sale-detail-quantity">-</td><td id="sale-detail-price">-</td><td id="sale-detail-amount">-</td></tr></tbody></table>
                 <div style="font-weight: 600; color: #262626; margin: 24px 0 16px; padding-left: 12px; border-left: 4px solid #1890ff;">订单状态</div>
@@ -1477,20 +1591,31 @@
         }
         
         // ========== 代储订单 ==========
+        // warehouse / owner 来自 fa_storage_order.warehouse_name / business_owner_id；evalPrice / depositRate / serviceRate / storageFee 对应 evaluate_price / deposit_rate / service_rate / storage_fee，均逐单不同
+        // available = 可售库存（入库数量 − 历史已销售/已占用）；allocateDate = 保证金拨付日期，用于算仓储天数
         var orderData = {
-            'DC20250909001': { supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: '100', amount: '¥880,000.00', margin: '¥616,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-09' },
-            'DC20250909002': { supplier: '无锡科技', goods: '华为 Mate 60', quantity: '50', amount: '¥345,000.00', margin: '¥241,500.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-09' },
-            'DC20250908003': { supplier: '深圳数码', goods: 'iPad Air', quantity: '30', amount: '¥156,000.00', margin: '¥109,200.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-08' },
-            'DC20250907004': { supplier: '华东科技', goods: '小米14', quantity: '80', amount: '¥320,000.00', margin: '¥224,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-07' },
-            'DC20250906005': { supplier: '北京电子', goods: 'OPPO Find X7', quantity: '40', amount: '¥200,000.00', margin: '-', status: '<span class="tag tag-warning">待拨付</span>', date: '2026-09-06' },
-            'DC20250905006': { supplier: '南方通讯', goods: 'vivo X100', quantity: '60', amount: '¥270,000.00', margin: '¥189,000.00', status: '<span class="tag tag-warning">待拨付</span>', date: '2026-09-05' }
+            'DC20250909001': { supplier: '能良科技', goods: 'iPhone 15 Pro', category: '手机', brand: '苹果', commonName: 'iPhone 15 Pro', commonSku: '128GB 黑色', quantity: '100', available: 85, amount: '¥880,000.00', margin: '¥616,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-09', warehouse: '上海监管仓', owner: '张三', evalPrice: 8800, depositRate: 0.7, serviceRate: 0.0025, storageFee: 12, allocateDate: '2026-09-09' },
+            'DC20250909002': { supplier: '无锡科技', goods: '华为 Mate 60', category: '手机', brand: '华为', commonName: 'Mate 60', commonSku: '256GB 白色', quantity: '50', available: 42, amount: '¥345,000.00', margin: '¥241,500.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-09', warehouse: '上海监管仓', owner: '张三', evalPrice: 6900, depositRate: 0.7, serviceRate: 0.0025, storageFee: 12, allocateDate: '2026-09-09' },
+            'DC20250908003': { supplier: '深圳数码', goods: 'iPad Air', category: '平板', brand: '苹果', commonName: 'iPad Air', commonSku: '64GB 蓝色', quantity: '30', available: 10, amount: '¥156,000.00', margin: '¥109,200.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-08', warehouse: '深圳监管仓', owner: '李四', evalPrice: 5200, depositRate: 0.7, serviceRate: 0.003, storageFee: 12, allocateDate: '2026-09-08' },
+            'DC20250907004': { supplier: '华东科技', goods: '小米14', category: '手机', brand: '小米', commonName: '小米14', commonSku: '512GB 黑色', quantity: '80', available: 35, amount: '¥320,000.00', margin: '¥224,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-07', warehouse: '北京监管仓', owner: '王五', evalPrice: 4000, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: '2026-09-07' },
+            'DC20250906005': { supplier: '北京电子', goods: 'OPPO Find X7', category: '手机', brand: 'OPPO', commonName: 'Find X7', commonSku: '256GB 绿色', quantity: '40', available: null, amount: '¥200,000.00', margin: '-', status: '<span class="tag tag-warning">待拨付</span>', date: '2026-09-06', warehouse: '北京监管仓', owner: '王五', evalPrice: 5000, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: null },
+            'DC20250905006': { supplier: '南方通讯', goods: 'vivo X100', category: '手机', brand: 'vivo', commonName: 'X100', commonSku: '256GB 蓝色', quantity: '60', available: null, amount: '¥270,000.00', margin: '¥189,000.00', status: '<span class="tag tag-warning">待拨付</span>', date: '2026-09-05', warehouse: '深圳监管仓', owner: '李四', evalPrice: 4500, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: null },
+            'DC20250909007': { supplier: '杭州电子', goods: '荣耀 Magic6', category: '手机', brand: '荣耀', commonName: 'Magic6', commonSku: '256GB 黑色', quantity: '120', available: 120, amount: '¥480,000.00', margin: '¥336,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-09', warehouse: '北京监管仓', owner: '王五', evalPrice: 4000, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: '2026-09-09' },
+            'DC20250908008': { supplier: '南京数码', goods: '三星 Galaxy S24', category: '手机', brand: '三星', commonName: 'Galaxy S24', commonSku: '256GB 灰色', quantity: '90', available: 90, amount: '¥450,000.00', margin: '¥315,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-08', warehouse: '深圳监管仓', owner: '李四', evalPrice: 5000, depositRate: 0.7, serviceRate: 0.003, storageFee: 10, allocateDate: '2026-09-08' }
         };
-        
+
         function openDirectSale(orderNo, supplier, product, stock) {
+            var data = orderData[orderNo] || {};
             document.getElementById('sale-order-no').textContent = orderNo;
             document.getElementById('sale-supplier').textContent = supplier;
-            document.getElementById('sale-stock').textContent = stock;
             document.getElementById('sale-product-name').textContent = product;
+            document.getElementById('sale-available-stock').textContent = stock;
+            document.getElementById('sale-eval-price').textContent = (data.evalPrice || 0).toFixed(2);
+            // 仓库与业务归属人随所选代储订单带出，只读，不由运营手工选择
+            document.getElementById('sale-warehouse').innerHTML = data.warehouse ? '<span class="wh-badge">' + data.warehouse + '</span>' : '-';
+            document.getElementById('sale-owner').textContent = data.owner || '-';
+            document.getElementById('sale-deposit-rate').textContent = data.depositRate ? (data.depositRate * 100) + '%' : '-';
+            document.getElementById('sale-fee-rate').textContent = data.serviceRate ? (data.serviceRate * 100).toFixed(2) + '% / ' + data.storageFee.toFixed(2) + ' 元·台/天' : '-';
             openModal('modal-direct-sale');
         }
         
@@ -1511,21 +1636,410 @@
             closeModal('modal-direct-sale');
             showToast('下单成功！', 'success');
         }
-        
+
+        // ========== 批量销售（多条代储订单 → 同一采购商） ==========
+        // 下单付款日期固定为原型演示日期，实际取当前日期
+        var BATCH_SALE_DATE = new Date('2026-09-14');
+        var BATCH_BUYER_ADDRESS = {
+            'buyer1': ['上海市浦东新区世纪大道100号', '上海市浦东新区世纪大道108号'],
+            'buyer2': ['江苏省南京市鼓楼区中山路200号'],
+            'buyer3': ['广东省深圳市福田区华强北路300号'],
+            'buyer4': ['北京市朝阳区建国路400号', '北京市海淀区中关村大街500号']
+        };
+        var batchRows = [];
+        var batchSaleSeq = 0;
+
+        // 提交后同步代储订单列表行：刷新可售库存，并按勾选规则转为不可勾选
+        function syncOrderRow(orderNo) {
+            var box = document.querySelector('#order-tbody .row-check[data-order-no="' + orderNo + '"]');
+            if (!box) return;
+            var d = orderData[orderNo];
+            var tr = box.closest('tr');
+            box.setAttribute('data-available', d.available);
+            // 列序：0 勾选 / 1 订单编号 / 2 供应商 / 3 货物信息 / 4 货物数量 / 5 可售库存
+            tr.children[5].textContent = d.available;
+            box.checked = false;
+            box.disabled = true;
+            tr.classList.remove('row-selected');
+            tr.classList.add('row-locked');
+            tr.title = d.available > 0
+                ? '已生成未付款销售单，需付款完成后才能再次发起销售（代储订单状态：销售中）'
+                : '已全部销售完成（代储订单状态：已完结）';
+        }
+
+        function daysBetween(fromStr, toDate) {
+            var from = new Date(fromStr);
+            return Math.round((toDate - from) / 86400000) + 1;
+        }
+
+        // 单台最低销售单价：逐行取该代储订单的保证金比例、服务费率、仓储费单价
+        function calcMinPrice(row) {
+            if (!row.allocateDate) return null;
+            var days = daysBetween(row.allocateDate, BATCH_SALE_DATE);
+            var marginPerUnit = row.evalPrice * row.depositRate;
+            var servicePerUnit = marginPerUnit * row.serviceRate * days;
+            var storagePerUnit = row.storageFee * days;
+            var a = marginPerUnit * (1 + row.serviceRate);
+            var b = marginPerUnit + servicePerUnit + storagePerUnit;
+            return { days: days, servicePerUnit: servicePerUnit, storagePerUnit: storagePerUnit, minPrice: Math.ceil(Math.max(a, b) * 100) / 100 };
+        }
+
+        function fmtMoney(n) {
+            return '¥' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function openBatchSaleFromSelection() {
+            var checked = document.querySelectorAll('#order-tbody .row-check:checked');
+            if (checked.length === 0) {
+                showToast('请先勾选需要批量销售的代储订单', 'warning');
+                return;
+            }
+            batchRows = [];
+            for (var i = 0; i < checked.length; i++) {
+                var orderNo = checked[i].getAttribute('data-order-no');
+                var data = orderData[orderNo] || {};
+                var calc = calcMinPrice(data);
+                batchRows.push({
+                    orderNo: orderNo, supplier: data.supplier, goods: data.goods,
+                    category: data.category, brand: data.brand, commonName: data.commonName, commonSku: data.commonSku,
+                    warehouse: data.warehouse, owner: data.owner,
+                    evalPrice: data.evalPrice, depositRate: data.depositRate,
+                    available: data.available, allocateDate: data.allocateDate,
+                    calc: calc,
+                    // 销售单价默认填该行最低销售单价，运营只需上调
+                    price: calc ? calc.minPrice.toFixed(2) : '', quantity: ''
+                });
+            }
+            document.getElementById('batch-no-preview').textContent = genBatchNo();
+            document.getElementById('batch-buyer').value = '';
+            document.getElementById('batch-address').innerHTML = '<option value="">请先选择采购商</option>';
+            buildBatchRows();
+            openModal('modal-batch-sale');
+        }
+
+        function genBatchNo() {
+            var d = new Date();
+            var ymd = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+            return 'XSP' + ymd + '001';
+        }
+
+        function buildBatchRows() {
+            var html = '';
+            for (var i = 0; i < batchRows.length; i++) {
+                var r = batchRows[i];
+                html += '<tr>'
+                    + '<td>' + r.orderNo + '</td>'
+                    + '<td>' + r.supplier + '</td>'
+                    + '<td>' + r.category + '</td>'
+                    + '<td>' + r.brand + '</td>'
+                    + '<td>' + r.commonName + '</td>'
+                    + '<td>' + r.commonSku + '</td>'
+                    + '<td><span class="wh-badge">' + r.warehouse + '</span></td>'
+                    + '<td>' + r.owner + '</td>'
+                    + '<td style="text-align: right;">' + r.evalPrice.toFixed(2) + '</td>'
+                    + '<td style="text-align: right;">' + (r.depositRate * 100) + '%</td>'
+                    + '<td style="text-align: right;">' + r.available + '</td>'
+                    + '<td style="text-align: right;"><input type="text" class="form-input" id="batch-price-' + i + '" value="' + r.price + '" oninput="recalcBatchRow(' + i + ')"><div class="cell-error-tip hidden" id="batch-price-err-' + i + '"></div></td>'
+                    + '<td style="text-align: right;"><input type="text" class="form-input" id="batch-qty-' + i + '" placeholder="请输入" oninput="recalcBatchRow(' + i + ')"><div class="cell-error-tip hidden" id="batch-qty-err-' + i + '"></div></td>'
+                    + '<td style="text-align: right;" id="batch-subtotal-' + i + '">¥0.00</td>'
+                    + '</tr>';
+            }
+            document.getElementById('batch-sale-tbody').innerHTML = html;
+            document.getElementById('batch-detail-tip').textContent = '（已选 ' + batchRows.length + ' 条代储订单）';
+            recalcBatchSummary();
+        }
+
+        function onBatchBuyerChange() {
+            var buyer = document.getElementById('batch-buyer').value;
+            var select = document.getElementById('batch-address');
+            var list = BATCH_BUYER_ADDRESS[buyer] || [];
+            if (list.length === 0) {
+                select.innerHTML = '<option value="">请先选择采购商</option>';
+                return;
+            }
+            var html = '<option value="">请选择收件地址</option>';
+            for (var i = 0; i < list.length; i++) {
+                html += '<option value="addr' + i + '">' + list[i] + '</option>';
+            }
+            select.innerHTML = html;
+        }
+
+        function recalcBatchRow(i) {
+            var r = batchRows[i];
+            var priceEl = document.getElementById('batch-price-' + i);
+            var qtyEl = document.getElementById('batch-qty-' + i);
+            var priceErr = document.getElementById('batch-price-err-' + i);
+            var qtyErr = document.getElementById('batch-qty-err-' + i);
+            r.price = priceEl.value.trim();
+            r.quantity = qtyEl.value.trim();
+
+            var price = parseFloat(r.price);
+            var qty = parseInt(r.quantity, 10);
+            var priceOk = r.price !== '' && !isNaN(price);
+            var qtyOk = r.quantity !== '' && !isNaN(qty) && String(qty) === r.quantity;
+
+            // 销售单价不得低于该行最低销售单价
+            if (r.price !== '' && (!priceOk || (r.calc && price < r.calc.minPrice))) {
+                priceEl.classList.add('input-error');
+                priceErr.textContent = priceOk ? '低于最低销售单价 ' + r.calc.minPrice.toFixed(2) : '请输入有效数值';
+                priceErr.classList.remove('hidden');
+            } else {
+                priceEl.classList.remove('input-error');
+                priceErr.classList.add('hidden');
+            }
+            // 销售数量须为 1 ~ 可售库存之间的整数
+            if (r.quantity !== '') {
+                if (!qtyOk || qty < 1) {
+                    qtyEl.classList.add('input-error');
+                    qtyErr.textContent = '请输入正整数';
+                    qtyErr.classList.remove('hidden');
+                } else if (qty > r.available) {
+                    qtyEl.classList.add('input-error');
+                    qtyErr.textContent = '超出可售库存 ' + r.available;
+                    qtyErr.classList.remove('hidden');
+                } else {
+                    qtyEl.classList.remove('input-error');
+                    qtyErr.classList.add('hidden');
+                }
+            } else {
+                qtyEl.classList.remove('input-error');
+                qtyErr.classList.add('hidden');
+            }
+
+            var subtotal = (priceOk && qtyOk) ? price * qty : 0;
+            document.getElementById('batch-subtotal-' + i).textContent = fmtMoney(subtotal);
+            r.subtotal = subtotal;
+            recalcBatchSummary();
+        }
+
+        // 整批汇总；所有比例与费率逐行取值，不使用全局常量
+        function recalcBatchSummary() {
+            var count = 0, totalQty = 0, totalAmount = 0, margin = 0, storage = 0, service = 0;
+            var warehouses = {};
+            for (var i = 0; i < batchRows.length; i++) {
+                var r = batchRows[i];
+                var price = parseFloat(r.price);
+                var qty = parseInt(r.quantity, 10);
+                // 只汇总校验通过的行：单价不低于最低销售单价、数量在 1 ~ 可售库存之间
+                if (isNaN(price) || isNaN(qty) || qty <= 0 || qty > r.available) continue;
+                if (r.calc && price < r.calc.minPrice) continue;
+                count++;
+                totalQty += qty;
+                totalAmount += price * qty;
+                // 未全部销售完：本次划扣保证金 = 评估单价 × 保证金比例 × 销售数量
+                // 全部销售完：本次划扣保证金 = 拨付保证金总额 − 已收保证金（已收仅统计已支付销售单）
+                if (qty >= r.available) {
+                    var paidMargin = 0;
+                    for (var k in saleData) {
+                        var s = saleData[k];
+                        if (s.storageOrderNo === r.orderNo && s.payStatus === '已支付') {
+                            paidMargin += (orderData[r.orderNo].evalPrice * orderData[r.orderNo].depositRate) * s.quantity;
+                        }
+                    }
+                    var allocated = parseFloat(orderData[r.orderNo].margin.replace(/[¥,]/g, '')) || 0;
+                    margin += Math.max(allocated - paidMargin, 0);
+                } else {
+                    margin += r.evalPrice * r.depositRate * qty;
+                }
+                if (r.calc) {
+                    storage += r.calc.storagePerUnit * qty;
+                    service += r.calc.minPrice * qty - (r.evalPrice * r.depositRate * qty) - (r.calc.storagePerUnit * qty);
+                }
+                warehouses[r.warehouse] = true;
+            }
+            var whCount = 0;
+            for (var w in warehouses) { if (warehouses.hasOwnProperty(w)) whCount++; }
+            var remain = totalAmount - (margin + storage + service);
+
+            document.getElementById('batch-sum-count').textContent = count + ' 条 / ' + totalQty + ' 台';
+            document.getElementById('batch-sum-warehouse').textContent = whCount + ' 个';
+            document.getElementById('batch-sum-amount').textContent = fmtMoney(totalAmount);
+            document.getElementById('batch-sum-margin').textContent = fmtMoney(margin);
+            document.getElementById('batch-sum-storage').textContent = fmtMoney(storage);
+            document.getElementById('batch-sum-service').textContent = fmtMoney(service);
+            document.getElementById('batch-sum-remain').textContent = fmtMoney(remain);
+
+            // 跨供应商 / 跨仓提示：供应商与仓库逐行不同是常态，需在提交前让运营知道会拆成多个履约动作
+            var scope = batchScope();
+            var tip = document.getElementById('batch-split-tip');
+            if (scope.suppliers.length > 1 || scope.warehouses.length > 1) {
+                var head = scope.suppliers.length > 1 && scope.warehouses.length > 1 ? '跨供应商 / 跨仓提示：'
+                    : (scope.warehouses.length > 1 ? '跨仓提示：' : '跨供应商提示：');
+                tip.innerHTML = '<strong>' + head + '</strong>' + batchConflictText(scope);
+                tip.style.display = '';
+            } else {
+                tip.style.display = 'none';
+            }
+        }
+
+        // 批内供应商 / 仓库去重，只统计校验通过的行。
+        // 两者不一致意味着本批会拆成多个履约动作，下单前需向运营提示
+        function batchScope() {
+            var suppliers = [], warehouses = [];
+            for (var i = 0; i < batchRows.length; i++) {
+                var r = batchRows[i];
+                var price = parseFloat(r.price);
+                var qty = parseInt(r.quantity, 10);
+                if (isNaN(price) || isNaN(qty) || qty <= 0 || qty > r.available) continue;
+                if (r.calc && price < r.calc.minPrice) continue;
+                if (suppliers.indexOf(r.supplier) === -1) suppliers.push(r.supplier);
+                if (warehouses.indexOf(r.warehouse) === -1) warehouses.push(r.warehouse);
+            }
+            return { suppliers: suppliers, warehouses: warehouses };
+        }
+
+        function isSelfPickup() {
+            return document.querySelector('input[name="batch-delivery"]:checked').value === 'self';
+        }
+
+        // 供应商 / 仓库不一致时的提示文案，弹窗提示与下单二次确认共用
+        function batchConflictText(scope) {
+            var dims = [];
+            if (scope.suppliers.length > 1) dims.push(scope.suppliers.length + ' 个供应商');
+            if (scope.warehouses.length > 1) dims.push(scope.warehouses.length + ' 个仓库');
+            var text = '本批代储订单涉及 ' + dims.join('、') + '。';
+            if (scope.warehouses.length > 1) {
+                text += isSelfPickup()
+                    ? '将按仓库拆分生成 ' + scope.warehouses.length + ' 个出库指令与提货码，采购商需分别到各仓库提货。'
+                    : '将按仓库拆分生成 ' + scope.warehouses.length + ' 个出库指令，由各仓库分别发货至同一收件地址，采购商将收到多个包裹。';
+            }
+            return text;
+        }
+
+        // 返回错误清单，为空表示校验通过
+        function validateBatchSale() {
+            var errors = [];
+            if (batchRows.length === 0) errors.push('至少需要勾选 1 条代储订单');
+            if (!document.getElementById('batch-buyer').value) errors.push('请选择采购商');
+            if (!document.getElementById('batch-address').value) errors.push('请选择收件地址');
+            for (var i = 0; i < batchRows.length; i++) {
+                var r = batchRows[i];
+                var price = parseFloat(r.price);
+                var qty = parseInt(r.quantity, 10);
+                if (r.price === '' || isNaN(price)) errors.push(r.orderNo + '：请填写销售单价');
+                else if (r.calc && price < r.calc.minPrice) errors.push(r.orderNo + '：销售单价低于最低销售单价 ' + r.calc.minPrice.toFixed(2));
+                if (r.quantity === '' || isNaN(qty) || qty < 1) errors.push(r.orderNo + '：请填写有效的销售数量');
+                else if (qty > r.available) errors.push(r.orderNo + '：销售数量超出可售库存 ' + r.available);
+            }
+            return errors;
+        }
+
+        function submitBatchSale() {
+            // 提交前二次拉取各代储订单可售库存并复核无未付款销售单，防并发超卖（原型省略接口调用）
+            var errors = validateBatchSale();
+            if (errors.length > 0) {
+                showToast(errors[0], 'warning');
+                return;
+            }
+            // 供应商 / 仓库不一致时，二次确认后再下单
+            var scope = batchScope();
+            if (scope.suppliers.length > 1 || scope.warehouses.length > 1) {
+                if (!confirm(batchConflictText(scope) + '\n\n确定下单吗？')) return;
+            }
+            var batchNo = document.getElementById('batch-no-preview').textContent;
+            var buyer = document.getElementById('batch-buyer').options[document.getElementById('batch-buyer').selectedIndex].text;
+            var tbody = document.getElementById('sale-tbody');
+            var now = '2026-09-14 ' + new Date().toTimeString().slice(0, 5);
+            var html = '';
+            for (var i = 0; i < batchRows.length; i++) {
+                var r = batchRows[i];
+                var qty = parseInt(r.quantity, 10);
+                var price = parseFloat(r.price);
+                // 单号流水号跨多次提交累加，避免重复
+                var orderNo = 'XS20260914' + String(++batchSaleSeq).padStart(3, '0');
+                saleData[orderNo] = {
+                    orderNo: orderNo, batchNo: batchNo, storageOrderNo: r.orderNo, buyer: buyer,
+                    supplier: r.supplier, goods: r.goods, quantity: qty,
+                    price: fmtMoney(price), amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending',
+                    orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: now, payTime: '-',
+                    buyerContact: '-', buyerAddress: document.getElementById('batch-address').options[document.getElementById('batch-address').selectedIndex].text,
+                    deliveryType: document.querySelector('input[name="batch-delivery"]:checked').value === 'self' ? '档口自提' : '快递物流'
+                };
+                html += '<tr class="batch-group' + (i === 0 ? ' batch-group-start' : '') + (i === batchRows.length - 1 ? ' batch-group-end' : '') + '">'
+                    + '<td><span class="link" onclick="showSaleDetail(\'' + orderNo + '\')">' + orderNo + '</span></td>'
+                    + '<td><span class="batch-no-tag" onclick="filterByBatchNo(\'' + batchNo + '\')">' + batchNo + '</span></td>'
+                    + '<td>' + r.orderNo + '</td><td>' + buyer + '</td><td>' + r.supplier + '</td><td>' + r.goods + '</td>'
+                    + '<td style="text-align: right;">' + qty + '</td>'
+                    + '<td style="text-align: right;">' + fmtMoney(price) + '</td>'
+                    + '<td style="text-align: right;">-</td>'
+                    + '<td><span class="tag tag-pay-pending">待支付</span></td>'
+                    + '<td><span class="tag tag-order-pending">待支付</span></td>'
+                    + '<td>' + now + '</td><td>-</td></tr>';
+                // 代储订单联动：扣减可售库存，本行吃满转「已完结」，否则转「销售中」
+                orderData[r.orderNo].available -= qty;
+                syncOrderRow(r.orderNo);
+            }
+            tbody.insertAdjacentHTML('afterbegin', html);
+            var totalEl = document.getElementById('sale-total');
+            totalEl.textContent = '共 ' + (parseInt(totalEl.textContent.replace(/\D/g, ''), 10) + batchRows.length) + ' 条';
+            closeModal('modal-batch-sale');
+            clearOrderSelection();
+            showToast('批量销售提交成功，批次号 ' + batchNo + '，已生成 ' + batchRows.length + ' 张销售订单', 'success');
+        }
+
+        function toggleOrderCheckbox(el) {
+            el.closest('tr').classList.toggle('row-selected', el.checked);
+            updateBatchToolbar();
+        }
+
+        function toggleAllOrders(el) {
+            var boxes = document.querySelectorAll('#order-tbody .row-check:not(:disabled)');
+            for (var i = 0; i < boxes.length; i++) {
+                boxes[i].checked = el.checked;
+                boxes[i].closest('tr').classList.toggle('row-selected', el.checked);
+            }
+            updateBatchToolbar();
+        }
+
+        function clearOrderSelection() {
+            var boxes = document.querySelectorAll('#order-tbody .row-check');
+            for (var i = 0; i < boxes.length; i++) {
+                boxes[i].checked = false;
+                boxes[i].closest('tr').classList.remove('row-selected');
+            }
+            document.getElementById('order-check-all').checked = false;
+            updateBatchToolbar();
+        }
+
+        // 三态回显：无勾选、部分勾选、全选
+        function updateBatchToolbar() {
+            var all = document.querySelectorAll('#order-tbody .row-check:not(:disabled)');
+            var checked = document.querySelectorAll('#order-tbody .row-check:checked');
+            var totalQty = 0;
+            for (var i = 0; i < checked.length; i++) {
+                totalQty += parseInt(checked[i].getAttribute('data-available'), 10) || 0;
+            }
+            var tip = document.getElementById('batch-selection-tip');
+            tip.innerHTML = '已选 <b>' + checked.length + '</b> 条 / 可售合计 <b>' + totalQty + '</b> 台';
+            document.getElementById('btn-batch-sale').disabled = checked.length === 0;
+            document.getElementById('btn-clear-selection').disabled = checked.length === 0;
+            var allBox = document.getElementById('order-check-all');
+            allBox.checked = checked.length > 0 && checked.length === all.length;
+            allBox.indeterminate = checked.length > 0 && checked.length < all.length;
+        }
+
+        function filterByBatchNo(batchNo) {
+            switchMenu('sale');
+            document.getElementById('sale-search-batch-no').value = batchNo;
+            showToast('已按批次号 ' + batchNo + ' 筛选', 'info');
+        }
+
         // ========== 销售订单 ==========
+        // batchNo 为销售批次号，定向销售生成的单为 '-'；同一批次的多张单共享同一批次号
         var saleData = {
-            'XS20250909001': { orderNo: 'XS20250909001', storageOrderNo: 'DC20250909001', buyer: '买家科技', supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: 10, price: '¥8,999.00', amount: '¥89,990.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '待发货', orderStatusClass: 'tag-order-ship', orderTime: '2026-09-09 14:30', payTime: '2026-09-09 14:35', buyerContact: '张经理 13800138000', buyerAddress: '上海市浦东新区世纪大道100号', deliveryType: '快递物流' },
-            'XS20250909002': { orderNo: 'XS20250909002', storageOrderNo: 'DC20250909001', buyer: '华东采购', supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: 5, price: '¥8,999.00', amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending', orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: '2026-09-09 15:00', payTime: '-', buyerContact: '王经理 13900139000', buyerAddress: '江苏省南京市鼓楼区中山路200号', deliveryType: '快递物流' },
-            'XS20250909003': { orderNo: 'XS20250909003', storageOrderNo: 'DC20250909002', buyer: '深圳数码', supplier: '无锡科技', goods: '华为 Mate 60', quantity: 8, price: '¥6,999.00', amount: '¥55,992.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已发货', orderStatusClass: 'tag-order-shipped', orderTime: '2026-09-09 10:20', payTime: '2026-09-09 10:25', buyerContact: '李经理 13700137000', buyerAddress: '广东省深圳市福田区华强北路300号', deliveryType: '档口自提' },
-            'XS20250908004': { orderNo: 'XS20250908004', storageOrderNo: 'DC20250908003', buyer: '北京科技', supplier: '深圳数码', goods: 'iPad Air', quantity: 20, price: '¥4,799.00', amount: '¥95,980.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已完成', orderStatusClass: 'tag-order-completed', orderTime: '2026-09-08 16:00', payTime: '2026-09-08 16:05', buyerContact: '赵经理 13600136000', buyerAddress: '北京市朝阳区建国路400号', deliveryType: '快递物流' },
-            'XS20250908005': { orderNo: 'XS20250908005', storageOrderNo: 'DC20250907004', buyer: '上海贸易', supplier: '华东科技', goods: '小米14', quantity: 15, price: '¥3,999.00', amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending', orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: '2026-09-08 09:30', payTime: '-', buyerContact: '陈经理 13500135000', buyerAddress: '上海市黄浦区南京东路500号', deliveryType: '快递物流' },
-            'XS20250907006': { orderNo: 'XS20250907006', storageOrderNo: 'DC20250907004', buyer: '广州电子', supplier: '华东科技', goods: '小米14', quantity: 30, price: '¥3,999.00', amount: '¥119,970.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已完成', orderStatusClass: 'tag-order-completed', orderTime: '2026-09-07 11:00', payTime: '2026-09-07 11:10', buyerContact: '刘经理 13400134000', buyerAddress: '广东省广州市天河区珠江新城600号', deliveryType: '档口自提' }
+            'XS20250909001': { orderNo: 'XS20250909001', batchNo: '-', storageOrderNo: 'DC20250909001', buyer: '买家科技', supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: 10, price: '¥8,999.00', amount: '¥89,990.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '待发货', orderStatusClass: 'tag-order-ship', orderTime: '2026-09-09 14:30', payTime: '2026-09-09 14:35', buyerContact: '张经理 13800138000', buyerAddress: '上海市浦东新区世纪大道100号', deliveryType: '快递物流' },
+            'XS20250909002': { orderNo: 'XS20250909002', batchNo: '-', storageOrderNo: 'DC20250909001', buyer: '华东采购', supplier: '能良科技', goods: 'iPhone 15 Pro', quantity: 5, price: '¥8,999.00', amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending', orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: '2026-09-09 15:00', payTime: '-', buyerContact: '王经理 13900139000', buyerAddress: '江苏省南京市鼓楼区中山路200号', deliveryType: '快递物流' },
+            'XS20250909003': { orderNo: 'XS20250909003', batchNo: '-', storageOrderNo: 'DC20250909002', buyer: '深圳数码', supplier: '无锡科技', goods: '华为 Mate 60', quantity: 8, price: '¥6,999.00', amount: '¥55,992.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已发货', orderStatusClass: 'tag-order-shipped', orderTime: '2026-09-09 10:20', payTime: '2026-09-09 10:25', buyerContact: '李经理 13700137000', buyerAddress: '广东省深圳市福田区华强北路300号', deliveryType: '档口自提' },
+            'XS20250908004': { orderNo: 'XS20250908004', batchNo: 'XSP20260908001', storageOrderNo: 'DC20250908003', buyer: '北京科技', supplier: '深圳数码', goods: 'iPad Air', quantity: 20, price: '¥4,799.00', amount: '¥95,980.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已完成', orderStatusClass: 'tag-order-completed', orderTime: '2026-09-08 16:00', payTime: '2026-09-08 16:05', buyerContact: '赵经理 13600136000', buyerAddress: '北京市朝阳区建国路400号', deliveryType: '快递物流' },
+            'XS20250908005': { orderNo: 'XS20250908005', batchNo: 'XSP20260908001', storageOrderNo: 'DC20250907004', buyer: '北京科技', supplier: '华东科技', goods: '小米14', quantity: 15, price: '¥3,999.00', amount: '-', payStatus: '待支付', payStatusClass: 'tag-pay-pending', orderStatus: '待支付', orderStatusClass: 'tag-order-pending', orderTime: '2026-09-08 09:30', payTime: '-', buyerContact: '赵经理 13600136000', buyerAddress: '北京市朝阳区建国路400号', deliveryType: '快递物流' },
+            'XS20250907006': { orderNo: 'XS20250907006', batchNo: '-', storageOrderNo: 'DC20250907004', buyer: '广州电子', supplier: '华东科技', goods: '小米14', quantity: 30, price: '¥3,999.00', amount: '¥119,970.00', payStatus: '已支付', payStatusClass: 'tag-pay-paid', orderStatus: '已完成', orderStatusClass: 'tag-order-completed', orderTime: '2026-09-07 11:00', payTime: '2026-09-07 11:10', buyerContact: '刘经理 13400134000', buyerAddress: '广东省广州市天河区珠江新城600号', deliveryType: '档口自提' }
         };
 
         function showSaleDetail(orderNo) {
             var data = saleData[orderNo];
             if (!data) return;
             document.getElementById('sale-detail-order-no').textContent = data.orderNo;
+            document.getElementById('sale-detail-batch-no').textContent = data.batchNo || '-';
             document.getElementById('sale-detail-storage-order').textContent = data.storageOrderNo;
             document.getElementById('sale-detail-buyer').textContent = data.buyer;
             document.getElementById('sale-detail-supplier').textContent = data.supplier;
@@ -1550,6 +2064,7 @@
 
         function handleSaleReset() {
             document.getElementById('sale-search-order-no').value = '';
+            document.getElementById('sale-search-batch-no').value = '';
             document.getElementById('sale-search-buyer').value = '';
             document.getElementById('sale-search-status').value = '';
             showToast('已重置查询条件', 'info');

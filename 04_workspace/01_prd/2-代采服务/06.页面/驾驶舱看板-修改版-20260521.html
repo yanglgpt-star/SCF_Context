@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资产管理 · 驾驶舱看板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",monospace;
+  background:#0b0e1a;color:#cad1e6;padding:16px;min-height:100vh;
+}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#131726}
+::-webkit-scrollbar-thumb{background:#2a3052;border-radius:2px}
+
+:root{
+  --bg-primary:#0b0e1a;--bg-card:#111522;--bg-card-alt:#161b2d;
+  --border:#1e2440;--border-hover:#2e3660;
+  --cyan:#00e5ff;--orange:#ff9100;--red:#ff1744;--green:#00e676;
+  --purple:#7c4dff;--blue:#448aff;
+  --blue-pay:#1890ff;--green-repay:#52c41a;
+  --text-primary:#f0f4ff;--text-secondary:#8892b0;--text-muted:#4a5278;
+  --gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;
+}
+
+.dashboard{max-width:1600px;margin:0 auto;display:grid;gap:14px;grid-template-columns:repeat(12,1fr);}
+
+.card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  padding:16px;transition:border-color .2s;position:relative;overflow:hidden;
+}
+.card:hover{border-color:var(--border-hover);}
+.card-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;font-size:13px;color:var(--text-secondary);letter-spacing:.3px;
+}
+.card-header .title{font-weight:600;display:flex;align-items:center;gap:6px;}
+.card-header .badge{font-size:10px;background:#1a2040;padding:2px 8px;border-radius:4px;color:var(--text-secondary);}
+
+/* ── KPI Row ── */
+.stats-row{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:14px;}
+.stat-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  padding:16px;position:relative;overflow:hidden;display:flex;align-items:center;gap:16px;
+}
+.stat-card .accent-line{
+  position:absolute;top:0;left:0;width:100%;height:3px;
+}
+.stat-card:nth-child(1) .accent-line{background:var(--blue-pay);}
+.stat-card:nth-child(2) .accent-line{background:var(--green-repay);}
+.stat-card:nth-child(3) .accent-line{background:var(--orange);}
+.stat-card:nth-child(4) .accent-line{background:var(--purple);}
+.stat-card:nth-child(5) .accent-line{background:var(--gold);}
+.stat-left{flex:1;min-width:0;}
+.stat-card .label{font-size:12px;color:var(--text-secondary);letter-spacing:.5px;}
+.stat-card .value{
+  font-size:26px;font-weight:700;color:var(--text-primary);margin-top:4px;
+  font-variant-numeric:tabular-nums;
+}
+.stat-card .sub{font-size:12px;margin-top:4px;}
+.sub-up{color:var(--red);}   /* 红色升 */
+.sub-down{color:var(--green);} /* 绿色降 */
+
+/* ── Time Tabs ── */
+.time-tabs{display:flex;gap:4px;background:var(--bg-card-alt);border-radius:6px;padding:2px;}
+.time-tab{
+  padding:5px 16px;font-size:12px;border:none;background:transparent;
+  color:var(--text-secondary);border-radius:4px;cursor:pointer;transition:all .2s;
+}
+.time-tab:hover{color:var(--text-primary);}
+.time-tab.active{background:var(--blue-pay);color:#fff;}
+.period-cards{
+  grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;
+}
+.peri-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  padding:16px;position:relative;overflow:hidden;text-align:center;
+  transition:border-color .2s;
+}
+.peri-card:hover{border-color:var(--border-hover);}
+.peri-card .accent-line{
+  position:absolute;top:0;left:0;width:100%;height:3px;
+}
+.peri-card:nth-child(1) .accent-line{background:var(--blue-pay);}
+.peri-card:nth-child(2) .accent-line{background:var(--green-repay);}
+.peri-card:nth-child(3) .accent-line{background:var(--cyan);}
+.peri-card .label{font-size:12px;color:var(--text-secondary);letter-spacing:.5px;margin-bottom:6px;}
+.peri-card .num{
+  font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;margin-bottom:8px;
+}
+.peri-card .num.pay{color:var(--blue-pay);}
+.peri-card .num.repay{color:var(--green-repay);}
+.peri-card .num.net{color:var(--cyan);}
+.peri-card .sub-row{
+  display:flex;justify-content:center;gap:20px;font-size:12px;
+}
+.peri-card .sub-item{display:flex;align-items:center;gap:4px;}
+.peri-card .sub-item .lbl{color:var(--text-muted);}
+.sub-up{color:var(--red);}
+.sub-down{color:var(--green);}
+
+/* ── Distribution Grid & Charts ── */
+.dist-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:14px;}
+.dist-chart{width:100%;height:160px;margin-top:4px;}
+.dist-card .dist-note{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-top:6px;
+  text-align:center;
+}
+
+/* ── Span ── */
+.span-3{grid-column:span 3;}
+.span-4{grid-column:span 4;}
+.span-6{grid-column:span 6;}
+.span-9{grid-column:span 9;}
+.span-12{grid-column:span 12;}
+
+/* ── Chart ── */
+.chart-wrap{width:100%;height:320px;}
+.chart-wrap-lg{height:400px;}
+
+/* ── Province Bar Chart (pure HTML) ── */
+.prov-list{height:400px;overflow-y:auto;padding-right:4px;margin-top:-4px;}
+.prov-list::-webkit-scrollbar{width:3px;}
+.prov-list::-webkit-scrollbar-thumb{background:#2a3052;border-radius:2px;}
+.prov-item{
+  display:flex;align-items:center;gap:10px;
+  padding:5px 0;cursor:pointer;border-radius:4px;transition:background .15s;
+}
+.prov-item:hover{background:rgba(255,255,255,.03);}
+.prov-item .rank-num{
+  width:22px;text-align:right;font-size:11px;color:var(--text-muted);font-weight:600;flex-shrink:0;
+}
+.prov-item .prov-name{
+  width:52px;font-size:12px;color:var(--text-secondary);flex-shrink:0;text-align:right;
+}
+.prov-item .bar-track{
+  flex:1;height:16px;background:#1a2040;border-radius:8px;overflow:hidden;position:relative;
+}
+.prov-item .bar-fill{
+  height:100%;border-radius:8px;transition:width .6s ease;
+  min-width:2px;
+}
+.prov-item .bar-val{
+  width:80px;font-size:11px;font-variant-numeric:tabular-nums;
+  text-align:right;flex-shrink:0;
+}
+.prov-item .bar-fill.gold{background:linear-gradient(90deg,#ffd700,#ffed70);}
+.prov-item .bar-fill.silver{background:linear-gradient(90deg,#c0c0c0,#d8d8d8);}
+.prov-item .bar-fill.bronze{background:linear-gradient(90deg,#cd7f32,#e09a50);}
+.prov-item .bar-fill.normal{background:linear-gradient(90deg,#1890ff,#4dabff);}
+
+/* ── Agent List ── */
+.agent-list{height:400px;overflow-y:auto;padding-right:2px;}
+.agent-list::-webkit-scrollbar{width:3px;}
+.agent-list::-webkit-scrollbar-thumb{background:#2a3052;border-radius:2px;}
+.agent-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.agent-item:last-child{border-bottom:none;}
+.agent-item .agent-rank{font-size:11px;color:var(--text-muted);width:18px;text-align:right;flex-shrink:0;}
+.agent-item .agent-name{font-size:12px;color:var(--text-secondary);flex:1;margin-left:8px;}
+.agent-item .agent-val{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;}
+.agent-item .agent-val.gold{color:var(--gold);}
+.agent-item .agent-val.silver{color:var(--silver);}
+.agent-item .agent-val.bronze{color:var(--bronze);}
+.agent-item .agent-val.normal{color:var(--text-primary);}
+.agent-item .agent-dot{
+  width:4px;height:4px;border-radius:50%;flex-shrink:0;
+}
+.agent-item .agent-dot.gold{background:var(--gold);}
+.agent-item .agent-dot.silver{background:var(--silver);}
+.agent-item .agent-dot.bronze{background:var(--bronze);}
+.agent-item .agent-dot.normal{background:var(--text-muted);}
+
+/* ── Responsive ── */
+@media(max-width:1200px){
+  .stats-row{grid-template-columns:1fr 1fr 1fr;}
+}
+@media(max-width:768px){
+  .stats-row{grid-template-columns:1fr;}
+  .stat-card{flex-direction:row;}
+  .time-summary{flex-direction:column;align-items:center;}
+  .peri-card .num{font-size:22px;}
+  .time-summary .total-group{flex-wrap:wrap;gap:14px;justify-content:center;}
+  .peri-card .sub-row{flex-direction:column;gap:4px;align-items:center;}
+  .period-cards{grid-template-columns:1fr;}
+  .span-9,.span-3,.dist-grid{grid-column:span 12;}
+  .dist-grid{grid-template-columns:1fr;}
+}
+
+/* ── Drill-down breadcrumb ── */
+.drill-bar{
+  grid-column:1 / -1;
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);
+  min-height:28px;
+}
+.drill-bar .tag{
+  background:var(--bg-card-alt);border:1px solid var(--border);border-radius:4px;
+  padding:2px 10px;display:inline-flex;align-items:center;gap:6px;
+}
+.drill-bar .tag .close{
+  cursor:pointer;opacity:.5;font-size:14px;line-height:1;
+}
+.drill-bar .tag .close:hover{opacity:1;color:var(--red);}
+.drill-hint{color:var(--text-muted);font-style:italic;}
+
+/* ── Top toolbar ── */
+.top-bar{
+  grid-column:1 / -1;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4px;margin-bottom:-6px;
+}
+.top-bar .update-time{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;}
+.top-bar .update-time .dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 2s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
+.refresh-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--bg-card-alt);border:1px solid var(--border);border-radius:6px;
+  padding:5px 14px;font-size:12px;color:var(--text-secondary);cursor:pointer;
+  transition:all .2s;font-family:inherit;
+}
+.refresh-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.refresh-btn:active{transform:scale(.96);}
+.refresh-btn .icon{font-size:14px;line-height:1;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.refresh-btn.spinning .icon{animation:spin .6s linear;}
+
+/* ── Legend indicator for KPI ── */
+.kpi-progress-text{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="dashboard" id="app">
+
+  <!-- ═══ 顶部工具栏 ═══ -->
+  <div class="top-bar">
+    <div class="update-time">
+      <span class="dot"></span>
+      <span>数据更新：<span id="updateTime">—</span></span>
+    </div>
+    <button class="refresh-btn" id="refreshBtn">
+      <span class="icon">↻</span> 刷新数据
+    </button>
+  </div>
+
+  <!-- ═══ 第一层：全年核心指标 ═══ -->
+  <div class="stats-row" id="kpiRow">
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="stat-left">
+        <div class="label">当年累计付款金额</div>
+        <div class="value" id="kpiPay">128,000 万</div>
+        <div class="sub"></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="stat-left">
+        <div class="label">当年累计还款金额</div>
+        <div class="value" id="kpiRepay">96,000 万</div>
+        <div class="sub"></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="stat-left">
+        <div class="label">全年日均资占</div>
+        <div class="value" id="kpiDailyOcc">213 万</div>
+        <div class="sub"></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="stat-left">
+        <div class="label">在押总数量</div>
+        <div class="value" id="kpiPledge">3,580 台</div>
+        <div class="sub"><span style="color:var(--text-secondary);">货值：<span id="kpiPledgeValue" style="color:var(--text-primary);font-weight:600;">¥ 42,600 万</span></span></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-line"></div>
+      <div class="stat-left">
+        <div class="label">付款目标完成率</div>
+        <div class="value" id="kpiTarget">87.3%</div>
+        <div class="sub"><span style="color:var(--text-secondary);">目标金额：¥ 150,000 万</span></div>
+      </div>
+    </div>
+  </div>
+<!-- ═══ 第二层：代采/代储 品牌占比 · 品类分布 · 货龄结构 ═══ -->
+  <div class="span-12 dist-grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="title">代采品牌占比</span>
+        <span class="badge">单一品牌 ≤40%</span>
+      </div>
+      <div class="dist-chart" id="brandChartDC"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="title">代采品类分布</span>
+      </div>
+      <div class="dist-chart" id="categoryChartDC"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="title">代储品牌占比</span>
+        <span class="badge">单一品牌 ≤40%</span>
+      </div>
+      <div class="dist-chart" id="brandChartDS"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="title">代储品类分布</span>
+      </div>
+      <div class="dist-chart" id="categoryChartDS"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="title">货龄结构</span>
+        <span class="badge">DSO: 34天</span>
+      </div>
+      <div class="dist-chart" id="agingChart"></div>
+      <div class="dist-note">60天+ 占比 &gt; 20% 应启动强制催赎程序</div>
+    </div>
+  </div>
+
+  <!-- ═══ 第三层：周期概览 ═══ -->
+  <div class="card span-12">
+    <div class="card-header">
+      <div class="title">周期概览</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="time-tabs" id="timeTabs">
+          <button class="time-tab active" data-period="day">日</button>
+          <button class="time-tab" data-period="week">周</button>
+          <button class="time-tab" data-period="month">月</button>
+        </div>
+      </div>
+    </div>
+    <div class="period-cards">
+      <div class="peri-card">
+        <div class="accent-line"></div>
+        <div class="label">付款总额</div>
+        <div class="num pay" id="totalPay">¥ 3,280 万</div>
+        <div class="sub-row">
+          <span class="sub-item"><span class="lbl">环比</span><span class="sub-up">▲ 8.2%</span></span>
+        </div>
+      </div>
+      <div class="peri-card">
+        <div class="accent-line"></div>
+        <div class="label">还款总额</div>
+        <div class="num repay" id="totalRepay">¥ 2,150 万</div>
+        <div class="sub-row">
+          <span class="sub-item"><span class="lbl">环比</span><span class="sub-down">▼ 2.1%</span></span>
+        </div>
+      </div>
+      <div class="peri-card">
+        <div class="accent-line"></div>
+        <div class="label">资占金额</div>
+        <div class="num net" id="totalNet">¥ 1,130 万</div>
+        <div class="sub-row">
+          <span class="sub-item"><span class="lbl">环比</span><span class="sub-up">▲ 12.4%</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 第四层：月度统计 ═══ -->
+  <div class="card span-12">
+    <div class="card-header">
+      <div class="title">月度统计</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:11px;color:var(--text-muted);" id="trendSubtitle">当年已发生月份</span>
+        <div class="badge">未到月份为 0</div>
+      </div>
+    </div>
+    <div class="chart-wrap" id="trendChart"></div>
+  </div>
+
+  <!-- ═══ 第五层：省份排名 ═══ -->
+  <div class="card span-9">
+    <div class="card-header">
+      <div class="title">省份排名</div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <span style="font-size:11px;color:var(--text-muted);">点击省份可下钻查看该省趋势</span>
+        <div class="badge">Top 3 高亮</div>
+      </div>
+    </div>
+    <div class="prov-list" id="provinceList"></div>
+  </div>
+
+  <!-- ═══ 经办人排名 ═══ -->
+  <div class="card span-3">
+    <div class="card-header">
+      <div class="title">经办人 Top 10</div>
+      <div class="badge">按金额排序</div>
+    </div>
+    <div class="agent-list" id="agentList"></div>
+  </div>
+
+  <!-- 下钻面包屑 -->
+  <div class="drill-bar" id="drillBar">
+    <span class="drill-hint">💡 点击省份可下钻查看该省月度趋势</span>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  工具函数
+// ══════════════════════════════════════════════════
+
+const fmt = v => Math.round(v / 1e4).toLocaleString('en-US') + ' 万';
+
+// 12 个月份标签
+const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+// 模拟数据 —— 各省份月付款金额（单位：元）
+function genProvinceData() {
+  const names = ['广东','江苏','浙江','山东','河南','四川','福建','湖北','湖南','安徽',
+                 '河北','北京','上海','辽宁','陕西','江西','重庆','广西','云南','贵州',
+                 '山西','内蒙古','吉林','黑龙江','新疆','甘肃','海南','宁夏','青海','西藏'];
+  const base = [980,850,780,620,510,480,460,430,410,390,
+                370,620,580,350,310,290,270,250,230,210,
+                190,170,150,140,120,100,80,60,40,20];
+  return names.map((n,i) => ({
+    name: n,
+    pay: Math.round(base[i] * (0.85 + Math.random() * 0.3)) * 10000,
+  })).sort((a,b) => b.pay - a.pay); // 降序：最大值在数组[0]
+}
+
+let provinceData = genProvinceData();
+console.log('genProvinceData 前5:', provinceData.slice(0,5).map(d=>d.name+d.pay));
+console.log('genProvinceData 后5:', provinceData.slice(-5).map(d=>d.name+d.pay));
+
+// 当前实际月份（用于判断哪些月份已发生）
+const currentRealMonth = new Date().getMonth() + 1; // 5 = 5月
+
+// 各省月度明细（用于下钻，未来月份为0）
+function genProvinceMonthly(provName) {
+  const base = provinceData.find(p => p.name === provName)?.pay || 5000000;
+  const monthlyBase = base / 5; // 分摊到已发生的月份
+  return months.map((m,i) => {
+    const monthNum = i + 1;
+    if (monthNum > currentRealMonth) return { month: m, pay: 0, repay: 0 };
+    return {
+      month: m,
+      pay: Math.round(monthlyBase * (0.7 + Math.random() * 0.6)),
+      repay: Math.round(monthlyBase * 0.7 * (0.6 + Math.random() * 0.5)),
+    };
+  });
+}
+
+// 全国月度数据（未来月份为0）
+function genNationalMonthly() {
+  return months.map((m,i) => {
+    const monthNum = i + 1;
+    if (monthNum > currentRealMonth) return { month: m, pay: 0, repay: 0 };
+    return {
+      month: m,
+      pay: Math.round((600 + Math.sin(i/12*Math.PI*2)*200 + (i+1)*25 + Math.random()*80)) * 10000,
+      repay: Math.round((400 + Math.cos(i/12*Math.PI*2)*150 + (i+1)*18 + Math.random()*60)) * 10000,
+    };
+  });
+}
+
+const nationalMonthly = genNationalMonthly();
+
+// ══════════════════════════════════════════════════
+//  状态
+// ══════════════════════════════════════════════════
+
+let currentPeriod = 'day';     // day / week / month
+let drillProvince = null;     // 下钻省份名称
+let isNational = true;        // 趋势图是否展示全国数据
+
+// ══════════════════════════════════════════════════
+//  第一层：KPI 环形进度
+// ══════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════
+//  代采/代储 品牌占比 / 品类分布 / 货龄结构
+// ══════════════════════════════════════════════════
+
+// 代采品牌占比（水平柱状图）
+const brandChartDC = echarts.init(document.getElementById('brandChartDC'));
+function renderBrandChartDC() {
+  const raw = [
+    {name:'Apple',  value:32, color:'#555555'},
+    {name:'华为',   value:28, color:'#ff3b30'},
+    {name:'小米',   value:20, color:'#ff9500'},
+    {name:'联想',   value:12, color:'#007aff'},
+    {name:'OPPO',   value: 8, color:'#34c759'},
+  ].sort((a,b) => a.value - b.value);
+  brandChartDC.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},formatter:p=>`${p[0].name}<br/>占比: ${p[0].value}%`},
+    grid:{left:60,right:10,top:5,bottom:5},
+    xAxis:{type:'value',max:40,splitLine:{lineStyle:{color:'#1e2440',type:'dashed'}},
+      axisLabel:{color:'#4a5278',fontSize:9,formatter:'{value}%'},
+      axisLine:{lineStyle:{color:'#1e2440'}}},
+    yAxis:{type:'category',data:raw.map(r=>r.name),
+      axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#8892b0',fontSize:10}},
+    series:[{
+      type:'bar',barWidth:10,
+      itemStyle:{color:p=>raw[p.dataIndex].color,borderRadius:[0,4,4,0]},
+      label:{show:true,position:'right',color:'#8892b0',fontSize:10,formatter:'{c}%'},
+      data:raw.map(r=>r.value),
+    }],
+  });
+}
+renderBrandChartDC();
+
+// 代采品类分布（环形图）
+const categoryChartDC = echarts.init(document.getElementById('categoryChartDC'));
+categoryChartDC.setOption({
+  tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+  series:[{
+    type:'pie',radius:['45%','70%'],center:['50%','50%'],
+    label:{color:'#8892b0',fontSize:10,formatter:'{b}\n{d}%'},
+    labelLine:{lineStyle:{color:'#2a3052'}},
+    itemStyle:{borderColor:'#111522',borderWidth:2},
+    data:[
+      {value:48,name:'手机',itemStyle:{color:'#1890ff'}},
+      {value:24,name:'笔记本',itemStyle:{color:'#52c41a'}},
+      {value:18,name:'平板',itemStyle:{color:'#faad14'}},
+      {value:10,name:'智能家电',itemStyle:{color:'#ff4d4f'}},
+    ],
+  }],
+});
+
+// 代储品牌占比（水平柱状图）
+const brandChartDS = echarts.init(document.getElementById('brandChartDS'));
+function renderBrandChartDS() {
+  const raw = [
+    {name:'海尔',   value:30, color:'#005bac'},
+    {name:'美的',   value:26, color:'#0072c6'},
+    {name:'格力',   value:18, color:'#e60012'},
+    {name:'海信',   value:14, color:'#009a44'},
+    {name:'TCL',    value:12, color:'#c8102e'},
+  ].sort((a,b) => a.value - b.value);
+  brandChartDS.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},formatter:p=>`${p[0].name}<br/>占比: ${p[0].value}%`},
+    grid:{left:60,right:10,top:5,bottom:5},
+    xAxis:{type:'value',max:40,splitLine:{lineStyle:{color:'#1e2440',type:'dashed'}},
+      axisLabel:{color:'#4a5278',fontSize:9,formatter:'{value}%'},
+      axisLine:{lineStyle:{color:'#1e2440'}}},
+    yAxis:{type:'category',data:raw.map(r=>r.name),
+      axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#8892b0',fontSize:10}},
+    series:[{
+      type:'bar',barWidth:10,
+      itemStyle:{color:p=>raw[p.dataIndex].color,borderRadius:[0,4,4,0]},
+      label:{show:true,position:'right',color:'#8892b0',fontSize:10,formatter:'{c}%'},
+      data:raw.map(r=>r.value),
+    }],
+  });
+}
+renderBrandChartDS();
+
+// 代储品类分布（环形图）
+const categoryChartDS = echarts.init(document.getElementById('categoryChartDS'));
+categoryChartDS.setOption({
+  tooltip:{trigger:'item',formatter:'{b}: {c}%'},
+  series:[{
+    type:'pie',radius:['45%','70%'],center:['50%','50%'],
+    label:{color:'#8892b0',fontSize:10,formatter:'{b}\n{d}%'},
+    labelLine:{lineStyle:{color:'#2a3052'}},
+    itemStyle:{borderColor:'#111522',borderWidth:2},
+    data:[
+      {value:42,name:'大家电',itemStyle:{color:'#1890ff'}},
+      {value:28,name:'小家电',itemStyle:{color:'#52c41a'}},
+      {value:18,name:'数码',itemStyle:{color:'#faad14'}},
+      {value:12,name:'其他',itemStyle:{color:'#ff4d4f'}},
+    ],
+  }],
+});
+
+// 货龄结构（水平条形图，带颜色标识）
+const agingChart = echarts.init(document.getElementById('agingChart'));
+agingChart.setOption({
+  tooltip:{trigger:'axis',axisPointer:{type:'shadow'},formatter:p=>`${p[0].name}<br/>占比: ${p[0].value}%`},
+  grid:{left:55,right:10,top:5,bottom:5},
+  xAxis:{type:'value',max:40,splitLine:{lineStyle:{color:'#1e2440',type:'dashed'}},
+    axisLabel:{color:'#4a5278',fontSize:9,formatter:'{value}%'},
+    axisLine:{lineStyle:{color:'#1e2440'}}},
+  yAxis:{type:'category',data:['60+','46-60天','31-45天','0-30天'],
+    axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#8892b0',fontSize:10}},
+  series:[{
+    type:'bar',barWidth:12,
+    itemStyle:{color:p=>{
+      const cs=['#ff1744','#ff9100','#00e5ff','#00e676'];
+      return cs[p.dataIndex];},borderRadius:[0,4,4,0]},
+    label:{show:true,position:'right',color:'#8892b0',fontSize:10,formatter:'{c}%'},
+    data:[12,18,25,45],
+  }],
+});
+
+// ══════════════════════════════════════════════════
+//  第二层：周期切换
+// ══════════════════════════════════════════════════
+
+const periodData = {
+  day:  { pay: 32800000, repay: 21500000 },
+  week: { pay: 198000000, repay: 145000000 },
+  month:{ pay: 856000000, repay: 623000000 },
+};
+
+function updatePeriodSummary(period) {
+  const d = periodData[period];
+  if (!d) return;
+  document.getElementById('totalPay').textContent = '¥ ' + fmt(d.pay);
+  document.getElementById('totalRepay').textContent = '¥ ' + fmt(d.repay);
+  document.getElementById('totalNet').textContent = '¥ ' + fmt(d.pay - d.repay);
+  document.getElementById('totalNet').style.color = (d.pay - d.repay >= 0) ? 'var(--cyan)' : 'var(--red)';
+}
+
+// 时间 Tab 切换
+document.querySelectorAll('.time-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.time-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    updatePeriodSummary(currentPeriod);
+  });
+});
+
+// 初始渲染
+updatePeriodSummary('day');
+updateTimestamp();
+
+// ══════════════════════════════════════════════════
+//  刷新数据
+// ══════════════════════════════════════════════════
+
+function updateTimestamp() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const ts = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+           + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  document.getElementById('updateTime').textContent = ts;
+}
+
+function refreshAllData() {
+  // 重新生成省份数据
+  provinceData = genProvinceData();
+  // 重新生成经办人数据
+  agentData = genAgentData();
+  // 重新生成全国月度数据
+  nationalMonthly.length = 0;
+  nationalMonthly.push(...genNationalMonthly());
+  // 重置下钻状态
+  drillProvince = null;
+  isNational = true;
+  document.getElementById('drillBar').innerHTML =
+    '<span class="drill-hint">💡 点击省份柱状图可下钻查看该省月度趋势</span>';
+  // 重绘图表
+  renderTrend(null);
+  renderProvince();
+  renderAgents();
+  // 更新时间戳
+  updateTimestamp();
+}
+
+document.getElementById('refreshBtn').addEventListener('click', function() {
+  this.classList.add('spinning');
+  refreshAllData();
+  setTimeout(() => this.classList.remove('spinning'), 600);
+});
+
+// ══════════════════════════════════════════════════
+//  第四层：月度统计（分组柱状图）
+// ══════════════════════════════════════════════════
+
+const trendDom = document.getElementById('trendChart');
+const trendChart = echarts.init(trendDom);
+
+function renderTrend(province) {
+  const isNational = !province;
+  const data = isNational ? nationalMonthly : genProvinceMonthly(province);
+  const title = isNational ? '全国 · 月度统计' : province + ' · 月度统计';
+
+  document.getElementById('trendSubtitle').textContent = title;
+
+  // 计算资占金额
+  const payData = data.map(d => d.pay);
+  const repayData = data.map(d => d.repay);
+  const netData = data.map(d => d.pay - d.repay);
+
+  trendChart.setOption({
+    tooltip:{
+      trigger:'axis',
+      valueFormatter:v => fmt(v || 0),
+    },
+    legend:{
+      data:['付款总额','还款总额','资占金额'],
+      textStyle:{color:'#8892b0',fontSize:11},
+      top:0,
+    },
+    grid:{left:60,right:20,bottom:25,top:36},
+    xAxis:{
+      type:'category',
+      data:data.map(d => d.month),
+      axisLine:{lineStyle:{color:'#1e2440'}},
+      axisLabel:{color:'#4a5278',fontSize:11},
+    },
+    yAxis:{
+      type:'value',
+      splitLine:{lineStyle:{color:'#1e2440',type:'dashed'}},
+      axisLabel:{
+        color:'#4a5278',fontSize:11,
+        formatter:v => Math.round(v / 1e4).toLocaleString('en-US') + '万',
+      },
+    },
+    series:[{
+      name:'付款总额',
+      type:'bar',
+      barWidth:'22%',
+      barGap:'10%',
+      itemStyle:{color:'#1890ff',borderRadius:[4,4,0,0]},
+      data:payData,
+    },{
+      name:'还款总额',
+      type:'bar',
+      barWidth:'22%',
+      barGap:'10%',
+      itemStyle:{color:'#52c41a',borderRadius:[4,4,0,0]},
+      data:repayData,
+    },{
+      name:'资占金额',
+      type:'bar',
+      barWidth:'22%',
+      barGap:'10%',
+      itemStyle:{color:'#00e5ff',borderRadius:[4,4,0,0]},
+      data:netData,
+    }],
+  });
+}
+
+renderTrend(null);
+
+// ══════════════════════════════════════════════════
+//  第四层：省份排名（纯 HTML 条形图）
+// ══════════════════════════════════════════════════
+
+function renderProvince() {
+  // 降序排列：最大值在 data[0]，从上到下依次排列
+  const data = [...provinceData].sort((a,b) => b.pay - a.pay);
+  const maxPay = data[0].pay;
+  const list = document.getElementById('provinceList');
+
+  // 生成每个省份行
+  list.innerHTML = data.map((d, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+    const rankLabel = i < 3 ? ['🥇','🥈','🥉'][i] : (i + 1);
+    const pct = (d.pay / maxPay * 100).toFixed(1);
+    return `<div class="prov-item" data-prov="${d.name}">
+      <span class="rank-num">${rankLabel}</span>
+      <span class="prov-name">${d.name}</span>
+      <div class="bar-track"><div class="bar-fill ${rankClass}" style="width:${pct}%"></div></div>
+      <span class="bar-val" style="color:${i === 0 ? 'var(--gold)' : i === 1 ? 'var(--silver)' : i === 2 ? 'var(--bronze)' : 'var(--text-secondary)'}">${fmt(d.pay)}</span>
+    </div>`;
+  }).join('');
+
+  // 为每个省份项绑定点击下钻事件
+  list.querySelectorAll('.prov-item').forEach(el => {
+    el.addEventListener('click', function() {
+      const provName = this.dataset.prov;
+      drillProvince = provName;
+      isNational = false;
+      renderTrend(provName);
+      document.getElementById('drillBar').innerHTML = `
+        <span class="tag">下钻：${provName}<span class="close" id="drillClose">&times;</span></span>
+        <span style="color:var(--text-muted);font-size:11px;">趋势图已切换为 ${provName} 月度数据</span>
+      `;
+      document.getElementById('drillClose').addEventListener('click', clearDrill);
+    });
+  });
+}
+
+renderProvince();
+
+// ══════════════════════════════════════════════════
+//  经办人数据
+// ══════════════════════════════════════════════════
+
+const agentNames = ['张伟','王芳','李强','刘洋','陈静','赵磊','孙莉','周涛','吴敏','郑浩',
+                    '林杰','何雪','黄鹏','马丽','徐峰','胡婷','郭凯','梁娟','宋涛','唐亮'];
+
+function genAgentData() {
+  return agentNames.map(name => ({
+    name,
+    amount: Math.round((200 + Math.random() * 800)) * 10000,
+  })).sort((a,b) => b.amount - a.amount);
+}
+
+let agentData = genAgentData();
+
+function renderAgents() {
+  const list = document.getElementById('agentList');
+  list.innerHTML = agentData.slice(0, 10).map((d, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+    const rankLabel = i < 3 ? ['🥇','🥈','🥉'][i] : (i + 1);
+    return `<div class="agent-item">
+      <span class="agent-rank">${rankLabel}</span>
+      <span class="agent-dot ${rankClass}"></span>
+      <span class="agent-name">${d.name}</span>
+      <span class="agent-val ${rankClass}">${fmt(d.amount)}</span>
+    </div>`;
+  }).join('');
+}
+
+renderAgents();
+
+// ══════════════════════════════════════════════════
+//  下钻：清除
+// ══════════════════════════════════════════════════
+
+function clearDrill() {
+  drillProvince = null;
+  isNational = true;
+  renderTrend(null);
+  document.getElementById('drillBar').innerHTML = '<span class="drill-hint">💡 点击省份可下钻查看该省月度趋势</span>';
+}
+
+// ══════════════════════════════════════════════════
+//  自适应 Resize
+// ══════════════════════════════════════════════════
+
+window.addEventListener('resize', () => {
+  trendChart.resize();
+  brandChartDC.resize();
+  categoryChartDC.resize();
+  brandChartDS.resize();
+  categoryChartDS.resize();
+  agingChart.resize();
+});
+</script>
+</body>
+</html>

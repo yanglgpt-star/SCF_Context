@@ -1,0 +1,48 @@
+<!-- 图片上传工具页 -->
+<view class="page-upload">
+  <view class="upload-header">
+    <text class="upload-title">🖼️ 批量上传图片到云存储</text>
+    <text class="upload-sub">将本地图片上传至云存储并更新数据库记录</text>
+  </view>
+
+  <!-- 统计信息 -->
+  <view class="stats-section">
+    <view class="stat-item">
+      <text class="stat-value">{{stats.total}}</text>
+      <text class="stat-label">需上传</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.success}}</text>
+      <text class="stat-label">已成功</text>
+    </view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.failed}}</text>
+      <text class="stat-label">已失败</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-bar">
+    <button class="btn-primary" bindtap="startUpload" disabled="{{isUploading || stats.total === 0}}">
+      {{isUploading ? '上传中...' : '开始批量上传'}}
+    </button>
+    <button class="btn-secondary" bindtap="clearStorage" wx:if="{{stats.success > 0}}">
+      清除云存储
+    </button>
+  </view>
+
+  <!-- 进度条 -->
+  <view class="progress-section" wx:if="{{isUploading || stats.success > 0}}">
+    <view class="progress-bar-wrap">
+      <view class="progress-bar" style="width: {{progressPercent}}%"></view>
+    </view>
+    <text class="progress-text">{{progressText}}</text>
+  </view>
+
+  <!-- 日志 -->
+  <scroll-view class="log-section" scroll-y auto-height wx:if="{{logs.length > 0}}">
+    <view class="log-entry {{log.type}}" wx:for="{{logs}}" wx:for-index="idx" wx:key="idx">
+      <text class="log-msg">{{log.msg}}</text>
+    </view>
+  </scroll-view>
+</view>

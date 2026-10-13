@@ -1,0 +1,168 @@
+page { background: #f7f2e9; color: #4e485d; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; font-size: 30rpx; }
+button { font: inherit; }
+button::after { border: 0; }
+.safe-page { width:100%; max-width:1200px; min-height:100vh; margin:0 auto; box-sizing:border-box; padding:calc(28rpx + env(safe-area-inset-top)) 48rpx calc(34rpx + env(safe-area-inset-bottom)); background:linear-gradient(155deg,#faf4eb 0%,#f2edf6 56%,#edf5f3 100%); }
+.capsule-safe { min-height:88rpx; padding-right:220rpx; box-sizing:border-box; }
+.card { background: rgba(255,255,255,.82); border: 2rpx solid rgba(119,102,151,.14); border-radius: 40rpx; box-shadow: 0 12rpx 36rpx rgba(68,59,87,.06); }
+.primary { min-height: 104rpx; display: flex; align-items: center; justify-content: center; border-radius: 30rpx; background: #75649b; color: #fff; font-size: 36rpx; font-weight: 700; box-shadow: 0 10rpx 24rpx rgba(90,74,125,.18); }
+.primary:active { opacity: .88; }
+.secondary { min-height: 92rpx; display:flex; align-items:center; justify-content:center; border-radius: 28rpx; background: #eee8f3; color: #5c506e; font-weight: 650; }
+.muted { color: #777180; }
+@media (min-width: 1000px) { .safe-page { padding-left:64px; padding-right:64px; } }
+@media (max-height:600px) and (orientation:landscape) {
+  .safe-page{padding:12rpx 24rpx calc(18rpx + env(safe-area-inset-bottom))}
+  .capsule-safe{min-height:70rpx;padding-right:190rpx}
+  .card{border-radius:30rpx}
+  .primary{min-height:90rpx;border-radius:26rpx;font-size:31rpx}
+  .secondary{min-height:80rpx;font-size:27rpx}
+  page .topbar{min-height:62rpx}
+  page .avatar{width:64rpx;height:64rpx;border-radius:22rpx;font-size:36rpx}
+  page .profile{font-size:27rpx}
+  page .harvest{min-height:56rpx;padding:0 18rpx;font-size:22rpx}
+  page .landscape-main{gap:18rpx;margin-top:10rpx;padding-bottom:82rpx}
+  page .recommend{padding:20rpx}
+  page .tag{padding:6rpx 12rpx;font-size:19rpx}
+  page .recommend-title{margin:10rpx 0 4rpx;font-size:31rpx}
+  page .recommend-meta{font-size:21rpx}
+  page .recommend-scene{font-size:48rpx}
+  page .progress-dots{margin-bottom:8rpx}
+  page .section-head{margin-bottom:8rpx}
+  page .section-title{font-size:29rpx}
+  page .listen{width:58rpx;height:58rpx;border-radius:20rpx;font-size:25rpx}
+  page .modules{gap:10rpx}
+  page .module{gap:12rpx;padding:15rpx;border-radius:27rpx}
+  page .module-icon{font-size:47rpx}
+  page .module-title{font-size:25rpx}
+  page .module-state{margin-top:3rpx;font-size:18rpx}
+  page .module-badge{top:8rpx;right:10rpx;font-size:15rpx}
+  page .bottom-nav{gap:90rpx;padding-top:7rpx;padding-bottom:calc(7rpx + env(safe-area-inset-bottom))}
+  page .bottom-icon{font-size:27rpx}
+  page .bottom-item{font-size:16rpx}
+  page .header{gap:14rpx}
+  page .header .back{width:68rpx;height:68rpx;border-radius:23rpx;font-size:42rpx}
+  page .header .title{font-size:29rpx}
+  page .header .round{font-size:19rpx}
+  page .content,page .game-area{min-height:330px;height:auto;gap:18rpx;padding-bottom:18rpx}
+  page .object-card{padding:18rpx}
+  page .tip,page .feedback{font-size:24rpx}
+  page .objects{gap:12rpx}
+  page .object{width:120rpx;height:120rpx;font-size:58rpx}
+  page .answers{gap:10rpx}
+  page .answers button,page .answer{min-height:120rpx;font-size:45rpx;border-radius:27rpx}
+  page .source-zone{height:180rpx}
+  page .source-blocks{gap:8rpx}
+  page .block{width:82rpx;height:82rpx;font-size:45rpx}
+  page .baskets{min-height:280px;height:auto}
+  page .basket{border-radius:32rpx;padding:15rpx}
+  page .basket .block{width:72rpx;height:72rpx;font-size:40rpx}
+  page .target{font-size:24rpx}
+  page .target text{font-size:42rpx}
+  page .game{grid-template-rows:75rpx minmax(320px,1fr);gap:10rpx}
+  page .game-head{grid-template-columns:70rpx 1fr 70rpx}
+  page .icon-button{width:65rpx;height:65rpx;font-size:38rpx}
+  page .type-tag{font-size:18rpx}
+  page .prompt{font-size:23rpx}
+  page .objects{font-size:52rpx}
+  page .equation{font-size:48rpx}
+  page .coach{font-size:22rpx}
+  page .help{min-height:72rpx;font-size:23rpx}
+  page .die{font-size:150rpx}
+  page .roll{min-width:320rpx;min-height:96rpx;font-size:30rpx}
+  page .result{min-height:420px;padding-top:12rpx}
+  page .result .rabbit{font-size:135rpx}
+  page .result .title{font-size:37rpx}
+  page .parent-page{gap:12rpx;padding-bottom:20rpx}
+}
+
+/* 真机主适配：短边尺寸由 wx.getWindowInfo() 识别并绑定，不依赖媒体查询。 */
+.safe-page.device-phone{padding:12rpx 24rpx calc(18rpx + env(safe-area-inset-bottom))}
+.device-phone .capsule-safe{min-height:70rpx;padding-right:190rpx}
+.device-phone .card{border-radius:30rpx}
+.device-phone .primary{min-height:90rpx;border-radius:26rpx;font-size:31rpx}
+.device-phone .secondary{min-height:80rpx;font-size:27rpx}
+.device-phone .topbar{min-height:62rpx}
+.device-phone .avatar{width:64rpx;height:64rpx;border-radius:22rpx;font-size:36rpx}
+.device-phone .profile{font-size:27rpx}.device-phone .harvest{min-height:56rpx;padding:0 18rpx;font-size:22rpx}
+.device-phone .landscape-main{gap:18rpx;margin-top:10rpx;padding-bottom:82rpx}
+.device-phone .recommend{padding:20rpx}.device-phone .tag{padding:6rpx 12rpx;font-size:19rpx}
+.device-phone .recommend-title{margin:10rpx 0 4rpx;font-size:31rpx}.device-phone .recommend-meta{font-size:21rpx}.device-phone .recommend-scene{font-size:48rpx}
+.device-phone .progress-dots,.device-phone .section-head{margin-bottom:8rpx}.device-phone .section-title{font-size:29rpx}
+.device-phone .listen{width:58rpx;height:58rpx;border-radius:20rpx;font-size:25rpx}
+.device-phone .modules{gap:10rpx}.device-phone .module{gap:12rpx;padding:15rpx;border-radius:27rpx}.device-phone .module-icon{font-size:47rpx}.device-phone .module-title{font-size:25rpx}.device-phone .module-state{margin-top:3rpx;font-size:18rpx}.device-phone .module-badge{top:8rpx;right:10rpx;font-size:15rpx}
+.device-phone .bottom-nav{gap:90rpx;padding-top:7rpx;padding-bottom:calc(7rpx + env(safe-area-inset-bottom))}.device-phone .bottom-icon{font-size:27rpx}.device-phone .bottom-item{font-size:16rpx}
+.device-phone .header{gap:14rpx}.device-phone .header .back{width:68rpx;height:68rpx;border-radius:23rpx;font-size:42rpx}.device-phone .header .title{font-size:29rpx}.device-phone .header .round{font-size:19rpx}
+.device-phone .content,.device-phone .game-area{min-height:330px;height:auto;gap:18rpx;padding-bottom:18rpx}
+.device-phone .object-card{padding:18rpx}.device-phone .tip,.device-phone .feedback{font-size:24rpx}.device-phone .objects{gap:12rpx}
+.device-phone .object{width:120rpx;height:120rpx;font-size:58rpx}.device-phone .answers{gap:10rpx}.device-phone .answers button,.device-phone .answer{min-height:120rpx;font-size:45rpx;border-radius:27rpx}
+.device-phone .source-zone{height:180rpx}.device-phone .source-blocks{gap:8rpx}.device-phone .block{width:82rpx;height:82rpx;font-size:45rpx}
+.device-phone .baskets{min-height:280px;height:auto}.device-phone .basket{border-radius:32rpx;padding:15rpx}.device-phone .basket .block{width:72rpx;height:72rpx;font-size:40rpx}.device-phone .target{font-size:24rpx}.device-phone .target text{font-size:42rpx}
+.game.device-phone{grid-template-rows:75rpx minmax(320px,1fr);gap:10rpx}.device-phone .game-head{grid-template-columns:70rpx 1fr 70rpx}.device-phone .icon-button{width:65rpx;height:65rpx;font-size:38rpx}
+.device-phone .type-tag{font-size:18rpx}.device-phone .prompt{font-size:23rpx}.game.device-phone .objects{font-size:52rpx}.device-phone .equation{font-size:48rpx}.device-phone .coach{font-size:22rpx}.device-phone .help{min-height:72rpx;font-size:23rpx}
+.device-phone .die{font-size:150rpx}.device-phone .roll{min-width:320rpx;min-height:96rpx;font-size:30rpx}
+.result.device-phone{min-height:420px;padding-top:12rpx}.result.device-phone .rabbit{font-size:135rpx}.result.device-phone .title{font-size:37rpx}
+.parent-page.device-phone{gap:12rpx;padding-bottom:20rpx}
+
+/* 手机横屏使用 px，避免 rpx 按横屏宽度换算后整体放大。 */
+.safe-page.device-phone{padding:6px calc(12px + env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));font-size:15px}
+.device-phone .capsule-safe{min-height:36px;padding-right:100px}.device-phone .card{border-radius:15px}
+.device-phone .primary{min-height:48px;border-radius:14px;font-size:17px}.device-phone .secondary{min-height:44px;border-radius:14px;font-size:15px}
+.device-phone .topbar{min-height:36px}.device-phone .avatar{width:34px;height:34px;border-radius:12px;font-size:20px}.device-phone .profile{gap:8px;font-size:15px}.device-phone .harvest{min-height:32px;padding:0 10px;border-radius:12px;font-size:12px}
+.device-phone .landscape-main{gap:10px;margin-top:5px;padding-bottom:58px}.device-phone .recommend{padding:11px}.device-phone .tag{padding:3px 7px;border-radius:10px;font-size:11px}.device-phone .recommend-title{margin:6px 0 2px;font-size:18px}.device-phone .recommend-meta{font-size:12px}.device-phone .recommend-scene{font-size:28px}
+.device-phone .progress-dots{gap:6px;margin-bottom:5px}.device-phone .dot{width:8px;height:8px}.device-phone .section-head{margin-bottom:5px}.device-phone .section-title{font-size:17px}.device-phone .listen{width:34px;height:34px;border-radius:11px;font-size:15px}
+.device-phone .modules{gap:6px}.device-phone .module{gap:8px;padding:8px;border-radius:15px}.device-phone .module-icon{font-size:27px}.device-phone .module-title{font-size:16px}.device-phone .module-state{margin-top:2px;font-size:11px}.device-phone .module-badge{top:5px;right:6px;padding:2px 5px;border-radius:7px;font-size:9px}
+.device-phone .bottom-nav{gap:70px;padding:5px 12px calc(5px + env(safe-area-inset-bottom))}.device-phone .bottom-item{min-width:75px;font-size:11px}.device-phone .bottom-icon{font-size:20px}
+.device-phone .header{gap:8px}.device-phone .header .back{width:42px;height:42px;border-radius:13px;font-size:27px}.device-phone .header .title{font-size:18px}.device-phone .header .round{font-size:12px}
+.device-phone .content,.device-phone .game-area{height:calc(100vh - 55px);min-height:280px;gap:10px;padding-bottom:9px}.device-phone .object-card{padding:10px}.device-phone .tip,.device-phone .feedback{font-size:14px}.device-phone .objects{gap:7px}.device-phone .object{width:60px;height:60px;border-radius:18px;font-size:31px}
+.device-phone .answers{gap:7px}.device-phone .answers button,.device-phone .answer{min-height:58px;border-radius:15px;font-size:25px}
+.device-phone .source-zone{height:92px}.device-phone .source-blocks{gap:5px}.device-phone .block{width:43px;height:43px;border-radius:13px;font-size:24px}.device-phone .baskets{height:calc(100vh - 150px);min-height:230px;gap:10px;grid-template-columns:1fr 42px 1fr}.device-phone .basket{padding:8px;border-radius:17px}.device-phone .basket .block{width:38px;height:38px;font-size:21px}.device-phone .target{margin-right:100px;font-size:14px}.device-phone .target text{font-size:24px}
+.game.device-phone{grid-template-rows:42px minmax(280px,1fr);gap:6px;grid-template-columns:68% 1fr}.device-phone .game-head{grid-template-columns:42px 1fr 42px}.device-phone .icon-button{width:38px;height:38px;border-radius:12px;font-size:23px}.device-phone .progress-title{font-size:14px}.device-phone .progress{height:6px;margin-top:5px}
+.device-phone .type-tag{padding:4px 8px;font-size:11px}.device-phone .prompt{margin-top:4px;font-size:14px}.device-phone .object-stage{gap:12px}.device-phone .plate{bottom:15px;width:260px;height:26px;border-width:3px}.game.device-phone .objects{max-width:130px;font-size:29px}.game.device-phone .objects.wide{max-width:180px}.game.device-phone .objects.removed{max-width:105px}.device-phone .equation{margin:2px 0 7px;font-size:28px;letter-spacing:3px}.device-phone .coach{min-height:40px;margin-top:7px;font-size:13px}.device-phone .help{min-height:42px;font-size:14px}
+.device-phone .die{font-size:86px}.device-phone .dice-row{gap:18px}.device-phone .roll{min-width:190px;min-height:50px;margin-top:12px;border-radius:16px;font-size:17px}
+.result.device-phone{min-height:100vh;padding-top:6px;column-gap:22px}.result.device-phone .rabbit{font-size:76px}.result.device-phone .title{font-size:21px}.result.device-phone .confetti{font-size:28px}.result.device-phone .subtitle{font-size:14px}.result.device-phone .reward{padding:12px;font-size:18px}.result.device-phone .stat{padding:10px;font-size:12px}.result.device-phone .stat text{font-size:22px}.result.device-phone .total{font-size:13px}.result.device-phone .again{min-height:48px;font-size:15px}
+.parent-page.device-phone{gap:7px;padding-bottom:10px}.parent-page.device-phone .intro-icon,.parent-page.device-phone .back{width:40px;height:40px}.parent-page.device-phone .title{font-size:18px}
+
+/* 页面根节点之外的弹窗必须自行绑定 device-phone。 */
+.setup-mask.device-phone,.complete-mask.device-phone,.mask.device-phone{padding:8px calc(100px + env(safe-area-inset-right)) 8px calc(12px + env(safe-area-inset-left));box-sizing:border-box;overflow-y:auto}
+.setup-mask.device-phone .setup{width:720px;max-width:100%;max-height:calc(100vh - 16px);padding:12px 16px;border-radius:16px;box-sizing:border-box;overflow-y:auto}
+.setup-mask.device-phone .setup-icon{font-size:24px;line-height:1}
+.setup-mask.device-phone .setup-title{margin:2px 0 8px;font-size:20px}
+.setup-mask.device-phone .setup-row{grid-template-columns:1fr 1fr;gap:18px}
+.setup-mask.device-phone .setup-label{margin:3px 0 7px;font-size:14px}
+.setup-mask.device-phone .avatar-list{gap:8px}
+.setup-mask.device-phone .avatar-choice{width:58px;height:58px;border-width:3px;border-radius:16px;font-size:30px;box-sizing:border-box}
+.setup-mask.device-phone .name-input{height:44px;padding:0 12px;border-radius:12px;font-size:17px}
+.setup-mask.device-phone .privacy{margin:6px 0;font-size:11px}
+.setup-mask.device-phone .name-side .primary{min-height:44px;font-size:16px}
+.complete-mask.device-phone .complete,.mask.device-phone .exit-card,.mask.device-phone .confirm{width:420px;max-width:62vw;padding:16px 20px;border-radius:16px;box-sizing:border-box}
+.complete-mask.device-phone .big,.mask.device-phone .exit-icon{font-size:36px;line-height:1}
+.complete-mask.device-phone .complete-title,.mask.device-phone .exit-title,.mask.device-phone .confirm-title{font-size:20px}
+.complete-mask.device-phone .complete-text,.mask.device-phone .exit-text,.mask.device-phone .muted{margin:5px 0 10px;font-size:13px}
+.complete-mask.device-phone .secondary,.mask.device-phone .secondary{margin-top:6px;min-height:42px}
+.mask.device-phone .danger{min-height:42px;margin:10px 0 6px;border-radius:13px;font-size:14px}
+
+/* 各学习页手机横屏内容密度复核。 */
+.count-page.device-phone .content{grid-template-columns:74% 1fr}
+.count-page.device-phone .objects.few .object{width:96px;height:96px;font-size:50px}
+.count-page.device-phone .objects.medium .object{width:82px;height:82px;font-size:43px}
+.count-page.device-phone .objects.dense .object{width:70px;height:70px;font-size:37px}
+.count-page.device-phone .waiting{font-size:42px}
+.split-page.device-phone .source-zone{height:92px}
+.split-page.device-phone .source-zone .feedback{height:28px;min-height:28px;line-height:28px}
+.split-page.device-phone .source-blocks{height:58px;align-items:center;overflow:visible}
+.split-page.device-phone .baskets{box-sizing:border-box;align-items:stretch}
+.split-page.device-phone .basket{height:100%;min-height:0;box-sizing:border-box;overflow:hidden}
+.split-page.device-phone .basket-title{font-size:14px}.split-page.device-phone .basket-title text{font-size:22px}
+.split-page.device-phone .basket-blocks{height:calc(100% - 28px);gap:6px;overflow:hidden}
+.split-page.device-phone .plus,.dice-page.device-phone .plus{font-size:34px}
+.dice-page.device-phone .feedback{min-height:50px;font-size:14px}
+.game.device-phone .take-arrow{font-size:13px}.game.device-phone .plus{font-size:30px}
+.result.device-phone .rest{left:22px;bottom:75px;font-size:12px}
+.parent-page.device-phone .intro{gap:9px}.parent-page.device-phone .intro .muted{font-size:12px}
+.parent-page.device-phone .stats{gap:7px}.parent-page.device-phone .stat{padding:10px;font-size:12px}.parent-page.device-phone .stat text{font-size:22px}
+.parent-page.device-phone .report,.parent-page.device-phone .settings{padding:13px}.parent-page.device-phone .section-title{margin-bottom:8px;font-size:15px}
+.parent-page.device-phone .metrics text{font-size:22px}.parent-page.device-phone .metrics label{font-size:11px}
+.parent-page.device-phone .operation-metrics{margin-top:8px;padding:7px;border-radius:10px;font-size:11px}
+.parent-page.device-phone .advice{margin-top:7px;padding:8px;border-radius:10px;font-size:12px}
+.parent-page.device-phone .setting-row{min-height:38px}.parent-page.device-phone .daily-label{margin:8px 0 6px;font-size:13px}
+.parent-page.device-phone .daily-options{gap:6px}.parent-page.device-phone .daily-button{min-height:36px;border-radius:11px;font-size:12px}
+.parent-page.device-phone .privacy{font-size:11px}.parent-page.device-phone .clear{font-size:13px}
