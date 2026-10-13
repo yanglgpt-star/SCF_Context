@@ -6,7 +6,7 @@
     python3 02_tools/md2html.py <输入.md> [输出.html] [--mermaid <mermaid.min.js>] [--kicker 文字]
 
 不带 --mermaid 时输出无图版本；带则把 mermaid bundle 内联进 HTML（离线可用）。
-版式令牌取自 04_workspace/01_prd/14-财务库存中心/财务库存中心（一期）PC端界面.html，
+版式令牌取自 04_workspace/01_prd/14_财务库存中心/财务库存中心（一期）PC端界面.html，
 为单一固定状态（不跟随系统主题）。
 """
 import re, sys, html, os

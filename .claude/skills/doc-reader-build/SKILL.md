@@ -17,9 +17,9 @@ description: 把仓库内的 md 交付物渲染成单文件只读 HTML 阅读版
 
 | 母本 | 特点 |
 |---|---|
-| `04_workspace/01_prd/14-财务库存中心/build_calc_doc.py` | ★ **首选母本**——更通用：通用分节器 + 围栏代码块 + 块级公式 |
-| `04_workspace/01_prd/14-财务库存中心/build_proto_doc.py` | 早期版：把 P01–P16 **硬绑**进切段逻辑，只适合骨架固定的逐页文档 |
-| `04_workspace/01_prd/14-财务库存中心/check_calc_doc.py` | 配套**数值校验器**范本（表格列数、数值自洽） |
+| `04_workspace/01_prd/14_财务库存中心/build_calc_doc.py` | ★ **首选母本**——更通用：通用分节器 + 围栏代码块 + 块级公式 |
+| `04_workspace/01_prd/14_财务库存中心/build_proto_doc.py` | 早期版：把 P01–P16 **硬绑**进切段逻辑，只适合骨架固定的逐页文档 |
+| `04_workspace/01_prd/14_财务库存中心/check_calc_doc.py` | 配套**数值校验器**范本（表格列数、数值自洽） |
 
 **新项目直接从 `build_calc_doc.py` 复制改名**，比照着改常量即可。
 

@@ -49,7 +49,7 @@ DIR: 04_workspace
   DIR: 03_discussions
   DIR: 04_公众号
   DIR: 05_关键会议纪要
-  DIR: 06.供应链金融文件
+  DIR: 06_供应链金融文件
 DIR: 05_drafts
   DIR: 临时记录
   DIR: 方案探索
