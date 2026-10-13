@@ -10,9 +10,12 @@
 node_modules/
 
 # ---------- 构建产物 ----------
+# 注意：macOS 文件系统大小写不敏感，`build/` 会连源码目录 `src/pages/Build/` 一起挡掉，
+# 故用否定规则救回。否定必须写在同一个 .gitignore 里——core.excludesFile 优先级低于它。
 dist/
 dist-ssr/
 build/
+!**/src/pages/Build/
 .output/
 *.tsbuildinfo
 
