@@ -48,4 +48,5 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # ---------- Claude Code 个人设置（跟机器绑定，不共享）----------
-.claude/settings.local.json
+# 用 **/ 前缀：各项目下的嵌套 .claude/ 也要挡住，不能只挡仓库根那一份
+**/.claude/settings.local.json
