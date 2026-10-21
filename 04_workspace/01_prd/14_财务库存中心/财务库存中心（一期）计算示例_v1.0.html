@@ -263,6 +263,8 @@ table.grid tbody tr:last-child td{border-bottom:0}
 table.grid tbody tr:hover{background:var(--surface-2)}
 table.grid td:first-child{color:var(--brand-ink); font-weight:500}
 table.grid td code{white-space:normal}
+table.grid.wide td,
+table.grid.wide td code{white-space:nowrap}
 table.grid td strong{font-weight:600}
 
 /* 计算逻辑代码块（``` ） */
@@ -388,6 +390,14 @@ pre.calc{
     <div class="rail-group-label"><span>五、专题算例</span><b>2</b></div>
     <a href="#s5-1" data-sec="s5-1"><span class="no">5.1</span><span>演练三：负库存的两阶段闭环</span></a>
     <a href="#s5-2" data-sec="s5-2"><span class="no">5.2</span><span>演练四：锁账与跨期处理（四条路的对照）</span></a>
+    <div class="rail-group-label"><span>六、全单据类型整体算例</span><b>7</b></div>
+    <a href="#s6-1" data-sec="s6-1"><span class="no">6.1</span><span>这张表怎么读</span></a>
+    <a href="#s6-2" data-sec="s6-2"><span class="no">6.2</span><span>三种前置结存状态</span></a>
+    <a href="#s6-3" data-sec="s6-3"><span class="no">6.3</span><span>全单据类型总表</span></a>
+    <a href="#s6-4" data-sec="s6-4"><span class="no">6.4</span><span>每个方向逐笔推一遍</span></a>
+    <a href="#s6-5" data-sec="s6-5"><span class="no">6.5</span><span>一条流水走完 10 类单据</span></a>
+    <a href="#s6-6" data-sec="s6-6"><span class="no">6.6</span><span>与附件对照表的差异</span></a>
+    <a href="#s6-7" data-sec="s6-7"><span class="no">6.7</span><span>要点</span></a>
     <div class="rail-group-label"><span>附录 A　来源对照表</span><b>1</b></div>
     <a href="#sA来源对照表" data-sec="sA来源对照表"><span class="no">A</span><span>来源对照表</span></a>
     <div class="rail-group-label"><span>附录 B　公式与校验项索引</span><b>2</b></div>
@@ -401,7 +411,7 @@ pre.calc{
     <div class="topbar-l">
       <h1>财务库存中心（一期）计算示例 v1.0</h1>
       <p class="topbar-sub">出入库计算示例 · 仓库／一级货主／二级产权人三个维度 ·
-        <b>35</b> 节 · <b>139</b> 张表 · <b>40</b> 段计算逻辑
+        <b>42</b> 节 · <b>146</b> 张表 · <b>44</b> 段计算逻辑
       </p>
     </div>
     <div class="topbar-r">
@@ -477,7 +487,8 @@ pre.calc{
 <div class="fml">D = 一级层金额 − ∑ 自有结存金额</div>
 <aside class="note"><p class="note-l"><strong>一句提醒。</strong> <span class="mth">D</span> ≠ 0 不是出错，是<strong>已经接受下来的代价</strong>——会计口径必须逐件 / 逐层如实结转，管理口径要的是一个能滚动的池价，两者本来就不可能同时成立。<code>E-13</code> 校的是「自有池有没有按它自己那口价如实走」，<strong>不是</strong>「<span class="mth">D</span> 必须等于 0」。</p></aside></section>
 <div class="chap-lead"><h2 class="chap-h">二、出入库计算示例</h2><aside class="note"><p class="note-l">逐个单据类型走一遍：<strong>起点 → 单据序列 → 计算逻辑 → 结存流水 → 要点</strong>。每种类型给两套——<strong>移动加权平均</strong>（标品 <code>M0001</code>）与<strong>个别计价</strong>（3C 整机 <code>M0002</code>，逐序列号）；另补一节<strong>先入先出法</strong>算例。</p></aside>
-<aside class="note"><p class="note-l"><strong>每个小节末尾都附一张「二级分摊与自有池」块</strong>：<strong>发生额层</strong>照引擎出口的原始形态给全「一行三个金额」，<strong>结存层</strong>给报表上真正看得到的那两列（<code>alloc_amount</code> / <code>own_amount</code>）加一列算出来的自有均价。移动加权平均的小节三个金额逐行相同（<span class="mth">D</span> = 0.00）；<strong>个别计价与先入先出法的小节只要发生出库／转出，<code>own_amount</code> 就与 <code>alloc_amount</code> 分叉</strong>——原因见 <code>§1.5</code>，各节的实际取值见小节末尾的块。</p></aside></div>
+<aside class="note"><p class="note-l"><strong>每个小节末尾都附一张「二级分摊与自有池」块</strong>：<strong>发生额层</strong>照引擎出口的原始形态给全「一行三个金额」，<strong>结存层</strong>给报表上真正看得到的那两列（<code>alloc_amount</code> / <code>own_amount</code>）加一列算出来的自有均价。移动加权平均的小节三个金额逐行相同（<span class="mth">D</span> = 0.00）；<strong>个别计价与先入先出法的小节只要发生出库／转出，<code>own_amount</code> 就与 <code>alloc_amount</code> 分叉</strong>——原因见 <code>§1.5</code>，各节的实际取值见小节末尾的块。</p></aside>
+<aside class="note"><p class="note-l"><strong>十类单据 × 三种前置结存状态的汇总表和一条贯穿流水在 <code>§6</code></strong>——本章按类型逐节展开，<code>§6</code> 把它们收成一张表。</p></aside></div>
 <section class="pg" id="s2-1" data-nav="2.1 三种计价方法的算法"><div class="sec-head"><span class="sec-no">2.1</span><div><h2>三种计价方法的算法</h2><p class="sec-path">二、出入库计算示例 → 三种计价方法的算法</p></div></div><h4 class="mini-h">移动加权平均法</h4>
 <p><strong>定义</strong>：系统会给每一个<strong>核算单元</strong>（就是把「商品、仓库、一级货主」这三样绑在一起的那个组合）维护一个「移动平均均价池」。只要进了一笔货，就按「（原来的金额 + 这一笔入账金额）÷（原来的数量 + 这一笔数量）」把均价重算一遍；出库的时候按<strong>当下的均价</strong>把金额结转出去、<strong>不重算均价</strong>。均价池只建在<strong>一级货主</strong>这一层，二级产权人和批次都<strong>不进会计均价池</strong>（规则 R3）——二级产权人另有一本<strong>管理口径</strong>的<strong>二级自有均价池</strong>（见分册 <code>§二</code>）。</p>
 <p><strong>适用场景</strong>：通用标品，也就是不要求一件件追溯成本的品类。它是<strong>一期默认启用</strong>的计价法（全局默认）。</p>
@@ -699,7 +710,7 @@ F3  rounding_diff = out_amount − out_qty × current_price</pre>
        Σ{is_open=1} layer_amount = 49,000.00     =  核算单元 amount = 49,000.00    ✓</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：示例商品编码（<code>M0002</code>） · 示例一级货主 A（<code>OWN-A</code>） · 示例仓库·一号仓（<code>WH01</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 核算引擎决策项·成本层与核算单元一致性（<code>E-11</code>） · 入库均重公式（<code>F1</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水（核算单元汇总）</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -899,7 +910,7 @@ F3  rounding_diff = out_amount − out_qty × current_price</pre>
        Σ{is_open=1} layer_amount = 12,000 + 13,000 + 11,500 + 12,500 + 14,000 = 63,000.00                     =  amount        ✓</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：销售退货入库（<code>SO_RET</code>） · 原销售出库单号（<code>orig_so_doc</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 金额增量（<code>amount_delta</code>） · 核算引擎决策项·成本层与核算单元一致性（<code>E-11</code>） · 入库均重公式（<code>F1</code>） · 出库结转公式（<code>F2</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1077,7 +1088,7 @@ E-11 两仓各自对平
        WH02：Σ layer_qty = 1 + 1 = 2 = qty ✓   Σ layer_amount = 12,000 + 13,000 = 25,000.00 = amount ✓</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：示例仓库·一号仓（<code>WH01</code>） · 示例仓库·二号仓（<code>WH02</code>） · 出入方向·1 入 0 出（<code>is_in</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 核算引擎决策项·成本层与核算单元一致性（<code>E-11</code>） · 结存金额（<code>new_amount</code>） · 结存单价（<code>new_price</code>） · 结存数量（<code>new_qty</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水（<code>WH02</code>：示例仓库·二号仓 调入侧）</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1308,7 +1319,7 @@ IN-5 无对价杂项（全五类里唯一用财务估价的一类）
          其余四层的层单价一分数不动。</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：外部（<code>EXTERNAL</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 估算依据（<code>valuation_basis</code>） · 估算来源（<code>valuation_source</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1566,7 +1577,7 @@ IN-5 无对价杂项（全五类里唯一用财务估价的一类）
 判断  is_internal = 1（集团内）→ 出凭证（模板 8.1.10）+ 合并抵消（模板 8.1.11）</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：示例商品编码（<code>M0002</code>） · 示例一级货主 A（<code>OWN-A</code>） · 示例一级货主 B（<code>OWN-B</code>） · 示例仓库·一号仓（<code>WH01</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 业务日期（<code>biz_date</code>） · 是否内部交易（<code>is_internal</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 作价来源（<code>price_source</code>） · 四舍五入函数（<code>round</code>） · 一级货权转移价（<code>transfer_price</code>） · 一级货权转移（<code>OWNER_TRANSFER</code>）</p></aside>
 <p><strong>结存流水（<code>OWN-B</code>：示例一级货主 B 转入侧）</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1874,7 +1885,7 @@ F2      ★ 个别计价：取【被点名的那个序列号 SN-0001】的层成
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：出库结转公式（<code>F2</code>） · 示例商品编码（<code>M0002</code>） · 示例其他出入库单号（<code>OT-202603-0103</code>） · 示例一级货主 A（<code>OWN-A</code>） · 示例一级货主 B（<code>OWN-B</code>） · 示例二级产权人 B-2（<code>OWN-B-2</code>） · 示例销售出库单号（<code>SO-202603-0103</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 示例仓库·一号仓（<code>WH01</code>） · 金额增量（<code>amount_delta</code>） · 业务日期（<code>biz_date</code>） · 是否内部交易（<code>is_internal</code>） · 二级分摊金额（<code>alloc_amount</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 作价来源（<code>price_source</code>） · 四舍五入函数（<code>round</code>） · 一级货权转移价（<code>transfer_price</code>）</p></aside>
 <p><strong>结存流水</strong></p>
 <p><code>OWN-A</code>（示例一级货主 A）层（转出方）</p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1890,7 +1901,7 @@ F2      ★ 个别计价：取【被点名的那个序列号 SN-0001】的层成
 <tr><td>03-10</td><td><code>OT-202603-0103</code>（示例其他出入库单号）</td><td>出</td><td>−2</td><td><code>SN-0001</code>、<code>SN-0002</code></td><td>12,000.000000 / 13,000.000000</td><td>25,000.00</td><td>2</td><td>24,000.00</td><td>12,000.000000</td></tr>
 </tbody></table></div>
 <p><code>OWN-B</code>（示例一级货主 B）层（转入方）</p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1921,7 +1932,7 @@ F2      ★ 个别计价：取【被点名的那个序列号 SN-0001】的层成
 硬校验    Σ alloc_amount = 11,500.00  =  一级层金额 11,500.00    ✓ 通过</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：出库结转公式（<code>F2</code>） · 示例商品编码（<code>M0002</code>） · 示例一级货主 A（<code>OWN-A</code>） · 示例仓库·一号仓（<code>WH01</code>） · 序列号（<code>sn_no</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 二级分摊金额（<code>alloc_amount</code>） · 金额增量（<code>amount_delta</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 一级货主（<code>owner_l1</code>） · 二级产权人（<code>owner_l2</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -1959,7 +1970,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
         派生结存单价 = round(37,000.00 / 3, 6) = 12,333.333333</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：出库结转公式（<code>F2</code>） · 固定价（<code>FIXED</code>） · 示例商品编码（<code>M0002</code>） · 示例其他出入库单号（<code>OT-202603-0102</code>） · 示例一级货主 A（<code>OWN-A</code>） · 示例二级产权人 A-1（<code>OWN-A-1</code>） · 示例二级产权人 A-2（<code>OWN-A-2</code>） · R2（二级按内部结算价、差额进管理口径、不出凭证） · 示例销售出库单号（<code>SO-202603-0102</code>） · 示例仓库·一号仓（<code>WH01</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 二级分摊金额（<code>alloc_amount</code>） · 金额增量（<code>amount_delta</code>） · 二级内部结算金额（<code>internal_amount</code>） · 内部损益（<code>internal_pl</code>） · 内部结算价（<code>internal_price</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 一级货主（<code>owner_l1</code>） · 二级产权人（<code>owner_l2</code>） · 取价结果（<code>price_value</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -2172,7 +2183,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
          就不存在「退货出库」这回事——实物已经出去了，退不回来。</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：采购退货出库（<code>PO_RET</code>） · 出库结转公式（<code>F2</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 金额增量（<code>amount_delta</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -2331,7 +2342,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
          不像移动加权平均那样被拉成一个均价。</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：出库结转公式（<code>F2</code>） · 示例仓库·一号仓（<code>WH01</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层数量（<code>layer_qty</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 金额增量（<code>amount_delta</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -2517,7 +2528,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
              查明原因后：借 管理费用 9,500.00 / 贷 待处理财产损溢 9,500.00</pre>
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：出库结转公式（<code>F2</code>） · 序列号（<code>sn_no</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 金额增量（<code>amount_delta</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 残值金额（<code>residual_amount</code>） · 残值来源（<code>residual_source</code>） · 四舍五入函数（<code>round</code>）</p></aside>
 <p><strong>结存流水</strong></p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -2534,7 +2545,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
 </tbody></table></div>
 <aside class="note"><p class="note-l"><strong>要点</strong>：<strong>按全额 11,500.00 一次性进损失是错的</strong>——那会把本来能收回来的 2,000.00 也一并费用化。<strong>报废 ≠ 盘亏</strong>：科目相同（都是待处理财产损溢），但<strong>来源和单据类型不一样</strong>——报废是<strong>业务主动推的单</strong>，盘亏是由盘点（<code>STOCKTAKE</code>）派生出来的，<strong>不要合并</strong>。<strong>个别计价下报废的是「具体哪一台」</strong>——报废的是 <code>SN-0003</code> 而不是「随便是哪一台」，这跟移动加权平均的「报废几台就按均价算几台」在<strong>成本追溯粒度</strong>上完全不同。</p></aside>
 <p><strong>六类总览</strong>（下表每一行都从同一起点 4 台 / 49,000.00 <strong>各自独立演算</strong>，不是一条连续流水）</p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>#</th>
 <th>子场景</th>
@@ -2735,7 +2746,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
 <aside class="note"><p class="note-l"><strong>变量说明</strong>：示例商品编码（<code>M0002</code>） · 示例一级货主 A（<code>OWN-A</code>） · 示例一级货主 B（<code>OWN-B</code>） · 示例仓库·一号仓（<code>WH01</code>） · 序列号（<code>sn_no</code>） · 成本层（<code>t_inventory_layer</code>） · 层金额（<code>layer_amount</code>） · 层单价（<code>layer_unit_cost</code>） · 是否未耗尽（<code>is_open</code>） · 金额增量（<code>amount_delta</code>） · 业务日期（<code>biz_date</code>） · 是否内部交易（<code>is_internal</code>） · 结存金额（<code>new_amount</code>） · 结存数量（<code>new_qty</code>） · 二级产权人（<code>owner_l2</code>） · 作价来源（<code>price_source</code>） · 四舍五入函数（<code>round</code>） · 一级货权转移价（<code>transfer_price</code>） · 一级货权转移（<code>OWNER_TRANSFER</code>）</p></aside>
 <p><strong>结存流水</strong></p>
 <p><code>OWN-A</code>（示例一级货主 A）层（转出方）</p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -2751,7 +2762,7 @@ F2      取【被点名的序列号 SN-0001】的层成本 = 12,000.000000
 <tr><td>03-10</td><td><code>OT-202603-0110</code>（示例货权转移单号）</td><td>出</td><td>−2</td><td><code>SN-0001</code>、<code>SN-0002</code></td><td>12,000.000000 / 13,000.000000</td><td>25,000.00</td><td>2</td><td>24,000.00</td><td>12,000.000000</td></tr>
 </tbody></table></div>
 <p><code>OWN-B</code>（示例一级货主 B）层（转入方）</p>
-<div class="tbl-wrap"><table class="grid">
+<div class="tbl-wrap"><table class="grid wide">
 <thead><tr>
 <th>日期</th>
 <th>单据</th>
@@ -3282,6 +3293,181 @@ B@WH01  ·  B-1
 </tbody></table></div>
 <p><strong>两条读法</strong>：</p>
 <ol class="meta meta-ol"><li><strong>补录单修不了「结错」，反结账修不了「漏单」</strong>：补录的语义是「这笔在 <code>04</code> 期<strong>从未存在</strong>」；结错的语义是「<code>04</code> 期<strong>有这笔、但做错了</strong>」。<strong>用补录去修结错，等于用一个业务单据去掩盖一个程序性错误</strong>——审计上再也分不清「错误」与「遗漏」。</li><li><strong>没锁账就别开补录单</strong>：<code>04</code> 期未锁账时走<strong>改单</strong>（reverse + new positive，<code>version_no + 1</code>），历史里留下可追溯的改单链。补录单是<strong>已锁账期间的专用通道</strong>，不是常规修数工具。</li></ol></section>
+<div class="chap-lead"><h2 class="chap-h">六、全单据类型整体算例</h2><aside class="note"><p class="note-l">第二章按单据类型一节一节走，每节自带起点；第三章换维度看结存。这一章把<strong>全部出入库单据类型收进一张表</strong>：同一笔「数量 10 台、单价 12.000000」的业务，分别落在<strong>三种前置结存状态</strong>上，过完账之后的结存是多少；再用<strong>一条流水</strong>把 10 类单据串起来走一遍。</p><p class="note-l">表的结构取自业务方给的《全单据类型 × 三种结存状态》对照表。<strong>附件列了 8 类，本章按项目口径补足 10 类</strong>（货权转移的入库腿、出库腿各算一类），与附件的其余两处差异见 <code>§6.6</code>。</p></aside></div>
+<section class="pg" id="s6-1" data-nav="6.1 这张表怎么读"><div class="sec-head"><span class="sec-no">6.1</span><div><h2>这张表怎么读</h2><p class="sec-path">六、全单据类型整体算例 → 这张表怎么读</p></div></div><div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>列组</th>
+<th>是什么</th>
+<th>不是什么</th>
+</tr></thead><tbody>
+<tr><td><strong>基础信息</strong>（单据类型 / 方向 / 数量 / 单价）</td><td><strong>本笔业务</strong>本身：哪类单据、入还是出、多少台、什么价</td><td>不是结存</td></tr>
+<tr><td><strong>情况1 / 情况2 / 情况3</strong>（各三列：数量 / 金额 / 均价）</td><td><strong>三种前置结存状态</strong>（取值见 <code>§6.2</code>）；每格是<strong>这笔业务过完账之后的结存</strong></td><td>不是三种处理方式，也不是本笔发生额</td></tr>
+</tbody></table></div>
+<p><strong>反推发生额</strong>：发生额 = 结果结存 − 前置结存。拿附件已填的那一行验一遍：</p>
+<pre class="calc">采购入库 +10 @ 12.000000（情况3）
+  结果 20 台 / 220.00  −  前置 10 台 / 100.00  =  +10 台 / +120.00
+  且 +120.00 = 10 × 12.000000   ✓</pre>
+<p><strong>两个「单价」不是一回事</strong>：</p>
+<ul class="meta"><li><strong>入库行</strong>的单价 = <strong>单据上的入库成本</strong>（采购价 / 原出库成本 / 调出方成本 / 外部给价 / 作价），本例统一 <strong>12.000000</strong>；</li><li><strong>出库行</strong>的单价 = <strong>从账上取出来的结转价</strong>：情况3 取当期均价 <strong>10.000000</strong>；情况1、情况2 取<strong>暂估价</strong>（<code>P_est</code>，取价来源不读结存）。出库价不是业务填的，附件那一列对出库行本来就没有「单据价」可填。</li><li>本例统一取 <code>P_est</code> = <strong>10.000000</strong>（来源 = 最近采购订单价），所以前置负结存的 −100.00 与本笔出库的 −100.00 同价。</li></ul>
+<aside class="note"><p class="note-l"><strong>零结存与负结存都取不到「移动均价」。</strong> 零结存是 <code>0 ÷ 0</code>，无解；负结存的「金额 ÷ 数量」即使除得出数，也不是一个可对外使用的均价——一律锁定 <code>P_est</code>，并对外显示 <code>—</code>（原文口径：负库存期间本行均价同时显示 <code>—</code>）。附件在这两格的均价写的是 <code>0</code>，只是示意，见 <code>§6.6</code>。</p></aside></section>
+<section class="pg" id="s6-2" data-nav="6.2 三种前置结存状态"><div class="sec-head"><span class="sec-no">6.2</span><div><h2>三种前置结存状态</h2><p class="sec-path">六、全单据类型整体算例 → 三种前置结存状态</p></div></div><div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>情况</th>
+<th>前置结存数量</th>
+<th>前置结存金额</th>
+<th>前置结存均价</th>
+<th>怎么形成的</th>
+</tr></thead><tbody>
+<tr><td><strong>情况1 · 小于 0</strong>（负结存）</td><td>−10</td><td>−100.00</td><td>—</td><td>出库时结存不足、策略允许负库存，按 <code>P_est</code> 10.000000 暂估出库并挂账（<code>OPEN</code>）</td></tr>
+<tr><td><strong>情况2 · 等于 0</strong>（零结存）</td><td>0</td><td>0.00</td><td>—</td><td>干净零：数量与金额同时为 0（不是「有金额没数量」的脏零）</td></tr>
+<tr><td><strong>情况3 · 大于 0</strong>（正结存）</td><td>10</td><td>100.00</td><td>10.000000</td><td>正常结存：10 台 × 10.000000</td></tr>
+</tbody></table></div></section>
+<section class="pg" id="s6-3" data-nav="6.3 全单据类型总表"><div class="sec-head"><span class="sec-no">6.3</span><div><h2>全单据类型总表</h2><p class="sec-path">六、全单据类型整体算例 → 全单据类型总表</p></div></div><aside class="note"><p class="note-l">每一格都是<strong>结果结存</strong>（数量 / 金额 / 均价）。十行的「情况」三组数只在两个方向上不同——<strong>入库五行同数、出库五行同数</strong>，差别全在备注里的处理规则上。</p></aside>
+<div class="tbl-wrap"><table class="grid wide">
+<thead><tr>
+<th>单据类型</th>
+<th>方向</th>
+<th>数量</th>
+<th>单价</th>
+<th>情况1（小于 0）数量</th>
+<th>情况1（小于 0）金额</th>
+<th>情况1（小于 0）均价</th>
+<th>情况2（等于 0）数量</th>
+<th>情况2（等于 0）金额</th>
+<th>情况2（等于 0）均价</th>
+<th>情况3（大于 0）数量</th>
+<th>情况3（大于 0）金额</th>
+<th>情况3（大于 0）均价</th>
+<th>备注说明</th>
+</tr></thead><tbody>
+<tr><td>采购入库（<code>PO_IN</code>）</td><td>+</td><td>10</td><td>12.000000</td><td>0</td><td>0.00</td><td>—</td><td>10</td><td>120.00</td><td>12.000000</td><td>20</td><td>220.00</td><td>11.000000</td><td>负结存先按暂估价冲平缺口、再入池；差价 20.00 出成本调整单</td></tr>
+<tr><td>销退入库（<code>SO_RET</code>）</td><td>+</td><td>10</td><td>12.000000</td><td>0</td><td>0.00</td><td>—</td><td>10</td><td>120.00</td><td>12.000000</td><td>20</td><td>220.00</td><td>11.000000</td><td>按原出库成本入账；负 / 零结存下的差价同样走成本调整</td></tr>
+<tr><td>调拨入库（<code>TRANSFER</code> · 入库腿）</td><td>+</td><td>10</td><td>12.000000</td><td>0</td><td>0.00</td><td>—</td><td>10</td><td>120.00</td><td>12.000000</td><td>20</td><td>220.00</td><td>11.000000</td><td>调入成本 = 调出方成本；同法人内调拨，集团层面净额为 0</td></tr>
+<tr><td>其他入库（<code>OTHER_IN</code>）</td><td>+</td><td>10</td><td>12.000000</td><td>0</td><td>0.00</td><td>—</td><td>10</td><td>120.00</td><td>12.000000</td><td>20</td><td>220.00</td><td>11.000000</td><td>受赠 / 盘盈按外部给价；受托代销、借入落外部货主（<code>OWN-D</code>），本层不动</td></tr>
+<tr><td>货权转移入库（<code>OWNER_TRANSFER</code> · 转入腿）</td><td>+</td><td>10</td><td>12.000000</td><td>0</td><td>0.00</td><td>—</td><td>10</td><td>120.00</td><td>12.000000</td><td>20</td><td>220.00</td><td>11.000000</td><td>按作价建层；作价与转出方成本的差进转出方损益，不进本层</td></tr>
+<tr><td>销售出库（<code>SO_OUT</code>）</td><td>−</td><td>10</td><td>10.000000</td><td>−20</td><td>−200.00</td><td>—</td><td>−10</td><td>−100.00</td><td>—</td><td>0</td><td>0.00</td><td>—</td><td>正结存按当期均价结转、刚好出清；负 / 零结存按暂估价出、挂账（<code>OPEN</code>）</td></tr>
+<tr><td>采退出库（<code>PO_RET</code>）</td><td>−</td><td>10</td><td>10.000000</td><td>−20</td><td>−200.00</td><td>—</td><td>−10</td><td>−100.00</td><td>—</td><td>0</td><td>0.00</td><td>—</td><td>按当期均价退供应商；与原进价的差只影响损益，不改本层单价</td></tr>
+<tr><td>调拨出库（<code>TRANSFER</code> · 出库腿）</td><td>−</td><td>10</td><td>10.000000</td><td>−20</td><td>−200.00</td><td>—</td><td>−10</td><td>−100.00</td><td>—</td><td>0</td><td>0.00</td><td>—</td><td>调出按本层成本，调入同额跟随；集团层面不产生损益</td></tr>
+<tr><td>其他出库（<code>OTHER_OUT</code>）</td><td>−</td><td>10</td><td>10.000000</td><td>−20</td><td>−200.00</td><td>—</td><td>−10</td><td>−100.00</td><td>—</td><td>0</td><td>0.00</td><td>—</td><td>报废 / 盘亏按当期均价；「货权已转、实物后出」的行金额记 0.00，只动数量</td></tr>
+<tr><td>货权转移出库（<code>OWNER_TRANSFER</code> · 转出腿）</td><td>−</td><td>10</td><td>10.000000</td><td>−20</td><td>−200.00</td><td>—</td><td>−10</td><td>−100.00</td><td>—</td><td>0</td><td>0.00</td><td>—</td><td>转出按本层成本；作价与成本的差是已实现毛利，出凭证 8.1.10</td></tr>
+</tbody></table></div>
+<aside class="note"><p class="note-l"><strong>十行只分两组，是因为「方向」决定了全部算法差异。</strong> 入库只有一条公式（<code>F1</code> 入均重），出库只有一条公式（<code>F2</code> 结转＋<code>F4</code> 出清）；单据类型改的是<strong>入池金额从哪来</strong>、<strong>出池金额记给谁</strong>、<strong>出不出凭证</strong>，不改余额算术。所以表格的「情况」三组数只随方向变。</p><p class="note-l"><strong>二级重分配（<code>OWNER_REASSIGN</code>）不在这张表里</strong>——它不动一级结存，只在二级分摊账上换归属、自有池同额平移，见 <code>§3.6</code> 与 <code>§4</code>；跨期补录（<code>PERIOD_ADJUST</code>）见 <code>§5.2</code>。</p></aside></section>
+<section class="pg" id="s6-4" data-nav="6.4 每个方向逐笔推一遍"><div class="sec-head"><span class="sec-no">6.4</span><div><h2>每个方向逐笔推一遍</h2><p class="sec-path">六、全单据类型整体算例 → 每个方向逐笔推一遍</p></div></div><p><strong>入库（+10 台 @ 12.000000 = +120.00）</strong></p>
+<pre class="calc">情况1  前置 −10 / −100.00 / —（按 P_est 10.000000 暂估形成）
+       ① 冲平缺口 ΔQ = 10：+10 台 / +round(10 × 10.000000, 2) = +100.00 → 0 / 0.00
+       ② 剩余 10 − 10 = 0 台入池：+0.00
+       ③ 差价 = (12.000000 − 10.000000) × 10 = 20.00 → 成本调整单（COST_ADJUST）计损益
+       结果 0 / 0.00 / —          ← 数量、金额同时归零，不留脏零
+情况2  前置 0 / 0.00 / —
+       F1：new_qty = 0 + 10 = 10；new_amount = 0.00 + 120.00 = 120.00
+       new_price = round(120.00 ÷ 10, 6) = 12.000000
+       结果 10 / 120.00 / 12.000000
+情况3  前置 10 / 100.00 / 10.000000
+       F1：new_qty = 20；new_amount = 220.00
+       new_price = round(220.00 ÷ 20, 6) = 11.000000
+       结果 20 / 220.00 / 11.000000</pre>
+<p><strong>出库（−10 台，取价 10.000000）</strong></p>
+<pre class="calc">情况1  前置 −10 / −100.00 / —
+       P_est = 10.000000；负库存期间均价不可对外，均价列显示 —
+       amount_delta = −round(10 × 10.000000, 2) = −100.00
+       结果 −20 / −200.00 / —      ← 缺口从 10 加深到 20
+情况2  前置 0 / 0.00 / —
+       零态取不到移动均价，P_est 回退到不读结存的价（本例 10.000000）
+       amount_delta = −100.00
+       结果 −10 / −100.00 / —      ← 挂账记录产生，resolve_status = 未冲平
+情况3  前置 10 / 100.00 / 10.000000
+       F2：amount_delta = −round(10 × 10.000000, 2) = −100.00 → 0 / 0.00
+       F4 检查：new_qty = 0 且 new_amount = 0.00 → 余差为 0，无需补结转
+       结果 0 / 0.00 / —          ← 干净出清</pre>
+<aside class="note"><p class="note-l"><strong>两条边界写在这里</strong>：① 负结存再出库是<strong>加深缺口</strong>，不是「先算均价再出」；② 正结存出到 0 时 <code>F4</code> 只在「金额 ≠ 0」时才补结转——本表情况3 的余差恰好是 0.00，所以没有补差这一笔。</p></aside></section>
+<section class="pg" id="s6-5" data-nav="6.5 一条流水走完 10 类单据"><div class="sec-head"><span class="sec-no">6.5</span><div><h2>一条流水走完 10 类单据</h2><p class="sec-path">六、全单据类型整体算例 → 一条流水走完 10 类单据</p></div></div><p><strong>起点</strong>：核算单元 <code>(M0001, WH01, OWN-A)</code>，移动加权平均，二级产权人一律 <code>OWN-A-1</code>，<strong>期初 0 台 / 0.00</strong>。单据数量一律 10 台（第 12 笔 5 台、第 13 笔 20 台、第 14 笔 5 台），<code>P_est</code> = 12.000000（最近采购订单价）。</p>
+<p><strong>单据序列与结存</strong></p>
+<div class="tbl-wrap"><table class="grid wide">
+<thead><tr>
+<th>序</th>
+<th>日期</th>
+<th>单号 · 单据类型</th>
+<th>方向</th>
+<th>数量</th>
+<th>单价</th>
+<th>本笔金额</th>
+<th>结存数量</th>
+<th>结存金额</th>
+<th>结存均价</th>
+</tr></thead><tbody>
+<tr><td>1</td><td>05-01</td><td><code>PO-202605-0001</code> · 采购入库（<code>PO_IN</code>）</td><td>入</td><td>+10</td><td>12.000000</td><td>+120.00</td><td>10</td><td>120.00</td><td>12.000000</td></tr>
+<tr><td>2</td><td>05-02</td><td><code>SR-202605-0001</code> · 销退入库（<code>SO_RET</code>）</td><td>入</td><td>+10</td><td>12.000000</td><td>+120.00</td><td>20</td><td>240.00</td><td>12.000000</td></tr>
+<tr><td>3</td><td>05-03</td><td><code>TR-202605-0001</code> · 调拨入库（<code>TRANSFER</code> · 入库腿）</td><td>入</td><td>+10</td><td>12.000000</td><td>+120.00</td><td>30</td><td>360.00</td><td>12.000000</td></tr>
+<tr><td>4</td><td>05-04</td><td><code>OT-202605-0001</code> · 其他入库（<code>OTHER_IN</code>）</td><td>入</td><td>+10</td><td>12.000000</td><td>+120.00</td><td>40</td><td>480.00</td><td>12.000000</td></tr>
+<tr><td>5</td><td>05-05</td><td><code>OT-202605-0002</code> · 货权转移入库（<code>OWNER_TRANSFER</code> · 转入腿）</td><td>入</td><td>+10</td><td>12.000000</td><td>+120.00</td><td>50</td><td>600.00</td><td>12.000000</td></tr>
+<tr><td>6</td><td>05-06</td><td><code>SO-202605-0001</code> · 销售出库（<code>SO_OUT</code>）</td><td>出</td><td>−10</td><td>12.000000</td><td>−120.00</td><td>40</td><td>480.00</td><td>12.000000</td></tr>
+<tr><td>7</td><td>05-07</td><td><code>PR-202605-0001</code> · 采退出库（<code>PO_RET</code>）</td><td>出</td><td>−10</td><td>12.000000</td><td>−120.00</td><td>30</td><td>360.00</td><td>12.000000</td></tr>
+<tr><td>8</td><td>05-08</td><td><code>TR-202605-0002</code> · 调拨出库（<code>TRANSFER</code> · 出库腿）</td><td>出</td><td>−10</td><td>12.000000</td><td>−120.00</td><td>20</td><td>240.00</td><td>12.000000</td></tr>
+<tr><td>9</td><td>05-09</td><td><code>OT-202605-0003</code> · 其他出库（<code>OTHER_OUT</code>）</td><td>出</td><td>−10</td><td>12.000000</td><td>−120.00</td><td>10</td><td>120.00</td><td>12.000000</td></tr>
+<tr><td>10</td><td>05-10</td><td><code>OT-202605-0004</code> · 货权转移出库（<code>OWNER_TRANSFER</code> · 转出腿）</td><td>出</td><td>−10</td><td>12.000000</td><td>−120.00</td><td>0</td><td>0.00</td><td>—</td></tr>
+<tr><td>11</td><td>05-11</td><td><code>SO-202605-0002</code> · 销售出库（<code>SO_OUT</code>）</td><td>出</td><td>−10</td><td>12.000000</td><td>−120.00</td><td>−10</td><td>−120.00</td><td>—</td></tr>
+<tr><td>12</td><td>05-12</td><td><code>OT-202605-0005</code> · 其他出库（<code>OTHER_OUT</code> · 报废）</td><td>出</td><td>−5</td><td>12.000000</td><td>−60.00</td><td>−15</td><td>−180.00</td><td>—</td></tr>
+<tr><td>13</td><td>05-13</td><td><code>PO-202605-0002</code> · 采购入库（<code>PO_IN</code>）</td><td>入</td><td>+20</td><td>15.000000</td><td>+300.00</td><td>5</td><td>75.00</td><td>15.000000</td></tr>
+<tr><td>14</td><td>05-14</td><td><code>SR-202605-0002</code> · 销退入库（<code>SO_RET</code>）</td><td>入</td><td>+5</td><td>12.000000</td><td>+60.00</td><td>10</td><td>135.00</td><td>13.500000</td></tr>
+</tbody></table></div>
+<p><strong>第 11–14 笔的计算逻辑</strong>（前 10 笔都是「均价 12.000000 下同价进出」，无差价）：</p>
+<pre class="calc">05-10  出清：10 − 10 = 0；120.00 − 120.00 = 0.00；余差 0 → 均价显示 —
+05-11  销售出库 10 台：结存为 0、取不到移动均价 → P_est = 12.000000
+       amount_delta = −round(10 × 12.000000, 2) = −120.00 → −10 / −120.00
+       均价锁定 P_est、对外显示 —；挂账记录 OPEN，负数量 10
+05-12  其他出库（报废）5 台：继续按 P_est 12.000000
+       amount_delta = −round(5 × 12.000000, 2) = −60.00 → −15 / −180.00
+       挂账累计负数量 15；resolve_status 仍为未冲平
+05-13  采购入库 20 台 @ 15.000000 = 300.00
+       ① 冲平缺口 ΔQ = 15：+15 台 / +round(15 × 12.000000, 2) = +180.00 → 0 / 0.00
+       ② 剩余 20 − 15 = 5 台按实际成本入池：+5 台 / +round(5 × 15.000000, 2) = +75.00
+          → 5 / 75.00 / round(75.00 ÷ 5, 6) = 15.000000
+       ③ 价差 = (15.000000 − 12.000000) × 15 = 45.00 → 成本调整单（COST_ADJUST）计损益
+       挂账转 RESOLVED，cost_status 转 CALCULATED
+05-14  销退入库 5 台 @ 原出库成本 12.000000 = 60.00
+       F1：new_qty = 5 + 5 = 10；new_amount = 75.00 + 60.00 = 135.00
+       new_price = round(135.00 ÷ 10, 6) = 13.500000</pre>
+<aside class="note"><p class="note-l"><strong>第 13 笔是整条流水里唯一不等的一行</strong>：本笔 300.00，结存只增加了 255.00（−180.00 → 75.00），差的 45.00 是<strong>价差</strong>，走成本调整单进损益，<strong>不进存货</strong>。这正是「冲平与入池分两步」的可见后果——把 300.00 整笔压进去会得到 120.00 / 15.000000，那是错的。</p></aside>
+<p><strong>钱的账</strong>（不平就说明算错了）：</p>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>项</th>
+<th>算式</th>
+<th>金额</th>
+</tr></thead><tbody>
+<tr><td>入库单据金额合计（第 1–5、13、14 笔）</td><td>120.00 × 5 + 300.00 + 60.00</td><td>960.00</td></tr>
+<tr><td>出库单据金额合计（第 6–12 笔）</td><td>120.00 × 5 + 120.00 + 60.00</td><td>−780.00</td></tr>
+<tr><td>冲平价差（成本调整单，计损益、不进存货）</td><td>(15.000000 − 12.000000) × 15</td><td>−45.00</td></tr>
+<tr><td><strong>期末结存</strong></td><td>960.00 − 780.00 − 45.00</td><td><strong>135.00</strong></td></tr>
+</tbody></table></div>
+<p><strong>二级分摊与自有池</strong></p>
+<aside class="note"><p class="note-l">这条流水全部落在<strong>一个核算单元、一个二级产权人、移动加权平均</strong>下：入池价 = 单元价、出池价 = 单元均价，所以 <code>alloc_amount</code> 与 <code>own_amount</code> 逐笔相同（<span class="mth">D</span> = 0.00）；<code>internal_amount</code> 全程 <code>—</code>——流水里没有二级重分配。三金额真正分叉的形态见 <code>§3.6</code> 与 <code>§4</code>。</p></aside>
+<p><strong>结存层</strong>（报表上并排展示的两列 ＋ 一列算出来的自有均价）</p>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>二级产权人</th>
+<th>结存数量</th>
+<th><code>alloc_amount</code></th>
+<th><code>own_amount</code></th>
+<th>自有均价</th>
+<th>自有 − 会计</th>
+</tr></thead><tbody>
+<tr><td><code>OWN-A-1</code></td><td>10</td><td>135.00</td><td>135.00</td><td>13.500000</td><td>0.00</td></tr>
+<tr><td><strong>合计</strong></td><td><strong>10</strong></td><td><strong>135.00</strong></td><td><strong>135.00</strong></td><td>—</td><td><strong>0.00</strong></td></tr>
+</tbody></table></div></section>
+<section class="pg" id="s6-6" data-nav="6.6 与附件对照表的差异"><div class="sec-head"><span class="sec-no">6.6</span><div><h2>与附件对照表的差异</h2><p class="sec-path">六、全单据类型整体算例 → 与附件对照表的差异</p></div></div><div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>#</th>
+<th>附件</th>
+<th>本章</th>
+<th>为什么</th>
+</tr></thead><tbody>
+<tr><td>1</td><td>8 类单据（没有货权转移入库 / 出库）</td><td><strong>10 类</strong></td><td>项目口径的出入库单据类型是 10 类；货权转移按两条腿各算一类（<code>OWNER_TRANSFER</code>，<code>is_in = 1 / 0</code>）</td></tr>
+<tr><td>2</td><td>负 / 零结存的均价写 <code>0</code></td><td>写 <code>—</code></td><td>零结存无均价、负库存均价不可对外（原文 <code>§三.5</code>）；写 <code>0</code> 会被读成「均价是 0」，再拿它乘数量去算金额就错了</td></tr>
+<tr><td>3</td><td>三个「情况」列只有数值</td><td>先声明它们是<strong>前置结存状态</strong></td><td>表头「情况1:小于0」容易被读成三种处理方式；表里的数本身是<strong>结果结存</strong></td></tr>
+</tbody></table></div>
+<aside class="note"><p class="note-l">另有两类情况不单独占行，因为它们<strong>不改变本层结存</strong>：「其他入库」里的受托代销 / 借入落外部货主（<code>OWN-D</code>，<code>is_internal = 0</code>）；「其他出库」里「货权已转、实物后出」的行金额记 0.00、<strong>只动数量</strong>。两者在 <code>§2.2</code> / <code>§2.3</code> 的对应小节里已给过算例。</p></aside></section>
+<section class="pg" id="s6-7" data-nav="6.7 要点"><div class="sec-head"><span class="sec-no">6.7</span><div><h2>要点</h2><p class="sec-path">六、全单据类型整体算例 → 要点</p></div></div><aside class="note"><p class="note-l">1. <strong>三个「情况」是前置结存状态，不是三种算法。</strong> 同一类单据在三种状态下走的是同一条公式，差别只在起点——所以 10 行里只有两个方向的数。 2. <strong>出库单价是取出来的，不是填出来的。</strong> 正结存取当期均价，零 / 负结存取暂估价 <code>P_est</code>；<code>P_est</code> 必须来自<strong>不读结存</strong>的价（最近采购价 / 基准价）。 3. <strong>正结存出到 0 是干净出清，负结存进货到 0 是冲平和差价两件事。</strong> 前者 <code>F4</code> 只在余差 ≠ 0 时补结转；后者必须<strong>先按 <code>P_est</code> 冲平、再按实际成本入池</strong>，剩余为 0 就一点不入池。 4. <strong>入池的只有「冲平之后的剩余量」。</strong> 把入库金额整笔加到负余额上会同时算错数量和均价（<code>§5.1</code> 第 2 条读法）。 5. <strong>10 类里只有调拨和货权转移是两条腿。</strong> 调拨两腿同额，集团净额 0；货权转移两腿两个价——转出按本层成本、转入按作价，差额是转出方已实现毛利。 6. <strong>三张表互相对得上</strong>：总表反推发生额（<code>§6.3</code>）、流水逐笔滚动（<code>§6.5</code>）、钱的账汇总（<code>§6.5</code> 末），每一格都能用 <code>附录 B</code> 的 <code>F1</code> / <code>F2</code> / <code>F4</code> 复算。</p></aside></section>
 <section class="pg" id="sA来源对照表" data-nav="A 来源对照表"><div class="sec-head"><span class="sec-no">A</span><div><h2>来源对照表</h2><p class="sec-path">附录 A　来源对照表 → 来源对照表</p></div></div><p>每个小节 ← 哪个文件的哪一节，以及它与源文件的口径关系（<code>移自</code> / <code>升级自</code> / <code>取用自</code>）。</p>
 <div class="tbl-wrap"><table class="grid">
 <thead><tr>
@@ -3297,6 +3483,7 @@ B@WH01  ·  B-1
 <tr><td><code>4.1</code>–<code>4.10</code> 自有均价池逐笔过账</td><td>分册 <code>§五</code></td><td>移自</td></tr>
 <tr><td><code>5.1</code> 负库存的两阶段闭环</td><td>整体 PRD <code>2.3.1.6</code> 演练三</td><td>取用自</td></tr>
 <tr><td><code>5.2</code> 锁账与跨期处理</td><td>整体 PRD <code>2.3.1.6</code> 演练四</td><td>取用自</td></tr>
+<tr><td><code>6.1</code>–<code>6.7</code> 全单据类型整体算例</td><td>本文 <code>§2.2</code> / <code>§2.3</code> 的十类单据算例 ＋ 业务方《全单据类型 × 三种结存状态》对照表</td><td>汇总自（三处差异见 <code>§6.6</code>）</td></tr>
 </tbody></table></div>
 <aside class="note"><p class="note-l"><code>移自</code> 的四处，源文件都已改成指向本文的指针，正文不再重复。<code>升级自</code> 的两处<strong>只在本文生效</strong>——原文与分册的入库／出库示例仍是两金额口径，是否同步升级需单独授权。</p></aside></section>
 <section class="pg" id="sB1计价公式" data-nav=" B.1 计价公式"><div class="sec-head"><span class="sec-no">·</span><div><h2>B.1 计价公式</h2><p class="sec-path">附录 B　公式与校验项索引 → B.1 计价公式</p></div></div><div class="tbl-wrap"><table class="grid">

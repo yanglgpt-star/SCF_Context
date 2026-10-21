@@ -78,7 +78,8 @@ def render_table(block):
     if not body:
         return ""
     head, rest = body[0], body[1:]
-    o = ['<div class="tbl-wrap"><table class="grid">', "<thead><tr>"]
+    cls = "grid wide" if len(head) >= 10 else "grid"
+    o = ['<div class="tbl-wrap"><table class="%s">' % cls, "<thead><tr>"]
     for c in head:
         o.append("<th>%s</th>" % cell(c))
     o.append("</tr></thead><tbody>")
@@ -271,7 +272,7 @@ for ch_title, ch_lines in chapters:
         nav.append('<a href="#%s" data-sec="%s"><span class="no">%s</span>'
                    '<span>%s</span></a>' % (sid, sid, inline(no or "·"), inline(nm)))
         html_body = render_blocks(sbody)
-        n_tbl += html_body.count('<table class="grid">')
+        n_tbl += html_body.count('<table class="grid')
         n_code += html_body.count('<pre class="calc">')
         body_parts.append(
             '<section class="pg" id="%s" data-nav="%s %s">'
@@ -548,6 +549,8 @@ table.grid tbody tr:last-child td{border-bottom:0}
 table.grid tbody tr:hover{background:var(--surface-2)}
 table.grid td:first-child{color:var(--brand-ink); font-weight:500}
 table.grid td code{white-space:normal}
+table.grid.wide td,
+table.grid.wide td code{white-space:nowrap}
 table.grid td strong{font-weight:600}
 
 /* 计算逻辑代码块（``` ） */

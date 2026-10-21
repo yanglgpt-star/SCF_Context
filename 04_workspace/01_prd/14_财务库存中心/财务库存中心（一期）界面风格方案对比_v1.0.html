@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>财务库存中心 · 界面风格方案对比 v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+/* ============================================================
+   本文件自身的排版（刻意中性灰，避免与 4 套方案抢色）
+   ============================================================ */
+:root{
+  --doc-ground:#F5F6F7;
+  --doc-card:#FFFFFF;
+  --doc-ink:#14181B;
+  --doc-ink-2:#5A646D;
+  --doc-ink-3:#8C959D;
+  --doc-rule:#E2E5E8;
+  --doc-rule-2:#CFD4D9;
+  --doc-accent:#2E4653;
+  --f-ui:"Inter",-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--doc-ground);color:var(--doc-ink);
+  font-family:var(--f-ui);font-size:14px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.doc{max-width:1240px;margin:0 auto;padding:44px 28px 96px}
+
+.doc-head{border-bottom:2px solid var(--doc-ink);padding-bottom:22px;margin-bottom:14px}
+.doc-eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--doc-ink-3)}
+.doc-head h1{font-size:27px;line-height:1.25;margin:8px 0 10px;letter-spacing:-.01em;text-wrap:balance}
+.doc-head p{margin:0;color:var(--doc-ink-2);max-width:78ch}
+
+.doc-rules{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:0;
+  border:1px solid var(--doc-rule);border-bottom:none;background:var(--doc-card);
+  margin:22px 0 34px;
+}
+.doc-rules div{padding:14px 16px;border-bottom:1px solid var(--doc-rule);border-right:1px solid var(--doc-rule)}
+.doc-rules div:last-child{border-right:none}
+.doc-rules b{display:block;font-size:11.5px;letter-spacing:.04em;color:var(--doc-ink-3);font-weight:600;margin-bottom:4px;text-transform:uppercase;font-family:var(--f-mono)}
+.doc-rules span{font-size:13px;color:var(--doc-ink-2)}
+
+/* ---- 一道必须交代的前提 ---- */
+.caveat{
+  background:var(--doc-card);border:1px solid var(--doc-rule);border-left:3px solid #B4530A;
+  padding:15px 18px;margin:0 0 34px;
+}
+.caveat h3{margin:0 0 6px;font-size:14px}
+.caveat p{margin:0 0 7px;font-size:13px;color:var(--doc-ink-2);max-width:88ch}
+.caveat p:last-child{margin-bottom:0}
+.caveat code{font-family:var(--f-mono);font-size:12px;background:#F1F3F5;padding:1px 5px;border-radius:3px}
+
+/* ---- 方案块 ---- */
+.opt{background:var(--doc-card);border:1px solid var(--doc-rule);margin-bottom:26px}
+.opt.is-pick{border-color:var(--doc-ink);box-shadow:0 0 0 1px var(--doc-ink)}
+.opt-head{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid var(--doc-rule)}
+.opt-id{font-family:var(--f-mono);font-size:22px;font-weight:600;line-height:1;color:var(--doc-ink);flex:0 0 auto;padding-top:3px}
+.opt-meta{flex:1 1 320px;min-width:0}
+.opt-meta h2{margin:0 0 3px;font-size:17px;letter-spacing:-.005em}
+.opt-meta h2 em{font-style:normal;font-family:var(--f-mono);font-size:12px;color:var(--doc-ink-3);margin-left:8px}
+.opt-meta p{margin:0;color:var(--doc-ink-2);font-size:13px}
+.opt-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:0 0 auto;max-width:340px}
+.badge{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.05em;padding:3px 8px;border:1px solid var(--doc-rule-2);color:var(--doc-ink-2);background:#FAFBFC;white-space:nowrap}
+.badge--pick{background:var(--doc-ink);color:#fff;border-color:var(--doc-ink);font-weight:600}
+.badge--warn{border-color:#E3B98A;background:#FDF6EC;color:#8A5A08}
+
+/* ---- 色卡 ---- */
+.swatches{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--doc-rule)}
+.sw{flex:1 1 74px;min-width:74px;padding:9px 10px 8px;border-right:1px solid var(--doc-rule)}
+.sw:last-child{border-right:none}
+.sw i{display:block;height:26px;border-radius:3px;border:1px solid rgba(0,0,0,.10);margin-bottom:6px}
+.sw b{display:block;font-family:var(--f-mono);font-size:10px;color:var(--doc-ink-3);font-weight:500;letter-spacing:.03em}
+.sw span{display:block;font-family:var(--f-mono);font-size:10.5px;color:var(--doc-ink-2)}
+
+.opt-foot{display:grid;grid-template-columns:1.3fr 1fr}
+.opt-foot>div{padding:16px 20px}
+.opt-foot>div:first-child{border-right:1px solid var(--doc-rule)}
+.opt-foot h4{margin:0 0 6px;font-size:11.5px;font-family:var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--doc-ink-3)}
+.opt-foot p{margin:0 0 8px;font-size:13px;color:var(--doc-ink-2)}
+.opt-foot p:last-child{margin-bottom:0}
+.opt-foot strong{color:var(--doc-ink)}
+@media (max-width:880px){.opt-foot{grid-template-columns:1fr}.opt-foot>div:first-child{border-right:none;border-bottom:1px solid var(--doc-rule)}}
+
+/* ---- 模拟界面容器 ---- */
+.mock-host{padding:20px;background:repeating-conic-gradient(#EEF0F2 0 25%,#E7EAED 0 50%) 0 0/16px 16px}
+.mock{
+  display:grid;grid-template-columns:184px 1fr;grid-template-rows:minmax(0,1fr);height:524px;
+  border:1px solid rgba(0,0,0,.14);border-radius:7px;overflow:hidden;
+  background:var(--paper);box-shadow:0 6px 20px rgba(16,26,31,.13);
+  font-size:11.5px;position:relative;
+}
+.skin{
+  --font-ui:"Inter",-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-display:"Noto Serif SC","Songti SC",Georgia,serif;
+}
+
+/* ============================================================
+   方案 A · 账簿绿格（现版，基准）
+   ============================================================ */
+[data-skin="ledger"]{
+  --paper:#F3F3E9; --surface:#FFFEF9; --surface-2:#EDECE0; --surface-3:#E0DFCE;
+  --ink:#1A2119; --ink-2:#53604E; --ink-3:#7C8874;
+  --rule:#DAD8C5; --rule-2:#C4C1A9;
+  --brand:#1F5C46; --brand-ink:#14402F; --brand-wash:#E2EFE7; --brand-line:#A9CDB8;
+  --brand-solid:#1F5C46; --brand-solid-ink:#EAF3EC;
+  --ok:#146B41; --ok-wash:#E1F0E7; --warn:#8A5A08; --warn-wash:#FBF0DA;
+  --danger:#A93120; --danger-wash:#FAE6E2;
+  --rail:#14231C; --rail-2:#1C3128; --rail-line:#274334;
+  --rail-ink:#8CA79A; --rail-ink-2:#5E7A6C; --rail-hi:#E9F1EA; --rail-active:#1F5C46; --rail-on:#EAF3EC;
+  --seal:#B2422A; --seal-line:rgba(178,66,42,.20);
+  --thead-bg:#EDECE0; --row-hover:#F7F6EE;
+  --link:#1F5C46; --link-deco:underline;
+  --bg-fx:repeating-linear-gradient(180deg,transparent 0 21px,rgba(31,92,70,.062) 21px 22px);
+  --radius:8px; --radius-ctl:6px;
+}
+
+/* ============================================================
+   方案 B · 仓配助手（附件原样）
+   ============================================================ */
+[data-skin="console"]{
+  --paper:#F5F6F7; --surface:#FFFFFF; --surface-2:#F7F8FA; --surface-3:#EFF1F4;
+  --ink:#1D2129; --ink-2:#4E5969; --ink-3:#86909C;
+  --rule:#E5E6EB; --rule-2:#D7DAE0;
+  --brand:#1FA84A; --brand-ink:#17853B; --brand-wash:#E8F7EC; --brand-line:#A6E0B8;
+  --brand-solid:#1FA84A; --brand-solid-ink:#FFFFFF;
+  --ok:#1FA84A; --ok-wash:#E8F7EC; --warn:#D2760A; --warn-wash:#FDF3E3;
+  --danger:#E5453A; --danger-wash:#FDECEA;
+  --rail:#FFFFFF; --rail-2:#F2F4F7; --rail-line:#EDEFF2;
+  --rail-ink:#4E5969; --rail-ink-2:#86909C; --rail-hi:#1D2129; --rail-active:#1FA84A; --rail-on:#FFFFFF;
+  --seal:#E5453A; --seal-line:transparent;
+  --thead-bg:#FAFBFC; --row-hover:#F5F9FF;
+  --link:#1668DC; --link-deco:none;
+  --bg-fx:none;
+  --radius:8px; --radius-ctl:4px;
+}
+
+/* ============================================================
+   方案 C · 附件骨架 + 账簿底（推荐）
+   ============================================================ */
+[data-skin="warm"]{
+  --paper:#F3F3E9; --surface:#FFFEF9; --surface-2:#F7F6EE; --surface-3:#EDECE0;
+  --ink:#1A2119; --ink-2:#53604E; --ink-3:#7C8874;
+  --rule:#DAD8C5; --rule-2:#C9C7B0;
+  --brand:#1F5C46; --brand-ink:#14402F; --brand-wash:#E2EFE7; --brand-line:#A9CDB8;
+  --brand-solid:#1F5C46; --brand-solid-ink:#EAF3EC;
+  --ok:#146B41; --ok-wash:#E1F0E7; --warn:#8A5A08; --warn-wash:#FBF0DA;
+  --danger:#A93120; --danger-wash:#FAE6E2;
+  --rail:#FFFEF9; --rail-2:#EFEEE2; --rail-line:#E4E2D3;
+  --rail-ink:#53604E; --rail-ink-2:#8C8874; --rail-hi:#1A2119; --rail-active:#1F5C46; --rail-on:#EAF3EC;
+  --seal:#B2422A; --seal-line:rgba(178,66,42,.20);
+  --thead-bg:#F2F1E5; --row-hover:#F7F6EE;
+  --link:#1F5C46; --link-deco:underline;
+  --bg-fx:repeating-linear-gradient(180deg,transparent 0 21px,rgba(31,92,70,.055) 21px 22px);
+  --radius:8px; --radius-ctl:5px;
+}
+
+/* ============================================================
+   方案 D · 附件骨架 + 深色侧栏
+   ============================================================ */
+[data-skin="rail"]{
+  --paper:#F5F6F7; --surface:#FFFFFF; --surface-2:#F7F8FA; --surface-3:#EFF1F4;
+  --ink:#1D2129; --ink-2:#4E5969; --ink-3:#86909C;
+  --rule:#E5E6EB; --rule-2:#D7DAE0;
+  --brand:#1F5C46; --brand-ink:#14402F; --brand-wash:#E2EFE7; --brand-line:#A9CDB8;
+  --brand-solid:#1F5C46; --brand-solid-ink:#EAF3EC;
+  --ok:#146B41; --ok-wash:#E1F0E7; --warn:#D2760A; --warn-wash:#FDF3E3;
+  --danger:#E5453A; --danger-wash:#FDECEA;
+  --rail:#14231C; --rail-2:#1C3128; --rail-line:#274334;
+  --rail-ink:#8CA79A; --rail-ink-2:#5E7A6C; --rail-hi:#E9F1EA; --rail-active:#1F5C46; --rail-on:#EAF3EC;
+  --seal:#B2422A; --seal-line:transparent;
+  --thead-bg:#FAFBFC; --row-hover:#F2F7F4;
+  --link:#1F5C46; --link-deco:none;
+  --bg-fx:none;
+  --radius:8px; --radius-ctl:4px;
+}
+
+/* ============================================================
+   模拟界面的共用骨架（4 套共用同一份 DOM）
+   ============================================================ */
+.m-rail{background:var(--rail);display:flex;flex-direction:column;min-width:0;overflow:hidden;border-right:1px solid var(--rail-line)}
+.m-brand{display:flex;gap:8px;align-items:center;padding:12px 12px 10px}
+.m-mark{flex:none;width:22px;height:22px;border-radius:5px;display:grid;place-items:center;background:var(--brand);color:var(--brand-solid-ink);font-size:11px;font-weight:700}
+.m-brand b{display:block;font-size:11.5px;color:var(--rail-hi);font-weight:600;line-height:1.3}
+.m-brand i{display:block;font-style:normal;font-family:var(--f-mono);font-size:8.5px;color:var(--rail-ink-2);letter-spacing:.03em}
+.m-navwrap{flex:1;min-height:0;overflow:hidden;padding:0 8px}
+.m-group{padding:9px 8px 4px;font-family:var(--f-mono);font-size:9px;letter-spacing:.1em;color:var(--rail-ink-2)}
+.m-nav{display:block;padding:6px 9px;border-radius:5px;color:var(--rail-ink);font-size:11.5px;line-height:1.3}
+.m-nav.is-on{background:var(--rail-active);color:var(--rail-on);font-weight:600}
+.m-railfoot{margin-top:auto;padding:9px 12px;border-top:1px solid var(--rail-line);color:var(--rail-ink-2);font-family:var(--f-mono);font-size:9px}
+
+.m-main{display:flex;flex-direction:column;min-width:0;background-color:var(--paper);background-image:var(--bg-fx);position:relative}
+.m-tabbar{display:flex;gap:4px;padding:6px 12px 0;background:var(--surface);border-bottom:1px solid var(--rule)}
+.m-tab{padding:6px 11px;font-size:11px;color:var(--ink-2);border:1px solid transparent;border-bottom:0;border-radius:5px 5px 0 0;white-space:nowrap}
+.m-tab.is-on{background:var(--paper);color:var(--brand-ink);border-color:var(--rule);font-weight:600;box-shadow:inset 0 2px 0 var(--brand)}
+.m-tab i{font-style:normal;color:var(--ink-3);margin-left:6px}
+.m-top{display:flex;align-items:center;gap:9px;padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--rule);position:relative;z-index:1}
+.m-crumb{font-size:11px;color:var(--ink-2)}
+.m-sp{flex:1}
+.m-chip{font-family:var(--f-mono);font-size:9px;color:var(--ok);background:var(--ok-wash);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.m-ava{flex:none;width:20px;height:20px;border-radius:50%;background:var(--brand-wash);color:var(--brand-ink);display:grid;place-items:center;font-size:9.5px;font-weight:600}
+.m-body{flex:1;min-height:0;padding:12px 14px 14px;display:flex;flex-direction:column;gap:9px;overflow:hidden;position:relative;z-index:1}
+.m-h1{margin:0;font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+
+.m-filt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px;background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);padding:10px 12px}
+.m-fl{display:flex;align-items:center;border:1px solid var(--rule);border-radius:var(--radius-ctl);background:var(--surface);min-height:30px;overflow:hidden}
+.m-fl-t{flex:none;padding:0 9px;font-size:11px;color:var(--ink-2);border-right:1px solid var(--rule);white-space:nowrap;line-height:1.2}
+.m-fl-c{flex:1;display:flex;min-width:0;padding:0 9px}
+.m-fl-c input{flex:1;min-width:0;height:28px;padding:0;border:0;background:none;font:inherit;font-size:11px;color:var(--ink)}
+.m-fl-c input::placeholder{color:var(--ink-3)}
+.m-fl-c input:focus{outline:none}
+
+.m-bar{display:flex;align-items:center;gap:8px}
+.m-btn{height:28px;padding:0 12px;border:1px solid var(--rule);border-radius:var(--radius-ctl);background:var(--surface);color:var(--ink);font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.m-btn--brand{background:var(--brand-solid);border-color:var(--brand-solid);color:var(--brand-solid-ink);font-weight:600}
+
+.m-tblwrap{flex:1;overflow:auto;background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius)}
+.m-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:11px}
+.m-tbl th,.m-tbl td{padding:7px 10px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--rule);background:var(--surface)}
+.m-tbl thead th{background:var(--thead-bg);font-weight:600;color:var(--ink-2);font-size:10.5px}
+.m-tbl tbody tr:hover td{background:var(--row-hover)}
+.m-tbl tbody tr.tot td{background:var(--surface-2);font-weight:600;color:var(--ink)}
+.m-tbl .r{text-align:right}
+.m-tbl .n{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.m-tbl .lk{color:var(--link);text-decoration:var(--link-deco);text-underline-offset:2px}
+.m-tbl .mu{color:var(--ink-3)}
+.m-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;background:var(--ok-wash);color:var(--ok)}
+.m-tag.bad{background:var(--danger-wash);color:var(--danger)}
+
+.m-pager{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--ink-2);padding:0 2px}
+.m-pg{display:flex;gap:4px;margin-left:auto}
+.m-pg span{min-width:22px;height:22px;padding:0 6px;border:1px solid var(--rule);border-radius:var(--radius-ctl);display:inline-grid;place-items:center;background:var(--surface)}
+.m-pg span.on{background:var(--brand-solid);border-color:var(--brand-solid);color:var(--brand-solid-ink);font-weight:600}
+.m-pg-extra{display:none;align-items:center;gap:6px}
+.m-pg-extra input{width:34px;height:22px;border:1px solid var(--rule);border-radius:var(--radius-ctl);background:var(--surface);font:inherit;font-size:10.5px;text-align:center;color:var(--ink)}
+.m-sel{height:22px;border:1px solid var(--rule);border-radius:var(--radius-ctl);background:var(--surface);font:inherit;font-size:10.5px;color:var(--ink);padding:0 4px}
+
+/* ---- 布局层：附件骨架 vs 现版骨架 ---- */
+[data-layout="ledger"] .m-tabbar{display:none}
+[data-layout="ledger"] .m-rail{padding-top:2px}
+[data-layout="ledger"] .m-nav.is-on{border-left:2.5px solid var(--seal)}
+[data-layout="ledger"] .m-h1{font-family:var(--font-display)}
+
+[data-layout="attach"] .m-crumb{display:none}
+[data-layout="attach"] .m-h1{display:none}
+[data-layout="attach"] .m-rail{padding:0 8px}
+[data-layout="attach"] .m-railfoot{margin-top:auto}
+[data-layout="attach"] .m-mark{border-radius:6px}
+[data-layout="attach"] .m-filt{gap:11px 12px;padding:12px 14px}
+[data-layout="attach"] .m-fl{display:block;border:0;background:none;min-height:0;overflow:visible}
+[data-layout="attach"] .m-fl-t{display:block;padding:0 0 5px;border-right:0;color:var(--ink-2)}
+[data-layout="attach"] .m-fl-c{padding:0}
+[data-layout="attach"] .m-fl-c input{width:100%;height:30px;padding:0 9px;border:1px solid var(--rule);border-radius:var(--radius-ctl);background:var(--surface)}
+[data-layout="attach"] .m-pager{justify-content:center}
+[data-layout="attach"] .m-pg{margin-left:0}
+[data-layout="attach"] .m-pg-extra{display:inline-flex}
+[data-layout="attach"] .m-tbl tbody td:first-child{color:var(--link);text-decoration:var(--link-deco);text-underline-offset:2px}
+
+/* ---- 结尾 ---- */
+.tail{margin-top:42px;padding-top:22px;border-top:2px solid var(--doc-ink)}
+.tail h2{font-size:19px;margin:0 0 10px}
+.tail p{margin:0 0 10px;font-size:13.5px;color:var(--doc-ink-2);max-width:84ch}
+.tail ul{margin:0 0 12px;padding-left:20px;font-size:13.5px;color:var(--doc-ink-2)}
+.tail li{margin-bottom:5px}
+.tail code{font-family:var(--f-mono);font-size:12px;background:#F1F3F5;padding:1px 5px;border-radius:3px}
+.tail strong{color:var(--doc-ink)}
+
+.cmp{width:100%;border-collapse:collapse;margin:18px 0 6px;font-size:12.5px}
+.cmp th,.cmp td{border:1px solid var(--doc-rule);padding:9px 11px;text-align:left;vertical-align:top}
+.cmp thead th{background:#FAFBFC;font-size:11.5px;color:var(--doc-ink-2);font-weight:600;white-space:nowrap}
+.cmp td:first-child{font-weight:600;white-space:nowrap}
+.cmp .y{color:#146B41;font-weight:600}
+.cmp .n{color:#A93120}
+.cmp-wrap{overflow-x:auto;border:1px solid var(--doc-rule);border-right:none;border-left:none}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <header class="doc-head">
+    <div class="doc-eyebrow">财务库存中心（一期）· 原型页面 · 界面风格</div>
+    <h1>界面风格方案对比 v1.0</h1>
+    <p>按附件（<strong>仓配助手</strong>列表页）的风格，给原型试了四套。四套共用<strong>同一份模拟 DOM</strong>——同一张「结存流水数据（P05）」列表页，只换令牌与布局层，所以差别是真实的风格差别，不是内容差别。</p>
+  </header>
+
+  <div class="doc-rules">
+    <div><b>只读</b><span>本文件不改原型、不碰 <code>PC端界面.html</code>。挑定后才落到正式文件。</span></div>
+    <div><b>同 DOM</b><span>四套共用一份模板，靠 <code>data-skin</code> / <code>data-layout</code> 切换。</span></div>
+    <div><b>单态</b><span>沿用现有约束：不做系统主题跟随、不做深浅切换。</span></div>
+    <div><b>数据自洽</b><span>模拟表逐行相加等于合计行；口径按「物理口径·仓库」标注。</span></div>
+  </div>
+
+  <div class="caveat">
+    <h3>先说一件必须由你拍板的事</h3>
+    <p>现版的配色不是随手定的，是 <strong>A 方案「账簿绿格」</strong>，写在两处约束里：<code>CLAUDE.md §四</code>「配色以本目录既有的『账簿绿格』令牌为准」，以及 <code>fin-prototype-edit</code> skill 的「令牌源只认 <code>PC端界面.html</code>」。</p>
+    <p>附件那套是另一套语言——<strong>冷灰平底 + 白色侧栏 + 无衬线标题 + 蓝色链接</strong>。选 B / D 就等于<strong>换掉设计系统</strong>，那两处约束要一起改，令牌源 <code>PC端界面.html</code> 也要跟着重做，否则原型与令牌源会立刻不一致。</p>
+    <p>C 是折中：<strong>拿附件的骨架（白色侧栏 / 标签在上 / 居中分页 / 页签条），保留账簿的底与色</strong>——你上次说过「平灰底不好看、账簿格线更能接受」，C 就是照着这句话做的。</p>
+  </div>
+
+  <!-- ================= A ================= -->
+  <section class="opt" data-skin="ledger" data-layout="ledger" id="A">
+    <div class="opt-head">
+      <div class="opt-id">A</div>
+      <div class="opt-meta">
+        <h2>账簿绿格 <em>现版 · 基准</em></h2>
+        <p>照 632 KB 原型现状复刻：暖纸底 + 账簿横格线、深绿侧栏、衬线标题、标签在左的输入组、绿下划线链接、右对齐分页。</p>
+      </div>
+      <div class="opt-tags"><span class="badge">现版</span><span class="badge">有格线</span><span class="badge">深色侧栏</span></div>
+    </div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#F3F3E9"></i><b>页面底</b><span>#F3F3E9</span></div>
+      <div class="sw"><i style="background:#FFFEF9"></i><b>卡片面</b><span>#FFFEF9</span></div>
+      <div class="sw"><i style="background:#DAD8C5"></i><b>分隔线</b><span>#DAD8C5</span></div>
+      <div class="sw"><i style="background:#1F5C46"></i><b>主色</b><span>#1F5C46</span></div>
+      <div class="sw"><i style="background:#14231C"></i><b>侧栏底</b><span>#14231C</span></div>
+      <div class="sw"><i style="background:#B2422A"></i><b>印色</b><span>#B2422A</span></div>
+    </div>
+    <div class="mock-host" data-mock></div>
+    <div class="opt-foot">
+      <div>
+        <h4>为什么留着它</h4>
+        <p>全项目唯一有<strong>业务语义</strong>的界面：横格线来自账页、印色来自凭证、衬线标题来自账本。它不像任何一套通用后台，看一眼就知道是「存货核算」。</p>
+        <p>也是 16 页原型 + 规格抽屉 + 四层浮层已经落定的那套，<strong>零改动成本</strong>。</p>
+      </div>
+      <div>
+        <h4>代价与注意</h4>
+        <p><strong>与附件差距最大</strong>：侧栏是深色、筛选项标签在左、没有页签条、分页靠右。</p>
+        <p>如果目标是「让业务方觉得这就是我们线上那套」，A 达不到。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= B ================= -->
+  <section class="opt" data-skin="console" data-layout="attach" id="B">
+    <div class="opt-head">
+      <div class="opt-id">B</div>
+      <div class="opt-meta">
+        <h2>仓配助手 <em>附件原样</em></h2>
+        <p>照附件直搬：白色侧栏 + 绿色实心胶囊选中、冷灰平底、纯白卡片、全无衬线、蓝色链接、页签条、居中分页（共 N 条 / 每页 / 前往）。</p>
+      </div>
+      <div class="opt-tags"><span class="badge badge--warn">换设计系统</span><span class="badge">无格线</span><span class="badge">白侧栏</span></div>
+    </div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#F5F6F7"></i><b>页面底</b><span>#F5F6F7</span></div>
+      <div class="sw"><i style="background:#FFFFFF"></i><b>卡片面</b><span>#FFFFFF</span></div>
+      <div class="sw"><i style="background:#E5E6EB"></i><b>分隔线</b><span>#E5E6EB</span></div>
+      <div class="sw"><i style="background:#1FA84A"></i><b>主色</b><span>#1FA84A</span></div>
+      <div class="sw"><i style="background:#1668DC"></i><b>链接</b><span>#1668DC</span></div>
+      <div class="sw"><i style="background:#86909C"></i><b>次要字</b><span>#86909C</span></div>
+    </div>
+    <div class="mock-host" data-mock></div>
+    <div class="opt-foot">
+      <div>
+        <h4>为什么选它</h4>
+        <p><strong>与附件逐项对齐</strong>：侧栏、筛选、按钮、表格、分页、页签条全部是同一种做法。业务方一眼认得出是自家系统。</p>
+        <p>交互惯性也一致——筛选标签在上、分页居中带总数，是他们的日常肌肉记忆。</p>
+      </div>
+      <div>
+        <h4>代价与注意</h4>
+        <p><strong>平灰底</strong>正是你上次评价「不好看」的那一种；绿格线、印色、衬线标题三项账簿语义<strong>全部丢失</strong>。</p>
+        <p>要动 <code>CLAUDE.md §四</code> 与 <code>PC端界面.html</code>；16 页原型的 <code>.filt</code> / <code>.bar</code> / <code>.tbl</code> / <code>.pg</code> 都要重写。</p>
+        <p>绿色取自截图目测，落地前需与真实令牌核对。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= C ================= -->
+  <section class="opt is-pick" data-skin="warm" data-layout="attach" id="C">
+    <div class="opt-head">
+      <div class="opt-id">C</div>
+      <div class="opt-meta">
+        <h2>附件骨架 + 账簿底 <em>折中</em></h2>
+        <p>拿附件的<strong>骨架</strong>——白色侧栏、绿色胶囊、标签在上、页签条、居中分页、无蓝链接；保留账簿的<strong>底与色</strong>——暖纸底 + 淡格线 + 账簿绿 + 衬线页面标题。</p>
+      </div>
+      <div class="opt-tags"><span class="badge badge--pick">推荐</span><span class="badge">有格线</span><span class="badge">白侧栏</span><span class="badge">保留账簿语义</span></div>
+    </div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#F3F3E9"></i><b>页面底</b><span>#F3F3E9</span></div>
+      <div class="sw"><i style="background:#FFFEF9"></i><b>卡片面</b><span>#FFFEF9</span></div>
+      <div class="sw"><i style="background:#DAD8C5"></i><b>分隔线</b><span>#DAD8C5</span></div>
+      <div class="sw"><i style="background:#1F5C46"></i><b>主色</b><span>#1F5C46</span></div>
+      <div class="sw"><i style="background:#FFFEF9"></i><b>侧栏底</b><span>#FFFEF9</span></div>
+      <div class="sw"><i style="background:#B2422A"></i><b>印色</b><span>#B2422A</span></div>
+    </div>
+    <div class="mock-host" data-mock></div>
+    <div class="opt-foot">
+      <div>
+        <h4>为什么推荐</h4>
+        <p><strong>骨架照抄附件，业务方认得出；底色留账簿，不丢身份</strong>。你上次对「账簿格线」的接受度明显高于平灰底，这一套就是那个判断的延续。</p>
+        <p>改动量<strong>比 B 小</strong>：只动布局层与令牌，账簿的 6 个 <code>.tag--*</code>、印色、<code>.mnote</code> 警示条这些语义件全部原样保留。</p>
+        <p>格线只有 .055 不透明度，在列表页这种密集版面上不抢行、不干扰读数，只是让底不空。</p>
+      </div>
+      <div>
+        <h4>代价与注意</h4>
+        <p>仍是<strong>混合体</strong>——严格说「和附件不完全一样」，如果甲方要求 1:1 复刻附件，C 不合格。</p>
+        <p>白色侧栏 + 暖底并置，需要把侧栏右边界线加重一点（已用 <code>#E4E2D3</code>），否则两者会糊成一片。</p>
+        <p>同样要动 <code>§四</code> 与令牌源——只是幅度比 B 小。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= D ================= -->
+  <section class="opt" data-skin="rail" data-layout="attach" id="D">
+    <div class="opt-head">
+      <div class="opt-id">D</div>
+      <div class="opt-meta">
+        <h2>附件骨架 + 深色侧栏 <em>折中</em></h2>
+        <p>附件的骨架，但把侧栏换回深绿。冷灰底 + 深色侧栏 + 账簿绿主色——列表区和附件一模一样，全靠侧栏压住身份。</p>
+      </div>
+      <div class="opt-tags"><span class="badge">无格线</span><span class="badge">深色侧栏</span><span class="badge">对比最强</span></div>
+    </div>
+    <div class="swatches">
+      <div class="sw"><i style="background:#F5F6F7"></i><b>页面底</b><span>#F5F6F7</span></div>
+      <div class="sw"><i style="background:#FFFFFF"></i><b>卡片面</b><span>#FFFFFF</span></div>
+      <div class="sw"><i style="background:#E5E6EB"></i><b>分隔线</b><span>#E5E6EB</span></div>
+      <div class="sw"><i style="background:#1F5C46"></i><b>主色</b><span>#1F5C46</span></div>
+      <div class="sw"><i style="background:#14231C"></i><b>侧栏底</b><span>#14231C</span></div>
+      <div class="sw"><i style="background:#8CA79A"></i><b>侧栏字</b><span>#8CA79A</span></div>
+    </div>
+    <div class="mock-host" data-mock></div>
+    <div class="opt-foot">
+      <div>
+        <h4>为什么可选</h4>
+        <p>三套折中里<strong>对比最强</strong>：深色侧栏天然把导航区与工作区分开，长表格页面上尤其好用。</p>
+        <p>主色仍是账簿绿，所以「财务」的身份还在；只是从底色换成了侧栏来承担。</p>
+      </div>
+      <div>
+        <h4>代价与注意</h4>
+        <p>深色侧栏（<code>#14231C</code>）配冷灰底（<code>#F5F6F7</code>）<strong>色温打架</strong>——侧栏偏暖绿、主区偏冷，同一屏里看久了会觉得脏。</p>
+        <p>若选 D，建议把侧栏改成更中性的深青 <code>#0F2B26</code> 再评估。</p>
+        <p>同样要动 <code>§四</code> 与令牌源。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 对照表 ================= -->
+  <div class="tail">
+    <h2>横向对照</h2>
+    <div class="cmp-wrap">
+      <table class="cmp">
+        <thead>
+          <tr><th>方案</th><th>贴近附件</th><th>保留账簿语义</th><th>页面底</th><th>侧栏</th><th>筛选项</th><th>分页</th><th>要动的约束</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>A 账簿绿格</td><td class="n">低</td><td class="y">完整</td><td>暖纸 + 格线</td><td>深绿</td><td>标签在左</td><td>右对齐</td><td class="y">无</td></tr>
+          <tr><td>B 仓配助手</td><td class="y">逐项一致</td><td class="n">全丢</td><td>冷灰平底</td><td>白色</td><td>标签在上</td><td>居中带总数</td><td class="n">§四 + 令牌源</td></tr>
+          <tr><td>C 附件骨架 + 账簿底</td><td class="y">骨架一致</td><td class="y">保住</td><td>暖纸 + 格线</td><td>白色</td><td>标签在上</td><td>居中带总数</td><td class="n">§四 + 令牌源</td></tr>
+          <tr><td>D 附件骨架 + 深色侧栏</td><td class="y">骨架一致</td><td>部分（仅主色）</td><td>冷灰平底</td><td>深绿</td><td>标签在上</td><td>居中带总数</td><td class="n">§四 + 令牌源</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:30px">我的判断与顾虑</h2>
+    <p><strong>推荐 C。</strong>附件里真正有价值的不是那抹绿或那片灰，是它把列表页的<strong>动线</strong>理顺了：页签条在上、筛选标签在上、按钮分左右、分页居中带总数——这些是效率，不是配色。C 把这套骨架整套拿过来，同时留住你已经认可过的账簿底。</p>
+    <p>如果你要的是「<strong>和线上那套看起来是同一个产品</strong>」，那就是 <strong>B</strong>，别犹豫——但那要接受平灰底，并且把 <code>CLAUDE.md §四</code> 与 <code>PC端界面.html</code> 一起改掉。</p>
+    <p>我的顾虑有两个：</p>
+    <ul>
+      <li><strong>绿色取值是目测的。</strong>附件截图里的绿我没法取到准确色值（<code>#1FA84A</code> 是估的）。定方案后请给我一份真实令牌或设计稿，我再锁死。</li>
+      <li><strong>规格抽屉与四层浮层没进这一轮。</strong>本页只做了列表页。原型里还有 <code>.drawer</code> 规格抽屉、<code>.form</code> 新建表单、<code>.modal</code>、四层浮层 <code>dw</code>/<code>pw</code>/<code>mw</code>/<code>fw</code>——那部分要不要跟、跟到哪一层，取决于你选哪套，我按你定的那套统一推。</li>
+    </ul>
+
+    <h2 style="margin-top:30px">挑定之后我会做什么</h2>
+    <ul>
+      <li>按选定方案改 <code>财务库存中心（一期）原型页面.html</code> 的令牌层与布局层，逐页走查 16 页 + 抽屉 + 浮层；改前先备份。</li>
+      <li>同步 <code>PC端界面.html</code>（它是令牌源，不同步就立刻不一致）——<strong>这一步需要你单独授权</strong>。</li>
+      <li>如涉及配色约束变更，改 <code>CLAUDE.md §四</code> 的措辞。</li>
+      <li>改完跑 <code>build_proto_doc.py</code> 重出说明书；<strong>不提交 commit</strong>。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ 模拟界面模板（四套方案共用同一份 DOM） ============ -->
+<template id="tpl-mock">
+  <div class="mock skin">
+    <aside class="m-rail">
+      <div class="m-brand">
+        <span class="m-mark">账</span>
+        <div><b>财务库存中心</b><i>存货核算 · 一期</i></div>
+      </div>
+      <div class="m-navwrap">
+        <div class="m-group">数据接入</div>
+        <span class="m-nav">业务源单据管理</span>
+        <span class="m-nav">原始数据处理</span>
+        <div class="m-group">结存查询</div>
+        <span class="m-nav is-on">结存流水数据</span>
+        <span class="m-nav">存货实时余额</span>
+        <span class="m-nav">余额管理报表</span>
+      </div>
+      <div class="m-railfoot">引擎 v1.0 · MA / SI / FIFO</div>
+    </aside>
+
+    <div class="m-main">
+      <div class="m-tabbar">
+        <span class="m-tab is-on">结存流水数据<i>✕</i></span>
+        <span class="m-tab">存货实时余额<i>✕</i></span>
+      </div>
+
+      <div class="m-top">
+        <span class="m-crumb">结存查询 / 结存流水数据 / 仓库维度</span>
+        <span class="m-sp"></span>
+        <span class="m-chip">期间 2026-10 · 未锁账</span>
+        <span class="m-ava">王</span>
+      </div>
+
+      <div class="m-body">
+        <h3 class="m-h1">结存流水数据</h3>
+
+        <div class="m-filt">
+          <label class="m-fl"><span class="m-fl-t">商品</span><span class="m-fl-c"><input type="text" placeholder="请输入商品编码" value=""></span></label>
+          <label class="m-fl"><span class="m-fl-t">仓库</span><span class="m-fl-c"><input type="text" placeholder="全部仓库" value=""></span></label>
+          <label class="m-fl"><span class="m-fl-t">一级货主</span><span class="m-fl-c"><input type="text" placeholder="全部一级货主" value=""></span></label>
+          <label class="m-fl"><span class="m-fl-t">记账期间</span><span class="m-fl-c"><input type="text" placeholder="2026-10" value=""></span></label>
+        </div>
+
+        <div class="m-bar">
+          <button class="m-btn">导出</button>
+          <span class="m-sp"></span>
+          <button class="m-btn m-btn--brand">搜索</button>
+          <button class="m-btn">重置</button>
+        </div>
+
+        <div class="m-tblwrap">
+          <table class="m-tbl">
+            <thead>
+              <tr>
+                <th>商品</th><th>仓库</th><th>一级货主</th><th>批次号</th>
+                <th class="r">结存数量</th><th class="r">结存均价</th><th class="r">结存金额</th><th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="lk">M0001</td><td>WH01</td><td>OWN-A</td><td class="mu">—</td><td class="r n">60</td><td class="r n">7.833333</td><td class="r n">470.00</td><td><span class="m-tag">正常</span></td></tr>
+              <tr><td class="lk">M0002</td><td>WH01</td><td>OWN-A</td><td class="mu">—</td><td class="r n">100</td><td class="r n">5.000000</td><td class="r n">500.00</td><td><span class="m-tag">正常</span></td></tr>
+              <tr><td class="lk">M0002</td><td>WH02</td><td>OWN-A</td><td class="mu">—</td><td class="r n">50</td><td class="r n">6.000000</td><td class="r n">300.00</td><td><span class="m-tag">正常</span></td></tr>
+              <tr><td class="lk">M9003</td><td>WH02</td><td>OWN-B</td><td class="mu">—</td><td class="r n">500</td><td class="r n">40.000000</td><td class="r n">20,000.00</td><td><span class="m-tag">正常</span></td></tr>
+              <tr><td class="lk">M8001</td><td>WH03</td><td>OWN-B</td><td class="mu">—</td><td class="r n">88</td><td class="r n">12.500000</td><td class="r n">1,100.00</td><td><span class="m-tag bad">负库存挂账</span></td></tr>
+              <tr><td class="mu">另有 4 个核算单元…</td><td class="mu">—</td><td class="mu">—</td><td class="mu">—</td><td class="r n">15</td><td class="r n mu">—</td><td class="r n">6,230.29</td><td class="mu">—</td></tr>
+              <tr class="tot"><td colspan="4">合计 · 9 个核算单元（物理口径 · 仓库）</td><td class="r n">813</td><td class="r n">35.178708</td><td class="r n">28,600.29</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="m-pager">
+          <span class="m-pg-extra">共 883 条</span>
+          <span class="m-pg-extra"><select class="m-sel"><option>20 条/页</option></select></span>
+          <span class="m-pg">
+            <span>‹</span><span class="on">1</span><span>2</span><span>3</span><span>…</span><span>45</span><span>›</span>
+          </span>
+          <span class="m-pg-extra">前往 <input type="text" value="1"> 页</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function(){
+  "use strict";
+  var tpl = document.getElementById('tpl-mock');
+  if(!tpl || !tpl.content){ return; }
+  document.querySelectorAll('[data-mock]').forEach(function(host){
+    host.appendChild(tpl.content.cloneNode(true));
+  });
+})();
+</script>
+</body>
+</html>

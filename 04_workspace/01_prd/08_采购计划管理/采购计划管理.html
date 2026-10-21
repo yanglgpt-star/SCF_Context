@@ -889,6 +889,7 @@
     // ==============================
     let currentView = 'plan';
     let editingPlanIndex = -1;
+    let copyingFromCode = '';   // 复制来源计划编码，仅用于保存后区分提示文案
     let planPage = 1, planPageSize = 5;
     let orderPage = 1, orderPageSize = 5;
     let logPage = 1, logPageSize = 5;
@@ -1159,6 +1160,7 @@
 
     function openCreatePlanModal() {
         editingPlanIndex = -1;
+        copyingFromCode = '';
         document.getElementById('modalTitle').textContent = '创建采购计划';
         document.getElementById('f_code').value = genPlanCode(plans.length + 1);
         ['f_totalAmount', 'f_term1', 'f_term2', 'f_startDate', 'f_endDate',
@@ -1192,16 +1194,12 @@
         openModal('planModal');
     }
 
-    function openEditPlanModal(index) {
-        editingPlanIndex = index;
-        const p = filteredPlansData[index];
-        document.getElementById('modalTitle').textContent = '编辑采购计划';
-        document.getElementById('f_code').value = p.code;
+    // 把源计划的业务配置回填到表单。不含编码、完成率、预计日期、执行/计划状态等执行态字段
+    function fillPlanForm(p) {
         document.getElementById('f_level').value = p.level;
         document.getElementById('f_brand').value = p.brand;
         document.getElementById('f_category').value = p.category;
         document.getElementById('f_totalAmount').value = p.totalAmount;
-        document.getElementById('f_completionRate').value = p.completionRate + '%';
         document.getElementById('f_company1').value = p.company1;
         document.getElementById('f_company2').value = p.company2;
         document.getElementById('f_company3').value = p.company3;
@@ -1219,10 +1217,6 @@
         onLevelChange();
         onDiffTypeChange(1);
         onDiffTypeChange(2);
-        document.getElementById('f_startDate').value = p.startDate;
-        document.getElementById('f_endDate').value = p.endDate;
-        document.getElementById('f_execStatus').value = p.execStatus;
-        document.getElementById('f_planStatus').value = p.planStatus;
         document.getElementById('f_minPrice').value = p.minPrice;
         document.getElementById('f_maxPrice').value = p.maxPrice;
         document.getElementById('f_minQty').value = p.minQty;
@@ -1231,6 +1225,37 @@
         document.getElementById('f_invoiceRate').value = p.invoiceRate;
         document.getElementById('f_coopTerm').value = p.coopTerm;
         document.getElementById('f_tradeAmount').value = p.tradeAmount;
+    }
+
+    function openEditPlanModal(index) {
+        editingPlanIndex = index;
+        copyingFromCode = '';
+        const p = filteredPlansData[index];
+        document.getElementById('modalTitle').textContent = '编辑采购计划';
+        fillPlanForm(p);
+        document.getElementById('f_code').value = p.code;
+        document.getElementById('f_completionRate').value = p.completionRate + '%';
+        document.getElementById('f_startDate').value = p.startDate;
+        document.getElementById('f_endDate').value = p.endDate;
+        document.getElementById('f_execStatus').value = p.execStatus;
+        document.getElementById('f_planStatus').value = p.planStatus;
+        openModal('planModal');
+    }
+
+    // 复制：以源计划为模板打开创建表单；业务配置预填，执行态归零，预计日期留空待用户重填
+    function openCopyPlanModal(code) {
+        const src = plans.find(x => x.code === code);
+        if (!src) return;
+        editingPlanIndex = -1;      // -1 → savePlan 走「新建」分支
+        copyingFromCode = code;
+        document.getElementById('modalTitle').textContent = '复制采购计划（源：' + code + '）';
+        fillPlanForm(src);
+        document.getElementById('f_code').value = genPlanCode(plans.length + 1);
+        document.getElementById('f_completionRate').value = '0.00%';
+        document.getElementById('f_execStatus').value = '待执行';
+        document.getElementById('f_planStatus').value = '启动';
+        document.getElementById('f_startDate').value = '';
+        document.getElementById('f_endDate').value = '';
         openModal('planModal');
     }
 
@@ -1304,9 +1329,14 @@
             if (realIdx >= 0) plans[realIdx] = { ...plans[realIdx], ...planData };
             showToast('采购计划已更新', 'success');
         } else {
+            // 编码兜底：预览编码可能已被占用（如重复打开复制弹窗），顺延到下一个可用序号
+            let seq = plans.length;
+            while (plans.some(p => p.code === genPlanCode(seq + 1))) seq++;
+            planData.code = genPlanCode(seq + 1);
             plans.push(planData);
-            showToast('采购计划已创建', 'success');
+            showToast(copyingFromCode ? '已复制采购计划 ' + planData.code + '（源 ' + copyingFromCode + '）' : '采购计划已创建', 'success');
         }
+        copyingFromCode = '';
 
         closeModal('planModal');
         filterPlans();
@@ -1518,6 +1548,7 @@
                     <td>
                         ${p.execStatus === '待执行' ? `<button class="btn btn-success btn-sm" onclick="executePlan('${p.code}')">执行</button>` : ''}
                         ${p.execStatus === '执行中' ? `<button class="btn btn-warning btn-sm" onclick="closePlan('${p.code}')">关闭</button>` : ''}
+                        <button class="btn btn-sm" style="color:#722ed1;border-color:#722ed1;" onclick="openCopyPlanModal('${p.code}')">复制</button>
                         ${p.execStatus === '待执行' ? `<button class="btn btn-danger btn-sm" onclick="deletePlan('${p.code}')">删除</button>` : ''}
                         <button class="btn btn-sm" style="color:#1890ff;border-color:#1890ff;" onclick="openPlanDetail('${p.code}')">判断详情</button>
                     </td>

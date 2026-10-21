@@ -1,0 +1,1721 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>财务库存中心 · 一期原型说明</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+
+/* 账簿绿格（与 PC 端界面同一套令牌）—— 定死一态，不跟随系统 */
+:root{
+  --rule-step:22px;
+  --paper:#F3F3E9; --surface:#FFFEF9; --surface-2:#EDECE0; --surface-3:#E0DFCE;
+  --ink:#1A2119; --ink-2:#53604E; --ink-3:#7C8874;
+  --rule:#DAD8C5; --rule-2:#C4C1A9;
+  --brand:#1F5C46; --brand-ink:#14402F; --brand-wash:#E2EFE7; --brand-line:#A9CDB8;
+  --ledger:#9B6520; --ledger-ink:#714913; --ledger-wash:#F8EEDA; --ledger-line:#DFC08A;
+  --l2:#4F5088; --l2-wash:#EAEAF4; --l2-line:#B8B9D7;
+  --ok:#146B41; --ok-wash:#E1F0E7; --warn:#8A5A08; --warn-wash:#FBF0DA;
+  --danger:#A93120; --danger-wash:#FAE6E2;
+  --seal:#B2422A; --seal-line:rgba(178,66,42,.30);
+  --rail:#14231C; --rail-2:#1C3128; --rail-line:#274334;
+  --rail-ink:#8CA79A; --rail-ink-2:#5E7A6C; --rail-hi:#E9F1EA; --rail-active:#1F5C46;
+  --bg-fx:repeating-linear-gradient(180deg,
+    transparent 0 calc(var(--rule-step) - 1px),
+    rgba(31,92,70,.055) calc(var(--rule-step) - 1px) var(--rule-step));
+  --shadow-sm:0 1px 2px rgba(31,46,36,.05);
+  --shadow:0 2px 4px rgba(31,46,36,.05),0 10px 28px rgba(31,46,36,.07);
+  --r:8px;
+  --font-ui:"Inter",-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-display:"Noto Serif SC","Songti SC","Source Han Serif SC",Georgia,serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:76px}
+body{
+  margin:0; background:var(--paper); background-image:var(--bg-fx);
+  color:var(--ink); font-family:var(--font-ui); font-size:14px; line-height:1.72;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--brand); text-decoration:none}
+a:hover{text-decoration:underline}
+code{
+  font-family:var(--font-mono); font-size:.88em;
+  background:var(--surface-2); border:1px solid var(--rule);
+  border-radius:4px; padding:1px 5px; color:var(--brand-ink); white-space:nowrap;
+}
+strong{font-weight:600; color:var(--ink)}
+
+/* ---------------------------------------------------------------- 侧栏 */
+.shell{display:grid; grid-template-columns:232px minmax(0,1fr); min-height:100vh}
+
+.rail{
+  position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--rail); color:var(--rail-ink);
+  display:flex; flex-direction:column;
+  border-right:1px solid var(--rail-line);
+}
+.rail-brand{
+  display:flex; align-items:center; gap:10px;
+  padding:20px 18px 16px; border-bottom:1px solid var(--rail-line);
+}
+.rail-mark{
+  flex:none; width:26px; height:26px; border-radius:5px;
+  background:
+    linear-gradient(var(--brand-line),var(--brand-line)) 5px 8px/16px 1.5px no-repeat,
+    linear-gradient(var(--brand-line),var(--brand-line)) 5px 13px/16px 1.5px no-repeat,
+    linear-gradient(var(--brand-line),var(--brand-line)) 5px 18px/10px 1.5px no-repeat,
+    var(--rail-active);
+  box-shadow:inset 0 0 0 1px rgba(169,205,184,.35);
+}
+.rail-name{font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--rail-hi); letter-spacing:.02em}
+.rail-env{font-size:11px; color:var(--rail-ink-2); letter-spacing:.06em; margin-top:1px}
+
+.rail-nav{flex:1; padding:8px 0 20px}
+.rail-group-label{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px 6px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--rail-ink-2);
+}
+.rail-group-label b{
+  font-family:var(--font-mono); font-size:10px; font-weight:500;
+  color:var(--rail-ink-2); background:var(--rail-2);
+  border:1px solid var(--rail-line); border-radius:3px; padding:0 5px;
+}
+.rail-nav a{
+  position:relative; display:grid; grid-template-columns:38px 1fr;
+  gap:0 8px; align-items:baseline;
+  padding:6px 18px 6px 16px; color:var(--rail-ink); font-size:13px;
+  border-left:2px solid transparent; transition:background .12s, color .12s;
+}
+.rail-nav a:hover{background:var(--rail-2); color:var(--rail-hi); text-decoration:none}
+.rail-nav a .no{
+  font-family:var(--font-mono); font-size:11px; color:var(--rail-ink-2); text-align:right;
+}
+.rail-nav a em{grid-column:2; font-style:normal; font-size:11px; color:var(--rail-ink-2); font-family:var(--font-mono)}
+.rail-nav a.is-active{background:var(--rail-active); color:#fff; border-left-color:var(--seal)}
+.rail-nav a.is-active .no,
+.rail-nav a.is-active em{color:rgba(255,255,255,.72)}
+.rail-nav a.is-dim{opacity:.28}
+.rail-foot{
+  position:sticky; bottom:0; z-index:2;
+  padding:12px 18px 16px; border-top:1px solid var(--rail-line);
+  background:var(--rail);
+  font-size:11px; color:var(--rail-ink-2); line-height:1.55;
+}
+
+/* ---------------------------------------------------------------- 主区 */
+.main{position:relative; min-width:0}
+.main::before{
+  content:""; position:absolute; left:15px; top:0; bottom:0; width:1px;
+  background:var(--seal-line); pointer-events:none;
+}
+
+.topbar{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:24px;
+  padding:20px 26px 16px 30px;
+  background:rgba(243,243,233,.92); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);
+}
+.topbar h1{
+  font-family:var(--font-display); font-size:23px; font-weight:700;
+  margin:0; letter-spacing:.01em; color:var(--ink); text-wrap:balance;
+}
+.topbar-sub{margin:6px 0 0; font-size:12px; color:var(--ink-2)}
+.topbar-sub b{font-family:var(--font-mono); font-weight:600; color:var(--brand-ink)}
+.topbar-sub code{font-size:11px; white-space:normal}
+.topbar-r{display:flex; align-items:center; gap:10px; flex:none}
+.search{display:flex; align-items:center; gap:8px; background:var(--surface);
+  border:1px solid var(--rule-2); border-radius:var(--r); padding:6px 10px; box-shadow:var(--shadow-sm)}
+.search span{font-size:11px; letter-spacing:.1em; color:var(--ink-3); text-transform:uppercase}
+.search input{
+  border:0; outline:0; background:transparent; font-family:inherit; font-size:13px;
+  color:var(--ink); width:232px;
+}
+.search input::placeholder{color:var(--ink-3)}
+.search:focus-within{border-color:var(--brand-line); box-shadow:0 0 0 3px var(--brand-wash)}
+.search kbd{
+  font-family:var(--font-mono); font-size:10.5px; color:var(--ink-3);
+  border:1px solid var(--rule-2); border-bottom-width:2px; border-radius:4px;
+  padding:1px 5px; background:var(--surface-2);
+}
+.hit{
+  font-family:var(--font-mono); font-size:11px; color:var(--ink-2);
+  background:var(--surface-2); border:1px solid var(--rule);
+  border-radius:999px; padding:3px 10px; white-space:nowrap;
+}
+
+.wrap{max-width:1180px; padding:8px 26px 96px 30px}
+
+/* ---------------------------------------------------------------- 章节 */
+.pg{padding:32px 0 8px; border-top:1px solid var(--rule)}
+.pg:first-child{border-top:0}
+.pg[hidden]{display:none}
+
+.sec-head{display:flex; align-items:flex-start; gap:14px; margin:0 0 14px}
+.sec-no{
+  flex:none; min-width:42px; text-align:center;
+  font-family:var(--font-mono); font-size:12px; font-weight:600;
+  color:var(--brand-ink); background:var(--brand-wash);
+  border:1px solid var(--brand-line); border-radius:5px; padding:3px 8px;
+  margin-top:5px;
+}
+.sec-head h2{
+  font-family:var(--font-display); font-size:21px; font-weight:700;
+  margin:0; letter-spacing:.01em; color:var(--ink); text-wrap:balance;
+}
+.sec-path{
+  margin:4px 0 0; font-size:11.5px; color:var(--ink-3);
+  font-family:var(--font-mono); letter-spacing:.01em;
+}
+
+.sub-h{
+  display:flex; align-items:center; gap:9px;
+  font-size:14.5px; font-weight:600; color:var(--ink);
+  margin:24px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--rule);
+}
+.sub-h .cnt{
+  font-family:var(--font-mono); font-size:11px; font-weight:500;
+  color:var(--ledger-ink); background:var(--ledger-wash);
+  border:1px solid var(--ledger-line); border-radius:4px; padding:1px 7px;
+}
+
+p{margin:10px 0}
+ul.meta{list-style:none; margin:12px 0 4px; padding:0; display:flex; flex-direction:column; gap:5px}
+ul.meta li{
+  position:relative; padding-left:14px; font-size:13px; color:var(--ink-2);
+}
+ul.meta li::before{
+  content:""; position:absolute; left:0; top:.72em;
+  width:5px; height:5px; border-radius:1px; background:var(--brand-line);
+}
+ul.meta li strong{color:var(--ink); font-weight:600}
+
+/* 注记 */
+.note{
+  margin:14px 0; padding:11px 14px 11px 15px;
+  background:var(--ledger-wash);
+  border:1px solid var(--ledger-line); border-left:3px solid var(--ledger);
+  border-radius:0 var(--r) var(--r) 0;
+}
+.note-l{margin:0; font-size:12.5px; line-height:1.7; color:var(--ledger-ink)}
+.note-l + .note-l{margin-top:8px; padding-top:8px; border-top:1px dashed var(--ledger-line)}
+.note code{background:rgba(255,255,255,.62); border-color:var(--ledger-line); color:var(--ledger-ink)}
+
+/* ---------------------------------------------------------------- 表格 */
+.tbl-wrap{
+  overflow-x:auto; margin:12px 0 18px;
+  background:var(--surface); border:1px solid var(--rule);
+  border-radius:var(--r); box-shadow:var(--shadow-sm);
+}
+table.grid{border-collapse:separate; border-spacing:0; width:100%; min-width:560px}
+table.grid th{
+  position:sticky; top:0; z-index:2;
+  background:var(--surface-2); color:var(--ink-2);
+  font-size:11.5px; font-weight:600; letter-spacing:.06em; text-align:left;
+  padding:9px 11px; border-bottom:1px solid var(--rule-2); white-space:nowrap;
+}
+table.grid td{
+  padding:9px 11px; border-bottom:1px solid var(--rule);
+  vertical-align:top; line-height:1.66; font-size:13px; color:var(--ink);
+}
+table.grid tbody tr:last-child td{border-bottom:0}
+table.grid tbody tr:hover{background:var(--surface-2)}
+table.grid td:first-child{color:var(--brand-ink); font-weight:500}
+table.grid td code{white-space:normal}
+table.grid td strong{font-weight:600}
+
+/* 行内公式（$…$） */
+.mth{
+  font-family:var(--font-mono); font-size:.94em; white-space:nowrap;
+  color:var(--ledger-ink); background:var(--ledger-wash);
+  border-radius:3px; padding:.5px 3px;
+}
+.mth sub,.mth sup{font-size:.72em}
+.note .mth{background:rgba(255,255,255,.62)}
+
+/* 分数（$…$ 公式） */
+.frac{
+  display:inline-grid; grid-template-rows:auto auto; vertical-align:-0.52em;
+  text-align:center; margin:0 .18em; font-size:.92em; line-height:1.16;
+}
+.frac .fn{padding:0 .28em; border-bottom:1px solid currentColor}
+.frac .fd{padding:0 .28em}
+
+.doc-foot{
+  max-width:74ch; margin:36px 0 0; padding-top:16px;
+  border-top:1px solid var(--rule);
+  font-size:11.5px; line-height:1.75; color:var(--ink-3);
+}
+.doc-foot code{font-size:11px; white-space:normal}
+
+::selection{background:var(--brand-wash)}
+
+/* ---------------------------------------------------------------- 打印 */
+@media print{
+  :root{--paper:#fff; --surface:#fff; --surface-2:#fff}
+  body{background:#fff; background-image:none; font-size:10.5pt}
+  .rail,.topbar-r,.main::before{display:none}
+  .shell{grid-template-columns:1fr}
+  .topbar{position:static; background:#fff; backdrop-filter:none; padding:0 0 10px}
+  .wrap{max-width:none; padding:0}
+  .pg{page-break-inside:auto; padding-top:14px}
+  .sec-head{page-break-after:avoid}
+  .sub-h{page-break-after:avoid}
+  table.grid{min-width:0}
+  table.grid th{position:static; background:#f2f2f2}
+  .tbl-wrap{overflow:visible; box-shadow:none; page-break-inside:avoid}
+  .note{page-break-inside:avoid}
+  a{color:inherit; text-decoration:none}
+}
+
+@media (max-width:960px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static; height:auto; max-height:52vh}
+  .main::before{display:none}
+  .topbar{position:static; flex-direction:column; align-items:stretch; gap:12px}
+  .search input{width:100%}
+  .wrap{padding-left:20px}
+}
+
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="rail">
+  <div class="rail-brand">
+    <span class="rail-mark" aria-hidden="true"></span>
+    <div>
+      <div class="rail-name">财务库存中心</div>
+      <div class="rail-env">一期原型说明 v1.0</div>
+    </div>
+  </div>
+  <nav class="rail-nav" id="nav">
+    <div class="rail-group-label"><span>原型总览</span></div><a href="#s1.1"><span class="no">1.1</span><span>文件与入口</span></a><a href="#s1.2"><span class="no">1.2</span><span>菜单结构（4 组 · 14 个侧栏入口）</span></a><a href="#s1.3"><span class="no">1.3</span><span>每个页面共有的交互</span></a><a href="#s1.4"><span class="no">1.4</span><span>页面上的浮层与表单入口</span></a><div class="rail-group-label"><span>配置管理</span><b>2</b></div><a href="#P01" data-pg="P01"><span class="no">P01</span><span>计价模型配置</span><em class="cnt3">6·10·12</em></a><a href="#P02" data-pg="P02"><span class="no">P02</span><span>负库存管理配置</span><em class="cnt3">4·7·10</em></a><div class="rail-group-label"><span>数据接入</span><b>5</b></div><a href="#P03" data-pg="P03"><span class="no">P03</span><span>原始数据管理</span><em class="cnt3">7·8·13</em></a><a href="#P17" data-pg="P17"><span class="no">P17</span><span>标准化数据流水</span><em class="cnt3">14·5·24</em></a><a href="#P04" data-pg="P04"><span class="no">P04</span><span>标准数据计算</span><em class="cnt3">14·10·31</em></a><a href="#P07" data-pg="P07"><span class="no">P07</span><span>数据计算流水</span><em class="cnt3">10·5·19</em></a><a href="#P14" data-pg="P14"><span class="no">P14</span><span>期初数据维护</span><em class="cnt3">5·9·17</em></a><div class="rail-group-label"><span>结存查询</span><b>3</b></div><a href="#P05" data-pg="P05"><span class="no">P05</span><span>结存流水数据</span><em class="cnt3">16·8·150</em></a><a href="#P16" data-pg="P16"><span class="no">P16</span><span>余额管理报表</span><em class="cnt3">9·6·52</em></a><a href="#P08" data-pg="P08"><span class="no">P08</span><span>序列号资产台账</span><em class="cnt3">8·5·14</em></a><div class="rail-group-label"><span>监控管理</span><b>4</b></div><a href="#P11" data-pg="P11"><span class="no">P11</span><span>成本波动表</span><em class="cnt3">5·5·14</em></a><a href="#P15" data-pg="P15"><span class="no">P15</span><span>负库存挂账表</span><em class="cnt3">6·6·16</em></a><a href="#P12" data-pg="P12"><span class="no">P12</span><span>库龄表</span><em class="cnt3">6·6·15</em></a><a href="#P13" data-pg="P13"><span class="no">P13</span><span>进销存周期表</span><em class="cnt3">7·5·22</em></a>
+  </nav>
+  <div class="rail-foot">引擎 v1.0 · 移动加权平均 / 个别计价 / 先入先出法</div>
+</aside>
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-l">
+      <h1>财务库存中心（一期）原型说明</h1>
+      <p class="topbar-sub">原型 <code>财务库存中心（一期）原型页面.html</code> 的逐页说明书 ·
+        <b>17</b> 个页面 · <b>4</b> 个菜单分组 · <b>61</b> 张表
+      </p>
+    </div>
+    <div class="topbar-r">
+      <label class="search">
+        <span>筛选</span>
+        <input id="q" type="search" placeholder="页码 / 页面名 / 字段 / 按钮…" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+      <span class="hit" id="hit">全部</span>
+    </div>
+  </header>
+  <div class="wrap" id="doc">
+    <section class="pg" id="s1.1"><div class="sec-head"><span class="sec-no">1.1</span><div><h2>文件与入口</h2></div></div><div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>项</th>
+<th>值</th>
+</tr></thead><tbody>
+<tr><td>原型文件</td><td><code>财务库存中心（一期）原型页面.html</code></td></tr>
+<tr><td>页面数</td><td>17 个页面 + 每页一个「字段与按钮说明」抽屉 + 行详情弹窗</td></tr>
+<tr><td>菜单层级</td><td><code>财务库存中心</code> → 4 个分组 → 14 个侧栏入口（另有 3 页整页保留、不进侧栏）</td></tr>
+<tr><td>打开方式</td><td>浏览器直接打开本地 HTML，无需构建</td></tr>
+</tbody></table></div></section>
+<section class="pg" id="s1.2"><div class="sec-head"><span class="sec-no">1.2</span><div><h2>菜单结构（4 组 · 14 个侧栏入口）</h2></div></div><div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>分组</th>
+<th>编号</th>
+<th>页面</th>
+<th>导航路径</th>
+<th>搜索</th>
+<th>按钮</th>
+<th>字段</th>
+</tr></thead><tbody>
+<tr><td>配置管理</td><td>P01</td><td>计价模型配置</td><td><code>财务库存中心</code> → <code>配置管理</code> → <code>计价模型配置</code></td><td>6</td><td>10</td><td>12</td></tr>
+<tr><td>配置管理</td><td>P02</td><td>负库存管理配置</td><td><code>财务库存中心</code> → <code>配置管理</code> → <code>负库存管理配置</code></td><td>4</td><td>7</td><td>10</td></tr>
+<tr><td>数据接入</td><td>P03</td><td>原始数据管理</td><td><code>财务库存中心</code> → <code>数据接入</code> → <code>原始数据管理</code></td><td>7</td><td>8</td><td>13</td></tr>
+<tr><td>数据接入</td><td>P17</td><td>标准化数据流水</td><td><code>财务库存中心</code> → <code>数据接入</code> → <code>标准化数据流水</code></td><td>14</td><td>5</td><td>24</td></tr>
+<tr><td>数据接入</td><td>P04</td><td>标准数据计算</td><td><code>财务库存中心</code> → <code>数据接入</code> → <code>标准数据计算</code></td><td>14</td><td>10</td><td>31</td></tr>
+<tr><td>数据接入</td><td>P07</td><td>数据计算流水</td><td><code>财务库存中心</code> → <code>数据接入</code> → <code>数据计算流水</code></td><td>10</td><td>5</td><td>19</td></tr>
+<tr><td>数据接入</td><td>P14</td><td>期初数据维护</td><td><code>财务库存中心</code> → <code>数据接入</code> → <code>期初数据维护</code></td><td>5</td><td>9</td><td>17</td></tr>
+<tr><td>结存查询</td><td>P05</td><td>结存流水数据</td><td><code>财务库存中心</code> → <code>结存查询</code> → <code>结存流水数据</code></td><td>16</td><td>8</td><td>150</td></tr>
+<tr><td>结存查询</td><td>P16</td><td>余额管理报表</td><td><code>财务库存中心</code> → <code>结存查询</code> → <code>余额管理报表</code></td><td>9</td><td>6</td><td>52</td></tr>
+<tr><td>结存查询</td><td>P08</td><td>序列号资产台账</td><td><code>财务库存中心</code> → <code>结存查询</code> → <code>序列号资产台账</code></td><td>8</td><td>5</td><td>14</td></tr>
+<tr><td>监控管理</td><td>P11</td><td>成本波动表</td><td><code>财务库存中心</code> → <code>监控管理</code> → <code>成本波动表</code></td><td>5</td><td>5</td><td>14</td></tr>
+<tr><td>监控管理</td><td>P15</td><td>负库存挂账表</td><td><code>财务库存中心</code> → <code>监控管理</code> → <code>负库存挂账表</code></td><td>6</td><td>6</td><td>16</td></tr>
+<tr><td>监控管理</td><td>P12</td><td>库龄表</td><td><code>财务库存中心</code> → <code>监控管理</code> → <code>库龄表</code></td><td>6</td><td>6</td><td>15</td></tr>
+<tr><td>监控管理</td><td>P13</td><td>进销存周期表</td><td><code>财务库存中心</code> → <code>监控管理</code> → <code>进销存周期表</code></td><td>7</td><td>5</td><td>22</td></tr>
+</tbody></table></div>
+<aside class="note"><p class="note-l"><strong>侧栏只有这 14 个入口，但页面仍有 17 个。</strong> P06 存货实时余额 / P09 存货计价批次追踪 / P10 核对表这 3 页<strong>整页保留</strong>（列表、说明抽屉、浮层都在），只是没有侧栏入口，可用 <code>原型页面.html#p6</code>、<code>#p9</code>、<code>#p10</code> 深链直达。本文 <code>二、逐页说明</code> 仍逐页收录。</p><p class="note-l">P05 的「字段」列 = 五个页签字段表之和（29 + 30 + 30 + 31 + 30）；P16 的五个页签字段合并为一张四列表（多一列「页签」），合计 52。</p></aside></section>
+<section class="pg" id="s1.3"><div class="sec-head"><span class="sec-no">1.3</span><div><h2>每个页面共有的交互</h2></div></div><div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>交互</th>
+<th>说明</th>
+</tr></thead><tbody>
+<tr><td>工具栏 <code>[字段与按钮说明]</code></td><td>每个页面都有。点开抽屉即本文各页的「搜索条件 / 按钮交互 / 字段说明」三张表，供评审时就地查阅</td></tr>
+<tr><td>行内 <code>[查看]</code></td><td>每个页面都有。打开行详情弹窗，按当前行只读展示该行全部字段</td></tr>
+<tr><td>危险动作</td><td>删除 / 停用 / 反结账 / 覆盖导入等按 <code>1.3.8</code> 统一流程：二次确认 + 填原因 + 勾选确认项 + 写审计日志</td></tr>
+<tr><td>搜索 / 重置</td><td>每个页面工具栏都有 <code>[查询]</code> 与 <code>[重置]</code></td></tr>
+</tbody></table></div></section>
+<section class="pg" id="s1.4"><div class="sec-head"><span class="sec-no">1.4</span><div><h2>页面上的浮层与表单入口</h2></div></div><p>原型每个页面在列表之上叠了四类浮层；本文各页的表格分别取自其中之一，查表时按下表对应：</p>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>浮层</th>
+<th>打开它的入口</th>
+<th>本文中对应的内容</th>
+</tr></thead><tbody>
+<tr><td>字段与按钮说明抽屉</td><td>工具栏 <code>[字段与按钮说明]</code></td><td>各页的「搜索条件 / 按钮交互 / 字段说明」三张表</td></tr>
+<tr><td>明细抽屉</td><td>工具栏 <code>[查看原始 JSON 报文]</code>、<code>[查看计量结果]</code> 等</td><td>各页「按钮交互」表中该按钮的「点击后的交互」</td></tr>
+<tr><td>通用弹窗</td><td>工具栏 <code>[导入]</code>；行内 <code>[查看]</code>、P01 / P02 的 <code>[编辑]</code>；危险动作</td><td>同上；P01 / P02 的 <code>[编辑]</code> 另有「编辑表单」页签，字段与该页「新建表单」表一致</td></tr>
+<tr><td>新建表单抽屉</td><td>工具栏 <code>[+ 新建…]</code></td><td><strong>仅 P01、P02 两页</strong>的「新建表单」表</td></tr>
+</tbody></table></div>
+<aside class="note"><p class="note-l"><strong>新建与编辑共用一份字段定义。</strong> P01 / P02 的「新建表单」抽屉与「编辑表单」页签是同一份字段定义渲染两次——字段、控件、必填、联动与提示文字逐字一致，编辑态额外按所点行预填。故本文在两页各只写一张「新建表单」表，同时覆盖新建与编辑。其余 15 页既无新建表单，行内也没有 <code>[编辑]</code> 链接。</p></aside>
+<aside class="note"><p class="note-l"><strong>表单字段与列表字段的关系。</strong> 表单是录入浮层，不出现在列表里，故 <code>1.2</code> 菜单结构表的「搜索 / 按钮 / 字段」三列<strong>不含</strong>它。两张表单的字段都是同页列表字段的子集：P01 表单比列表少 <code>priority</code>（优先级），P02 表单比列表少 <code>rule_code</code>（策略编码）——前者新增时自动排到末位、再在列表上拖拽调整，后者由系统生成。</p></aside></section>
+<section class="pg" id="P01" data-nav="P01 计价模型配置">
+<div class="sec-head"><span class="sec-no">01</span><div><h2>计价模型配置</h2><p class="sec-path">财务库存中心 → 配置管理 → 计价模型配置</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>配置管理</code> → <code>计价模型配置</code></li><li><strong>对应系统需求</strong>：SR01_F01 计价模型配置</li><li><strong>页面说明</strong>：计价模式按「特定 SKU → 仓库 + 品类 → 商品品类 → 仓库 → 全局默认」优先级路由；三种方法一期均可选，全局默认 = 移动加权平均（<code>MOVING_AVG</code>）</li></ul>
+<h3 class="sub-h">搜索条件（6 项）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>规则编码 / 名称</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>—</td></tr>
+<tr><td>适用一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>适用仓库</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>计价模式</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>三种一期均可选；取值：全部 / 移动加权平均 / 个别计价 / 先入先出法</td></tr>
+<tr><td>规则状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 生效中 / 已停用</td></tr>
+<tr><td>业务类型</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 自营 / 代销 / 代采 / 寄售</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（10 个）<span class="cnt">10</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载计价规则列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[+ 新建计价规则]</code></td><td>新增一条计价规则</td><td>弹出新建表单，录入规则编码、名称、适用范围、业务类型、计价模式与生效周期</td><td>保存后新增规则行，状态默认 <code>ACTIVE</code>（生效）</td></tr>
+<tr><td><code>[保存优先级重排]</code></td><td>保存拖动排序后的优先级顺序</td><td>提交当前优先级顺序并刷新列表</td><td>保存后写回 <code>priority</code>（优先级）</td></tr>
+<tr><td><code>[编辑]</code></td><td>修改规则内容</td><td>打开编辑表单</td><td>已生效或未生效规则均可编辑</td></tr>
+<tr><td><code>[启用]</code></td><td>启用规则</td><td>将该规则状态置为 <code>ACTIVE</code>（生效）</td><td>前置：规则当前为停用</td></tr>
+<tr><td><code>[停用]</code></td><td>停用规则</td><td>将该规则状态置为 <code>INACTIVE</code>（停用）</td><td>前置：规则当前为生效</td></tr>
+<tr><td><code>[删除 (仅未生效)]</code></td><td>删除规则</td><td>危险动作（见 <code>§一.5.11「危险动作与统一要求」</code>）：二次确认 + 填写原因（NFR-07）+ 勾选确认项，写审计日志；<strong>删除后按列表顺序重排 <code>priority</code>（优先级），不留断号</strong></td><td>前置：仅未生效规则可删除</td></tr>
+<tr><td><code>[上移/下移]</code></td><td>调整规则优先级顺序</td><td>将当前行上移或下移一位</td><td>保存后调整 <code>priority</code>（优先级）</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（12 项）<span class="cnt">12</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>priority</code>（优先级）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>数值越小越优先，支持鼠标拖拽排序，数字徽章展现；路由匹配优先级：特定 SKU → 仓库 + 品类 → 商品品类 → 仓库 → 全局默认（移动加权平均 <code>MOVING_AVG</code>（移动加权平均））</td></tr>
+<tr><td><code>rule_code</code>（规则编码）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>系统唯一编码，纯文本</td></tr>
+<tr><td><code>rule_name</code>（规则名称）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>财务自定义名称</td></tr>
+<tr><td><code>legal_owner_id</code>（适用一级货主）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>指定法人（空代表全部）</td></tr>
+<tr><td><code>warehouse_code</code>（适用仓库）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>指定仓库（空代表全部）</td></tr>
+<tr><td><code>category_name</code>（适用品类）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>绑定类目名称（空代表全部）</td></tr>
+<tr><td><code>sku_code</code>（适用特定 SKU）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>绑定 SKU 编码（空代表全部）</td></tr>
+<tr><td><code>biz_type</code>（业务类型）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td>本规则适用的业务类型，<strong>非必填</strong>；取值：自营 / 代销 / 代采 / 寄售（空代表全部）</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），<strong>三种取值一期均可选</strong>，三色 Tag 区分（移动加权平均绿底 / 个别计价蓝紫底 / 先入先出法棕金底）；<strong>本列只表达配置意图</strong>，<code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法） 单元的权威成本在成本层 <code>t_inventory_layer</code></td></tr>
+<tr><td><code>sn_mandatory</code>（强制 SN 开关）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td><code>1</code> 强制采集 / <code>0</code> 否（<strong>个别计价锁死为 1</strong>；先入先出法不锁——拣货顺序由系统按入库先后自动决定，无需人工指定 SN）</td></tr>
+<tr><td><code>valid_period</code>（生效周期）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td><code>YYYY-MM-DD ~ YYYY-MM-DD</code></td></tr>
+<tr><td><code>status</code>（状态）</td><td><code>cfg_inventory_pricing_rule</code>（计价模型配置表）</td><td><code>ACTIVE</code>（生效）生效(绿) / <code>INACTIVE</code>（停用）停用(灰)</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">新建表单（11 项）<span class="cnt">11</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>表单项</th>
+<th>控件类型</th>
+<th>必填</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>规则编码</td><td>文本输入</td><td>必填</td><td>系统唯一编码，如 <code>PR-101</code></td></tr>
+<tr><td>规则名称</td><td>文本输入</td><td>必填</td><td>财务自定义名称，如「3C 高值整机 · 个别计价」</td></tr>
+<tr><td>适用一级货主</td><td>下拉单选</td><td>非必填</td><td>取值：全部 / <code>OWN-A</code>（上海醒市供应链有限公司）/ <code>OWN-B</code>（醒市数字科技（昆山）有限公司）/ <code>OWN-D</code>（外部货主 D）；选「全部」代表不限法人</td></tr>
+<tr><td>适用仓库</td><td>下拉单选</td><td>非必填</td><td>取值：全部 / <code>WH01</code>（昆山一号仓）/ <code>WH02</code>（上海二号仓）/ <code>WH03</code>（成都中心仓）/ <code>WH04</code>（在途仓）；选「全部」代表不限仓库</td></tr>
+<tr><td>适用品类</td><td>下拉单选</td><td>非必填</td><td>取值：全部 / 3C 高值整机 / 二手数码 / 手机通讯 / 电脑办公 / 出行商品 / 智能穿戴；选「全部」代表不限品类</td></tr>
+<tr><td>适用特定 SKU</td><td>文本输入</td><td>非必填</td><td>留空代表不限 SKU；填了就只对该 SKU 生效，优先级最高</td></tr>
+<tr><td>业务类型</td><td>下拉单选</td><td>非必填</td><td>取值：全部 / 自营 / 代销 / 代采 / 寄售；选「全部」代表不限业务类型</td></tr>
+<tr><td>计价模式</td><td>下拉单选</td><td>必填</td><td>取值：移动加权平均 / 个别计价 / 先入先出法，三种一期均可选；未匹配到规则时的全局默认 = 移动加权平均（<code>MOVING_AVG</code>）</td></tr>
+<tr><td>强制 SN 开关</td><td>复选框</td><td>非必填</td><td>勾选即「强制采集序列号」。<strong>联动</strong>：「计价模式」选「个别计价」时本项锁死为已勾选且不可改；先入先出法不锁——拣货顺序由系统按入库先后自动决定，无需人工指定 SN</td></tr>
+<tr><td>生效周期</td><td>日期区间（起 ~ 止）</td><td>必填</td><td>格式 <code>YYYY-MM-DD ~ YYYY-MM-DD</code>；原型默认值 <code>2026-10-01 ~ 2026-12-31</code></td></tr>
+<tr><td>状态</td><td>只读文本</td><td>—</td><td>录入时不可改；保存后为 <code>ACTIVE</code>（生效）</td></tr>
+</tbody></table></div>
+<aside class="note"><p class="note-l"><strong>本表来源。</strong> 逐行取自原型的<strong>新建表单抽屉</strong>（工具栏 <code>[+ 新建计价规则]</code>），不取自「字段与按钮说明」抽屉；行内 <code>[编辑]</code> 打开同一份字段定义并按当前行预填，故本表同时覆盖新建与编辑。</p></aside>
+<aside class="note"><p class="note-l"><strong>表单不含「优先级」。</strong> 列表第 1 列 <code>priority</code>（优先级）不在录入项内：新增规则由系统自动排到末位，保存提示为「已新增计价规则，状态默认「生效」，优先级排到末位」；优先级只在列表上通过拖拽或 <code>[上移/下移]</code>、<code>[保存优先级重排]</code> 调整。</p></aside>
+</section>
+<section class="pg" id="P02" data-nav="P02 负库存管理配置">
+<div class="sec-head"><span class="sec-no">02</span><div><h2>负库存管理配置</h2><p class="sec-path">财务库存中心 → 配置管理 → 负库存管理配置</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>配置管理</code> → <code>负库存管理配置</code></li><li><strong>对应系统需求</strong>：SR01_F02 负库存管理配置</li><li><strong>页面说明</strong>：存货核算单元 = (商品, 仓库, 一级货主)。容差默认 0（一期默认禁止负库存），超容差拒收返回 E-NEGATIVE-QTY</li></ul>
+<h3 class="sub-h">搜索条件（4 项）<span class="cnt">4</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>适用一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>适用仓库</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>是否允许负库存</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 严格禁止 / 允许负库存</td></tr>
+<tr><td>状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 生效中 / 已停用</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（7 个）<span class="cnt">7</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载负库存策略列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[+ 新建负库存策略]</code></td><td>新增一条负库存风控策略</td><td>弹出新建表单，录入适用一级货主、仓库、品类/SKU、是否允许负库存、缺口上限、最长挂账天数与暂估取价来源。<strong>条件行联动</strong>：「缺口上限件数 / 最长挂账天数 / 暂估单价来源」三项<strong>仅在「是否允许负库存」选「允许负库存」时出现且必填</strong>；选「严格禁止」时三项<strong>隐藏</strong>（不允许负库存则不存在缺口，此三项无意义）</td><td>保存后新增策略行，状态默认 <code>ACTIVE</code>（生效）</td></tr>
+<tr><td><code>[编辑]</code></td><td>修改策略内容</td><td>打开编辑表单</td><td>—</td></tr>
+<tr><td><code>[启用]</code></td><td>启用策略</td><td>将该策略状态置为 <code>ACTIVE</code>（生效）</td><td>前置：策略当前为停用</td></tr>
+<tr><td><code>[停用]</code></td><td>停用策略</td><td>将该策略状态置为 <code>INACTIVE</code>（停用）</td><td>前置：策略当前为生效</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（10 项）<span class="cnt">10</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>rule_code</code>（策略编码）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>唯一策略编码</td></tr>
+<tr><td><code>legal_owner_id</code>（适用一级货主）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>法人名称</td></tr>
+<tr><td><code>warehouse_code</code>（适用仓库）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>仓库编码与名称</td></tr>
+<tr><td><code>scope_target</code>（适用品类/SKU）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>类目名或 SKU（空代表全仓全类目）</td></tr>
+<tr><td><code>allow_negative</code>（允许负库存）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td><code>0</code> 严格禁止 (Hard Stop)(红) / <code>1</code> 允许负库存(绿)；允许时负库存出库登记挂账表 <code>inv_negative_stock_log</code>（负库存挂账表），状态 <code>OPEN</code>（挂账中·未冲平），采购到货冲平后置 <code>RESOLVED</code>（已冲平）</td></tr>
+<tr><td><code>max_negative_qty</code>（缺口上限件数）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>允许超卖件数上限，数值（如 <code>50 件</code>）</td></tr>
+<tr><td><code>max_pending_days</code>（最长挂账天数）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>逾期未平阻断出库天数，数值（如 <code>7 天</code>）</td></tr>
+<tr><td><code>est_price_source</code>（暂估单价来源）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td><code>LATEST_PO_PRICE</code>（最近采购订单价）最近 PO 价 / <code>BENCHMARK_PRICE</code>（基准供货价）基准供货价 / <code>MOVING_AVG_PRICE</code>（当前移动平均价）当前均价；负库存出库时结存均价强制锁定为暂估单价 P_est，禁止金额除以数量产生数学异常</td></tr>
+<tr><td><code>alert_email</code>（告警接收人）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td>告警通知推送邮箱</td></tr>
+<tr><td><code>status</code>（状态）</td><td><code>cfg_negative_stock_rule</code>（负库存风控策略配置表）</td><td><code>ACTIVE</code>（生效）生效中 / <code>INACTIVE</code>（停用）已停用</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">新建表单（9 项）<span class="cnt">9</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>表单项</th>
+<th>控件类型</th>
+<th>必填</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>适用一级货主</td><td>下拉单选</td><td>必填</td><td>取值：请选择… / <code>OWN-A</code>（上海醒市供应链有限公司）/ <code>OWN-B</code>（醒市数字科技（昆山）有限公司）/ <code>OWN-D</code>（外部货主 D）；源自法人主数据</td></tr>
+<tr><td>适用仓库</td><td>下拉单选</td><td>必填</td><td>取值：请选择… / <code>WH01</code>（昆山一号仓）/ <code>WH02</code>（上海二号仓）/ <code>WH03</code>（成都中心仓）/ <code>WH04</code>（在途仓）；源自仓库主数据</td></tr>
+<tr><td>适用品类/SKU</td><td>文本输入</td><td>非必填</td><td>类目名或 SKU；留空代表全仓全类目</td></tr>
+<tr><td>是否允许负库存</td><td>单选按钮（严格禁止 / 允许负库存）</td><td>必填</td><td><strong>默认选「严格禁止」</strong>。严格禁止 = Hard Stop，超容差直接拒收（返回 <code>E-NEGATIVE-QTY</code>：负库存超容差拒收）</td></tr>
+<tr><td>缺口上限件数</td><td>数字输入</td><td>条件必填</td><td><strong>联动</strong>：仅当「是否允许负库存」选「允许负库存」时本行才出现，选「严格禁止」时整行隐藏。允许超卖的件数上限，超过即阻断出库</td></tr>
+<tr><td>最长挂账天数</td><td>数字输入</td><td>条件必填</td><td><strong>联动</strong>同「缺口上限件数」。逾期未冲平则阻断出库</td></tr>
+<tr><td>暂估单价来源</td><td>下拉单选</td><td>条件必填</td><td><strong>联动</strong>同「缺口上限件数」。取值：最近采购订单价（<code>LATEST_PO_PRICE</code>）/ 基准供货价（<code>BENCHMARK_PRICE</code>）/ 当前移动平均价（<code>MOVING_AVG_PRICE</code>）；负库存出库时结存均价锁定为暂估单价 <code>P_est</code>，避免金额除以负数量</td></tr>
+<tr><td>告警接收人</td><td>邮箱输入</td><td>非必填</td><td>缺口或挂账逾期的推送邮箱</td></tr>
+<tr><td>状态</td><td>只读文本</td><td>—</td><td>录入时不可改；保存后为 <code>ACTIVE</code>（生效）</td></tr>
+</tbody></table></div>
+<aside class="note"><p class="note-l"><strong>本表来源。</strong> 逐行取自原型的<strong>新建表单抽屉</strong>（工具栏 <code>[+ 新建负库存策略]</code>），不取自「字段与按钮说明」抽屉；行内 <code>[编辑]</code> 打开同一份字段定义并按当前行预填，故本表同时覆盖新建与编辑。</p></aside>
+<aside class="note"><p class="note-l"><strong>表单不含「策略编码」。</strong> 列表第 1 列 <code>rule_code</code>（策略编码）不在录入项内，由系统生成；保存提示为「已新增负库存策略，状态默认「生效」」。</p></aside>
+<aside class="note"><p class="note-l"><strong>三项「条件必填」的口径。</strong> 取自本页按钮说明「仅在『允许负库存』时出现且必填」；原型这三行的控件本身未带必填标记，即保存校验不会拦空值——此处按文档口径记为「条件必填」。</p></aside>
+</section>
+<section class="pg" id="P03" data-nav="P03 原始数据管理">
+<div class="sec-head"><span class="sec-no">03</span><div><h2>原始数据管理</h2><p class="sec-path">财务库存中心 → 数据接入 → 原始数据管理</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>数据接入</code> → <code>原始数据管理</code></li><li><strong>对应系统需求</strong>：SR02_F01 业务源单据管理（原文 §三.3 页名同；原型侧本次改名为「原始数据管理」）</li><li><strong>页面说明</strong>：接入层原始报文台账，只看不改。失败单据可重试过账；两条接入通道共用同一套校验与幂等键</li></ul>
+<h3 class="sub-h">搜索条件（7 项）<span class="cnt">7</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>业务单据号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>—</td></tr>
+<tr><td>单据类型</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：采购入库 / 销退入库 / 调拨入库 / 其他入库 / 货权转移入库 / 销售出库 / 采退出库 / 调拨出库 / 其他出库 / 货权转移出库（<strong>入库 5 类 + 出库 5 类</strong>）。<strong>调拨与货权转移都是双边单据，按其两腿各列一项</strong>——报文与 <code>doc_type</code>（单据类型）层各只有<strong>一个</strong>类型（调拨 <code>TRANSFER</code>：调拨、一级货权转移 <code>OWNER_TRANSFER</code>：一级货权转移），转出 / 转入是<strong>行上的 <code>is_in</code>（出入方向·1 入 0 出）</strong>，不拆成两个单据类型。<strong>盘点 <code>STOCKTAKE</code>（盘点）、二级货权重分配 <code>OWNER_REASSIGN</code>（二级货权重分配）、跨期补录 <code>PERIOD_ADJUST</code>（跨期补录单）不在本列表</strong>——它们不是业务推送的出入库报文；盘盈 / 盘亏是盘点单的<strong>派生单据、不是独立 <code>doc_type</code>（单据类型）</strong></td></tr>
+<tr><td>一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自法人主数据</td></tr>
+<tr><td>物理仓库</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自仓库主数据</td></tr>
+<tr><td>商品 SKU</td><td>文本输入</td><td>精确查询</td><td>非必填</td><td>—</td></tr>
+<tr><td>处理状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 待处理 / 处理成功 / 处理失败</td></tr>
+<tr><td>接收时间范围</td><td>日期时间双选框</td><td>区间</td><td>非必填</td><td>快捷项：今日 / 近7天 / 近30天</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（8 个）<span class="cnt">8</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载源单台账列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出源单日志]</code></td><td>导出当前查询结果</td><td>点击后下载导出文件</td><td>—</td></tr>
+<tr><td><code>[批量重试记账]</code></td><td>对勾选的失败单据批量重试</td><td>二次确认后批量触发重试</td><td>前置：选中至少一条失败单据</td></tr>
+<tr><td><code>[查看原始 JSON 报文]</code></td><td>查看该条接入的原始报文</td><td>抽屉展示原始 JSON 报文</td><td>—</td></tr>
+<tr><td><code>[重试过账]</code></td><td>对单条失败单据重试</td><td>点击后触发重试</td><td>前置：仅失败单据可点</td></tr>
+<tr><td><code>[查看生成流水]</code></td><td>查看该单据生成的记账明细</td><td>跳转 P07 数据计算流水</td><td>前置：仅成功单据可点</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（13 项）<span class="cnt">13</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>raw_id</code>（接入流水号）</td><td>接入层原始报文</td><td>数据库自增主键，全局唯一，纯文本展示</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td>接入层原始报文</td><td>上游推送单号，可点击下钻看详情</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td>接入层原始报文</td><td>上游操作类型，蓝底 Tag 展现</td></tr>
+<tr><td><code>source_system</code>（来源系统）</td><td>接入层原始报文</td><td><code>WMS</code>（仓储管理系统） / <code>OMS</code>（订单管理系统） / <code>ERP_PO</code>（采购订单系统），灰底 Tag 展现</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>接入层原始报文</td><td>法人编码与简称，如 <code>LEGAL_SH01(上海公司)</code></td></tr>
+<tr><td><code>owner_l2</code>（二级产权人）</td><td>接入层原始报文</td><td>二级产权人编码与名称，如 <code>OWN-A-1(3C 事业部)</code>；<strong>产权人可为个人，也可为部门 / 事业部 / 代采项目</strong>。<strong>每行必填</strong>，缺失即行级拒绝（<code>E-OWNER-L2-MISSING</code>：二级货主缺失）</td></tr>
+<tr><td><code>warehouse_code</code>（物理仓库）</td><td>接入层原始报文</td><td>仓库编码与名称，如 <code>WH_KS01(昆山一号仓)</code></td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>接入层原始报文</td><td>报文中的 SKU 编码</td></tr>
+<tr><td><code>raw_qty</code>（原始数量）</td><td>接入层原始报文</td><td>报文原始申报量，数值保留 4 位小数</td></tr>
+<tr><td><code>raw_price</code>（原始单价）</td><td>接入层原始报文</td><td>报文单价（PO 暂估价），货币格式 <code>¥#,##0.0000</code></td></tr>
+<tr><td><code>received_time</code>（接收时间）</td><td>接入层原始报文</td><td>网关接收时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>process_status</code>（处理状态）</td><td>接入层原始报文</td><td><code>SUCCESS</code>（成功）成功(绿) / <code>FAILED</code>（失败）失败(红) / <code>PENDING</code>（待处理·挂起）处理中(黄)</td></tr>
+<tr><td><code>error_msg</code>（失败原因）</td><td>接入层原始报文</td><td>接口校验报错文本，红色文本，超长 Tooltip 提示</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P17" data-nav="P17 标准化数据流水">
+<div class="sec-head"><span class="sec-no">17</span><div><h2>标准化数据流水</h2><p class="sec-path">财务库存中心 → 数据接入 → 标准化数据流水</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>数据接入</code> → <code>标准化数据流水</code></li><li><strong>对应系统需求</strong>：SR02_F02 原始数据处理（本页为其「标准化事件」列集单独成页；原文 §三 只有 1–16 节，<strong>无 §三.17</strong>）</li><li><strong>页面说明</strong>：标准化层出口：原始数据整理成待计算的标准数据，按排序键（业务日期 + 当日序号）排序。只读流水，引擎按本序逐单调度；出口硬校验不平则整单回滚</li></ul>
+<h3 class="sub-h">搜索条件（14 项）<span class="cnt">14</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>业务单号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>—</td></tr>
+<tr><td>单据类型</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：采购入库 / 销退入库 / 调拨入库 / 其他入库 / 货权转移入库 / 销售出库 / 采退出库 / 调拨出库 / 其他出库 / 货权转移出库（<strong>入库 5 类 + 出库 5 类</strong>）。<strong>调拨与货权转移都是双边单据，按其两腿各列一项</strong>——报文与 <code>doc_type</code>（单据类型）层各只有<strong>一个</strong>类型（调拨 <code>TRANSFER</code>：调拨、一级货权转移 <code>OWNER_TRANSFER</code>：一级货权转移），转出 / 转入是<strong>行上的 <code>is_in</code>（出入方向·1 入 0 出）</strong>，不拆成两个单据类型。<strong>盘点 <code>STOCKTAKE</code>（盘点）、二级货权重分配 <code>OWNER_REASSIGN</code>（二级货权重分配）、跨期补录 <code>PERIOD_ADJUST</code>（跨期补录单）不在本列表</strong>——它们不是业务推送的出入库报文；盘盈 / 盘亏是盘点单的<strong>派生单据、不是独立 <code>doc_type</code>（单据类型）</strong></td></tr>
+<tr><td>子场景原因</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 借用归还 / 报废毁损 / 赠出送样 / 借出可归还 / 委托代销发出 / 货权已转实物才出。<code>reason</code>（子场景原因）；<strong>仅其他出入库有值</strong>，随所选单据类型联动——选 <code>OTHER_IN</code> 时列出 7 个入库原因、选 <code>OTHER_OUT</code> 时列出 8 个出库原因，其余类型置灰。完整枚举见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td>金额来源</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 原单回冲 / 外部给价 / 财务估价。<code>valuation_source</code>（金额来源）；<strong>用途：把「待财务估价」的行单独筛出来</strong>——这三类决定财务是「取数」还是「估价」，也决定本单要不要审</td></tr>
+<tr><td>有无实物移动</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 有 / 无。<code>has_physical_movement</code>（有无实物移动）；<strong>用途：虚进虚出的排查入口</strong></td></tr>
+<tr><td>一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自法人主数据</td></tr>
+<tr><td>二级产权人</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自二级货主主数据，随所选一级货主联动</td></tr>
+<tr><td>物理仓库</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自仓库主数据</td></tr>
+<tr><td>商品 SKU</td><td>文本输入</td><td>精确查询</td><td>非必填</td><td>—</td></tr>
+<tr><td>批次号</td><td>文本输入</td><td>精确匹配</td><td>非必填</td><td>取值为标准化事件<strong>派生</strong>的批次号（详见字段说明），<strong>非落库字段</strong>，故不做模糊匹配；空 = 该商品不按批次管理</td></tr>
+<tr><td>核算状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td><code>cost_status</code>（核算状态） 取值：全部 / 待计算 / 已计算 / 已回滚；常用筛选为「待计算」</td></tr>
+<tr><td>所属记账期间</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认当前期间）</td><td><code>period</code>（所属记账期间），<code>YYYYMM</code>（年月格式）</td></tr>
+<tr><td>业务日期范围</td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>排序键第一段 <code>biz_date</code>（业务日期）；快捷项：今日 / 近7天 / 近30天</td></tr>
+<tr><td>原单号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td><code>orig_doc_no</code>（原单号）；仅原物归还、退货、回冲类有值，空 = 非回冲行</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（5 个）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载标准数据流水</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出标准数据流水]</code></td><td>导出当前查询结果</td><td>点击后下载导出文件</td><td>无权限限制</td></tr>
+<tr><td><code>[查看标准化事件]</code></td><td>查看该行标准化后的标准数据全字段与原始报文</td><td>右侧滑出抽屉：展示标准化事件 JSON、字段映射与原始报文</td><td>本页为只读流水，无写操作</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（24 项）<span class="cnt">24</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>doc_no</code>（业务单号）</td><td>标准化事件</td><td>上游推送单号，链接文本，点击回跳 P03 看原始报文</td></tr>
+<tr><td><code>doc_type</code>（单据类型）</td><td>标准化事件</td><td>标准化后的单据类型，蓝底 Tag 展现</td></tr>
+<tr><td><code>line_no</code>（单据行号）</td><td>标准化事件</td><td>同一业务单号内从 1 递增；重算的最小单位</td></tr>
+<tr><td><code>version_no</code>（版本号）</td><td>标准化事件</td><td>改单后递增，与 <code>doc_type</code>（单据类型） 、<code>doc_no</code>（业务单号） 共同构成事件幂等键</td></tr>
+<tr><td><code>biz_date</code>（业务日期）</td><td>标准化事件</td><td>排序键第一段，<code>YYYY-MM-DD</code>（日期格式）；跨期补录单填补录归属日</td></tr>
+<tr><td><code>seq_in_day</code>（当日序号）</td><td>标准化事件</td><td>排序键第二段，由引擎按「同日入库优先、同类型按单号」分配</td></tr>
+<tr><td><code>period</code>（所属记账期间）</td><td>标准化事件</td><td><code>YYYYMM</code>（年月格式），由 <code>biz_date</code>（业务日期） 推导</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>标准化事件</td><td>法人编码与名称，如 <code>OWN-A(上海醒市供应链有限公司)</code></td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td>标准化事件</td><td>产权人编码与名称（<strong>个人或部门</strong>）；不进余额表主键、不进存货总额</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>标准化事件</td><td>核算单元（均价池）键之一，仓库编码与名称</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>标准化事件</td><td>商品编码，四轴之一</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件</td><td>空 = 不按批次管理；批次一期不进均价池</td></tr>
+<tr><td><code>is_in</code>（出入方向·1 入 0 出）</td><td>标准化事件</td><td><code>1</code>（入）入库(绿) / <code>0</code>（出）出库(橙)</td></tr>
+<tr><td><code>qty</code>（数量）</td><td>标准化事件</td><td>业务单位数量（展示用），数值保留 4 位小数</td></tr>
+<tr><td><code>unit</code>（单位）</td><td>标准化事件</td><td>业务单位</td></tr>
+<tr><td><code>base_qty</code>（基本单位数量）</td><td>标准化事件</td><td>核算唯一口径，<code>qty × convert_rate = base_qty</code>（数量 × 单位换算率 = 基本单位数量） 对不上即在接入段被拒</td></tr>
+<tr><td><code>amount_ex_tax</code>（不含税金额）</td><td>标准化事件</td><td>入账基数，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>price_source</code>（取价来源）</td><td>标准化事件</td><td>取价在事件层完成并随单据快照进来，引擎不查价目表</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型显示 <code>—</code>。彩色 Tag（蓝底）；<strong>未列入枚举的取值在接入段即被拒</strong>（<code>E-ENUM-INVALID</code> 枚举取值非法）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件</td><td><strong>决定财务是「取数」还是「估价」</strong>，也决定本单要不要审：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件</td><td>本行回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件</td><td><code>1</code>（有）/ <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕；<code>0</code> 时本行在「虚实」排查中需人工确认</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件</td><td>直发业务「入库 + 出库」两笔的配对键；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong>。非直发为空</td></tr>
+<tr><td><code>cost_status</code>（核算状态）</td><td>标准化事件</td><td><code>PENDING</code>（待处理·挂起）待计算(黄) / <code>CALCULATED</code>（已核算）已计算(绿) / <code>ROLLED_BACK</code>（已回滚）已回滚(红)</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P04" data-nav="P04 标准数据计算">
+<div class="sec-head"><span class="sec-no">04</span><div><h2>标准数据计算</h2><p class="sec-path">财务库存中心 → 数据接入 → 标准数据计算</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>数据接入</code> → <code>标准数据计算</code></li><li><strong>对应系统需求</strong>：SR02_F02 原始数据处理（原文 §三.4 页名仍是「原始数据计算」；原型侧 2026-10-16 改名为「标准数据计算」）</li><li><strong>页面说明</strong>：接入段（FL-01–FL-05）与计量段（FL-06–FL-08）之间的待计算队列。与 P03 / P17 的分工：P03 看报文进没进来，P17 看整理出来的标准数据长什么样、排在哪，P04 看待计算的数据算没算、算出来是什么</li></ul>
+<h3 class="sub-h">搜索条件（14 项）<span class="cnt">14</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>接入流水号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td><code>raw_id</code>（接入流水号），接入层自增主键，全局唯一</td></tr>
+<tr><td>业务单号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>—</td></tr>
+<tr><td>单据类型</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：采购入库 / 销退入库 / 调拨入库 / 其他入库 / 货权转移入库 / 销售出库 / 采退出库 / 调拨出库 / 其他出库 / 货权转移出库（<strong>入库 5 类 + 出库 5 类</strong>）。<strong>调拨与货权转移都是双边单据，按其两腿各列一项</strong>——报文与 <code>doc_type</code>（单据类型）层各只有<strong>一个</strong>类型（调拨 <code>TRANSFER</code>：调拨、一级货权转移 <code>OWNER_TRANSFER</code>：一级货权转移），转出 / 转入是<strong>行上的 <code>is_in</code>（出入方向·1 入 0 出）</strong>，不拆成两个单据类型。<strong>盘点 <code>STOCKTAKE</code>（盘点）、二级货权重分配 <code>OWNER_REASSIGN</code>（二级货权重分配）、跨期补录 <code>PERIOD_ADJUST</code>（跨期补录单）不在本列表</strong>——它们不是业务推送的出入库报文；盘盈 / 盘亏是盘点单的<strong>派生单据、不是独立 <code>doc_type</code>（单据类型）</strong></td></tr>
+<tr><td>子场景原因</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 借用归还 / 报废毁损 / 赠出送样 / 借出可归还 / 委托代销发出 / 货权已转实物才出。<code>reason</code>（子场景原因）；<strong>仅其他出入库有值</strong>，随所选单据类型联动——选 <code>OTHER_IN</code> 时列出 7 个入库原因、选 <code>OTHER_OUT</code> 时列出 8 个出库原因，其余类型置灰。完整枚举见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td>金额来源</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 原单回冲 / 外部给价 / 财务估价。<code>valuation_source</code>（金额来源）；<strong>用途：把「待财务估价」的行单独筛出来</strong>——这三类决定财务是「取数」还是「估价」，也决定本单要不要审</td></tr>
+<tr><td>有无实物移动</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 有 / 无。<code>has_physical_movement</code>（有无实物移动）；<strong>用途：虚进虚出的排查入口</strong></td></tr>
+<tr><td>一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自法人主数据</td></tr>
+<tr><td>二级产权人</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自二级货主主数据，随所选一级货主联动</td></tr>
+<tr><td>物理仓库</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>源自仓库主数据</td></tr>
+<tr><td>商品 SKU</td><td>文本输入</td><td>精确查询</td><td>非必填</td><td>—</td></tr>
+<tr><td>核算状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td><code>cost_status</code>（核算状态） 取值：全部 / 待计算 / 已计算 / 已回滚；常用筛选为「待计算」</td></tr>
+<tr><td>所属记账期间</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认当前期间）</td><td><code>period</code>（所属记账期间），<code>YYYYMM</code>（年月格式）</td></tr>
+<tr><td>业务日期范围</td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>排序键第一段 <code>biz_date</code>（业务日期）；快捷项：今日 / 近7天 / 近30天</td></tr>
+<tr><td>接收时间范围</td><td>日期时间双选框</td><td>区间</td><td>非必填</td><td><code>received_time</code>（接收时间），网关接收时间戳</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（10 个）<span class="cnt">10</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载待计算队列</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出待计算清单]</code></td><td>导出当前查询结果</td><td>点击后下载导出文件</td><td>—</td></tr>
+<tr><td><code>[批量执行计算]</code></td><td>对勾选的数据批量触发引擎计量</td><td>二次确认后按排序键 <code>(biz_date, seq_in_day)</code>（业务日期 + 当日序号） 顺序逐单调度</td><td>前置：选中至少一条「待计算」数据；出口硬校验不平整单回滚，<code>cost_status</code>（核算状态） 置 <code>ROLLED_BACK</code>（已回滚）</td></tr>
+<tr><td><code>[执行计算]</code></td><td>对单条数据触发计量</td><td>点击后即时调用 <code>measure(event, ctx) -&gt; Posting</code>（计量）</td><td>前置：仅「待计算」可点</td></tr>
+<tr><td><code>[重新计算]</code></td><td>对已回滚的数据重算</td><td>二次确认后重新触发计量</td><td>前置：仅「已回滚」可点；同一事件幂等键 <code>(doc_type, doc_no, version_no)</code>（单据类型 + 业务单号 + 版本号） 重复执行结果一致</td></tr>
+<tr><td><code>[查看计量结果]</code></td><td>查看 <code>measure()</code>（计量） 返回的 <code>Posting</code>（记账结果）</td><td>抽屉展示 <code>delta_qty</code>（数量增量） / <code>delta_amount</code>（金额增量） / <code>rounding_diff</code>（舍入差异） / <code>unit_price_after</code>（本笔过账后单价）</td><td>前置：仅「已计算」可点</td></tr>
+<tr><td><code>[查看标准化事件]</code></td><td>查看映射后的标准事件结构</td><td>右侧滑出抽屉展示</td><td>—</td></tr>
+<tr><td><code>[报文对照]</code></td><td>原始报文与标准化事件逐字段对照</td><td>抽屉左右分栏对照</td><td>用于排查字段映射与单位换算</td></tr>
+<tr><td><code>[查看原始报文]</code></td><td>查看该条接入的原始 JSON 报文</td><td>抽屉展示原始 JSON 报文</td><td>—</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（31 项）<span class="cnt">31</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>raw_id</code>（接入流水号）</td><td>接入层原始报文</td><td>数据库自增主键，全局唯一，纯文本展示</td></tr>
+<tr><td><code>doc_no</code>（业务单号）</td><td>标准化事件</td><td>上游推送单号，链接文本，点击回跳 P03 看原始报文</td></tr>
+<tr><td><code>doc_type</code>（单据类型）</td><td>标准化事件</td><td>标准化后的单据类型，蓝底 Tag 展现</td></tr>
+<tr><td><code>line_no</code>（单据行号）</td><td>标准化事件</td><td>同一业务单号内从 1 递增；重算的最小单位</td></tr>
+<tr><td><code>version_no</code>（版本号）</td><td>标准化事件</td><td>改单后递增，与 <code>doc_type</code>（单据类型） 、<code>doc_no</code>（业务单号） 共同构成事件幂等键</td></tr>
+<tr><td><code>biz_date</code>（业务日期）</td><td>标准化事件</td><td>排序键第一段，<code>YYYY-MM-DD</code>（日期格式）；跨期补录单填补录归属日</td></tr>
+<tr><td><code>seq_in_day</code>（当日序号）</td><td>标准化事件</td><td>排序键第二段，由引擎按「同日入库优先、同类型按单号」分配</td></tr>
+<tr><td><code>period</code>（所属记账期间）</td><td>标准化事件</td><td><code>YYYYMM</code>（年月格式），由 <code>biz_date</code>（业务日期） 推导</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>标准化事件</td><td>法人编码与名称，如 <code>OWN-A(上海醒市供应链有限公司)</code></td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td>标准化事件</td><td>产权人编码与名称（<strong>个人或部门</strong>）；不进余额表主键、不进存货总额</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>标准化事件</td><td>核算单元（均价池）键之一，仓库编码与名称</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>标准化事件</td><td>商品编码，四轴之一</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件</td><td>空 = 不按批次管理；批次一期不进均价池</td></tr>
+<tr><td><code>is_in</code>（出入方向·1 入 0 出）</td><td>标准化事件</td><td><code>1</code>（入）入库(绿) / <code>0</code>（出）出库(橙)</td></tr>
+<tr><td><code>qty</code>（数量）</td><td>标准化事件</td><td>业务单位数量（展示用），数值保留 4 位小数</td></tr>
+<tr><td><code>unit</code>（单位）</td><td>标准化事件</td><td>业务单位</td></tr>
+<tr><td><code>base_qty</code>（基本单位数量）</td><td>标准化事件</td><td>核算唯一口径，<code>qty × convert_rate = base_qty</code>（数量 × 单位换算率 = 基本单位数量） 对不上即在接入段被拒</td></tr>
+<tr><td><code>amount_ex_tax</code>（不含税金额）</td><td>标准化事件</td><td>入账基数，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>price_source</code>（取价来源）</td><td>标准化事件</td><td>取价在事件层完成并随单据快照进来，引擎不查价目表</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型显示 <code>—</code>。彩色 Tag（蓝底）；<strong>未列入枚举的取值在接入段即被拒</strong>（<code>E-ENUM-INVALID</code> 枚举取值非法）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件</td><td><strong>决定财务是「取数」还是「估价」</strong>，也决定本单要不要审：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件</td><td>本行回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件</td><td><code>1</code>（有）/ <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕；<code>0</code> 时本行在「虚实」排查中需人工确认</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件</td><td>直发业务「入库 + 出库」两笔的配对键；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong>。非直发为空</td></tr>
+<tr><td><code>cost_status</code>（核算状态）</td><td>标准化事件</td><td><code>PENDING</code>（待处理·挂起）待计算(黄) / <code>CALCULATED</code>（已核算）已计算(绿) / <code>ROLLED_BACK</code>（已回滚）已回滚(红)</td></tr>
+<tr><td><code>delta_qty</code>（数量增量）</td><td>计量结果 <code>Posting</code>（记账结果）</td><td><code>measure()</code>（计量） 返回，数值保留 4 位小数；余额由投影层累加，引擎<strong>不返回余额</strong></td></tr>
+<tr><td><code>delta_amount</code>（金额增量）</td><td>计量结果 <code>Posting</code>（记账结果）</td><td><code>measure()</code>（计量） 返回，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>unit_price_after</code>（本笔过账后单价）</td><td>计量结果 <code>Posting</code>（记账结果）</td><td>该笔过账后核算单元的派生单价（= 结存金额 ÷ 结存数量）；<code>MOVING_AVG</code>（移动加权平均） 下即移动平均单价、为计价输入，<code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法） 下仅供展示，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>rounding_diff</code>（舍入差异）</td><td>计量结果 <code>Posting</code>（记账结果）</td><td>单价除不尽的残差归集到本笔，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>received_time</code>（接收时间）</td><td>接入层原始报文</td><td>网关接收时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>error_msg</code>（失败原因）</td><td>计量结果 <code>Posting</code>（记账结果）</td><td>出口硬校验不平的报错文本（如 <code>E-NEGATIVE-QTY</code>（负库存）），红色文本，超长 Tooltip 提示</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P07" data-nav="P07 数据计算流水">
+<div class="sec-head"><span class="sec-no">07</span><div><h2>数据计算流水</h2><p class="sec-path">财务库存中心 → 数据接入 → 数据计算流水</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>数据接入</code> → <code>数据计算流水</code></li><li><strong>对应系统需求</strong>：SR05_F01 存货记账明细台账（原文 §三.7 页名仍是「原始数据处理流水」；原型侧 2026-10-16 改名为「数据计算流水」）</li><li><strong>页面说明</strong>：只读流水，引擎 delta 的逐笔留痕。事务回滚 ≠ 事件回滚；反向调整一律追加反向事件</li></ul>
+<h3 class="sub-h">搜索条件（10 项）<span class="cnt">10</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>会计期间</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>取值 <code>YYYY-MM</code>（年月格式）</td></tr>
+<tr><td>记账日期范围</td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>—</td></tr>
+<tr><td>单据类型</td><td>下拉多选</td><td>精确匹配</td><td>非必填</td><td>取值：采购入库 / 销退入库 / 调拨入库 / 其他入库 / 货权转移入库 / 销售出库 / 采退出库 / 调拨出库 / 其他出库 / 货权转移出库（<strong>入库 5 类 + 出库 5 类</strong>）。<strong>调拨与货权转移都是双边单据，按其两腿各列一项</strong>——报文与 <code>doc_type</code>（单据类型）层各只有<strong>一个</strong>类型（调拨 <code>TRANSFER</code>：调拨、一级货权转移 <code>OWNER_TRANSFER</code>：一级货权转移），转出 / 转入是<strong>行上的 <code>is_in</code>（出入方向·1 入 0 出）</strong>。<strong>盘点 <code>STOCKTAKE</code>（盘点）、二级货权重分配 <code>OWNER_REASSIGN</code>（二级货权重分配）、跨期补录 <code>PERIOD_ADJUST</code>（跨期补录单）不在本列表</strong>，盘盈 / 盘亏是盘点单的派生单据、不是独立 <code>doc_type</code>（单据类型）</td></tr>
+<tr><td>业务单据号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>—</td></tr>
+<tr><td>一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>二级产权人</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>物理仓库</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>商品 SKU</td><td>文本输入</td><td>精确查询</td><td>非必填</td><td>—</td></tr>
+<tr><td>批次号</td><td>文本输入</td><td>精确匹配</td><td>非必填</td><td>取值为标准化事件<strong>派生</strong>的批次号（详见字段说明），<strong>非落库字段</strong>，故不做模糊匹配；空 = 该商品不按批次管理</td></tr>
+<tr><td>异常标记</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 正常 / 负库存过账 / 尾差平账</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（5 个）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载记账流水列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出流水报表]</code></td><td>导出当前查询结果</td><td>点击后下载导出文件</td><td>—</td></tr>
+<tr><td><code>[穿透详情]</code></td><td>穿透查看该笔流水的核算全过程</td><td>右侧滑出抽屉：展示核算结果、凭证分录、原始报文 JSON</td><td>本页为只读流水，无写操作</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（19 项）<span class="cnt">19</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>journal_no</code>（流水号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>唯一记账流水号</td></tr>
+<tr><td><code>posting_seq</code>（全局过账序号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><strong>全局单调递增</strong>的过账序号，记录实际生效顺序（同一天内也按它排序，而非 <code>biz_date + seq_in_day</code>）。<strong>审计追溯与事件重放的对齐依据</strong>：排障时按它复现过账次序、核对 <code>before_* / after_*</code> 快照链是否连续。纯数字，等宽字体右对齐</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水所归属的批次号；<strong>空 = 该商品不按批次管理</strong>。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>batch_no</code>，<strong>不落 <code>t_calc_log</code></strong>（字段层已冻结，故为展示层派生而非新字段）。<strong>仅记账流水口径有值</strong>：结存余额口径的核算单元是 <code>(商品, 仓库, 一级货主)</code> 三轴聚合，批次不属于聚合键，强行展示会打散聚合，故该口径下恒为 <code>—</code>。口径说明：<code>SI</code>（个别计价）单元的批次 = 序列号；<code>FIFO</code>（先入先出法）单元的批次 = 每次入库形成的层</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>上游单据编号</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>业务操作类型，彩色 Tag</td></tr>
+<tr><td><code>source_bill_no</code>（溯源原单号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>退货/调拨原单号</td></tr>
+<tr><td><code>fiscal_period</code>（会计期间）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>归属账期，如 <code>2026-09</code></td></tr>
+<tr><td><code>posting_date</code>（记账日期）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>财务记账日，<code>YYYY-MM-DD</code>（日期格式）</td></tr>
+<tr><td><code>owner_info</code>（货权主体）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>一级货主 / 二级产权人</code> 组合文本</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>仓库编码</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>商品编码</td></tr>
+<tr><td><code>direction</code>（变动方向）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>1</code> 入库(绿+) / <code>-1</code> 出库(橙-) / <code>0</code> 纯金额调整(蓝调)</td></tr>
+<tr><td><code>change_qty</code>（发生数量）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次出入库量，数值保留 4 位小数</td></tr>
+<tr><td><code>unit_cost</code>（核算单价）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次不含税成本，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>total_cost</code>（发生总成本）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>change_qty × unit_cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>bal_qty_snapshot</code>（结存数量快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后在库量快照</td></tr>
+<tr><td><code>bal_price_snapshot</code>（结存均价快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后均价快照，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>bal_cost_snapshot</code>（结存金额快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后总额快照，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>is_abnormal</code>（异常标记）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>0</code> 正常 / <code>1</code> 负库存 / <code>2</code> 尾差清零</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P14" data-nav="P14 期初数据维护">
+<div class="sec-head"><span class="sec-no">14</span><div><h2>期初数据维护</h2><p class="sec-path">财务库存中心 → 数据接入 → 期初数据维护</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>数据接入</code> → <code>期初数据维护</code></li><li><strong>对应系统需求</strong>：SR02_F03 期初数据维护</li><li><strong>页面说明</strong>：启用期初为危险动作，须二次确认 + 填写原因 + 审计日志（NFR-07）。字段层缺口待 W1 按入库五类补齐</li></ul>
+<h3 class="sub-h">搜索条件（5 项）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>所属记账期间</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>启用期间，格式 <code>YYYYMM</code>（年月格式），如 <code>202601</code>。</td></tr>
+<tr><td><code>仓库编码</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>仓库编码，四轴之一。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>一级货主（法人 / 账套），四轴之一，主数据须为 A 级编码。</td></tr>
+<tr><td><code>商品编码</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码。</td></tr>
+<tr><td><code>导入状态</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>全部 / 待校验 / 校验通过 / 校验失败 / 已启用。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（9 个）<span class="cnt">9</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载期初数据列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[下载期初导入模板]</code></td><td>下载期初数据导入模板</td><td>下载 <code>initial_balance_import_template.xlsx</code>（期初数据导入模板文件）模板，列名与顺序即表头校验判据</td><td>无权限限制</td></tr>
+<tr><td><code>[导入]</code></td><td>上传并生成导入批次</td><td>打开 <code>modal-file</code>（模板下拉 + 拖拽上传），上传后生成导入批次 <code>import_batch_id</code>（导入批次号），逐行落 <code>t_initial_balance</code>（期初余额表），失败行写 <code>t_import_error_log</code>（导入错误日志表）</td><td>—（源文未规定权限）</td></tr>
+<tr><td><code>[校验]</code></td><td>对已导入期初数据执行校验</td><td>逐行跑 <strong>5 项</strong>校验，返回通过 / 失败行清单：① <strong>四轴完整性</strong>（商品 · 仓库 · 批次 · 一级货主）；② <strong>货主维度</strong>——<code>owner_l2</code>（二级产权人）必填；③ <strong>精度</strong>——数量 4 位 / 金额 2 位 / 单价 6 位；④ <strong>行内恒等式</strong>——<code>init_qty × init_unit_price = init_amount</code>（期初数量 × 期初单价 = 期初金额）；⑤ <strong>期间未锁账</strong>——<code>E-PERIOD-CLOSED</code>（期间已锁账）。失败行写 <code>t_import_error_log</code>（导入错误日志表）</td><td>前置：<strong>仅「待校验」行参与定级</strong>；「已启用」行<strong>跳过</strong>——该期间已锁定，不得被复检拉回</td></tr>
+<tr><td><code>[启用期初]</code></td><td>将校验通过的期初作为存量成本的第一笔事件启用</td><td><strong>只启用「校验通过」行</strong>；「校验失败」与「待校验」行<strong>不启用</strong>，保持原状并留在 <code>t_import_error_log</code>（导入错误日志表）。启用后该期间期初<strong>锁定</strong>，作为 <code>PO_IN</code>（采购入库）的第一笔事件</td><td>危险动作（见 <code>§一.5.11「危险动作与统一要求」</code>）：<strong>前置：至少一行「校验通过」，否则不可启用</strong>；二次确认 + 填原因 + 勾选确认项 + 审计日志（NFR-07）</td></tr>
+<tr><td><code>[查看导入日志]</code></td><td>查看导入批次与错误明细</td><td>打开 <code>drawer-err</code>（失败明细 + 导出清单 + 标记重推），可整批撤销重导</td><td>无权限限制</td></tr>
+<tr><td><code>[删除]</code></td><td>按导入批次整批撤销期初数据</td><td>二次确认 + 填写原因（NFR-07）+ 勾选确认项，写审计日志；按 <code>import_batch_id</code>（导入批次号）整批撤销，不做人工逐行改</td><td>危险动作（见 <code>§一.5.11「危险动作与统一要求」</code>）：须二次确认 + 填原因 + 勾选确认项 + 审计日志（NFR-07）</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（17 项）<span class="cnt">17</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>period</code>（所属记账期间）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>联合主键，启用期间，<code>YYYYMM</code>（年月格式）。</td></tr>
+<tr><td><code>material_code</code>（商品编码）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>联合主键，核算单元第 1 轴 / 库存维度第 1 轴。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库编码）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>联合主键，核算单元第 2 轴 / 库存维度第 2 轴。</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>联合主键，库存维度第 3 轴；均价行时为空（<code>batch_no IS NULL</code>），批次只影响库龄与跌价，一期不进均价池。</td></tr>
+<tr><td><code>owner_l1</code>（一级货主）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>联合主键，核算单元第 3 轴 / 库存维度第 4 轴；货主维度必须导，缺失即四轴从第一天就是坏的。</td></tr>
+<tr><td><code>init_qty</code>（期初数量）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td><code>DECIMAL(18,4)</code>，数量精度 4 位。</td></tr>
+<tr><td><code>init_amount</code>（期初金额）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td><code>DECIMAL(18,2)</code>，金额精度 2 位。</td></tr>
+<tr><td><code>init_unit_price</code>（期初单价）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td><code>DECIMAL(18,6)</code>，单价精度 6 位。</td></tr>
+<tr><td><code>batch_no_origin</code>（原始批次号）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>原始批次号（上游口径）。</td></tr>
+<tr><td><code>import_batch_id</code>（导入批次）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>导入批次（可追溯、可整批撤销），与 <code>idempotency_key</code>（幂等键）前缀一致。</td></tr>
+<tr><td><code>created_at</code>（创建时间）</td><td>期初余额表（<code>t_initial_balance</code>）</td><td>创建时间。</td></tr>
+<tr><td><code>row_no</code>（出错行号）</td><td>导入错误日志（<code>t_import_error_log</code>）</td><td>出错行号。</td></tr>
+<tr><td><code>error_code</code>（错误码）</td><td>导入错误日志（<code>t_import_error_log</code>）</td><td>错误码，如 <code>E-MASTER-MISSING</code>（主数据缺失） / <code>E-OWNER-L1-MISSING</code>（一级货主缺失） / <code>E-OWNER-L2-MISSING</code>（二级货主缺失） / <code>E-ENUM-INVALID</code>（枚举取值非法） / <code>E-PERIOD-CLOSED</code>（期间已锁账）。</td></tr>
+<tr><td><code>error_msg</code>（错误说明）</td><td>导入错误日志（<code>t_import_error_log</code>）</td><td>错误说明。</td></tr>
+<tr><td><code>raw_payload</code>（原始报文）</td><td>导入错误日志（<code>t_import_error_log</code>）</td><td>原始报文（便于业务修正后重推）。</td></tr>
+<tr><td><code>resolved</code>（是否已处理）</td><td>导入错误日志（<code>t_import_error_log</code>）</td><td>是否已处理。</td></tr>
+<tr><td><code>导入状态</code></td><td>派生</td><td>待校验 / 校验通过 / 校验失败 / 已启用。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P05" data-nav="P05 结存流水数据">
+<div class="sec-head"><span class="sec-no">05</span><div><h2>结存流水数据</h2><p class="sec-path">财务库存中心 → 结存查询 → 结存流水数据</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>结存查询</code> → <code>结存流水数据</code></li><li><strong>对应系统需求</strong>：SR04_F01 结存流水数据（五个维度）</li><li><strong>页面说明</strong>：结存余额口径（集团 / 仓库 / 货主 / 产权人 / 批次 五 tab）+ 记账流水口径。二级层「一个数量、两个金额」</li></ul>
+<h3 class="sub-h">搜索条件（16 项）<span class="cnt">16</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>一级货主</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td><strong>不填 = 全部一级货主</strong>：集团维度与仓库维度即<strong>跨货主合并</strong>（见 <code>§一.5.2</code>），货主维度即每个一级货主各自成组；填了即在该一级货主范围内缩小</td></tr>
+<tr><td>二级产权人</td><td>下拉联动（支持多选）</td><td>精确匹配</td><td>非必填</td><td>产权人维度按二级产权人分组显示（集团维度、仓库维度、货主维度跨二级产权人合并，本条件用于限定参与合并的范围）；结存余额口径支持多选、记账流水口径为单选</td></tr>
+<tr><td>物理仓库</td><td>下拉选择（支持多选）</td><td>精确匹配</td><td>非必填</td><td>仓库维度、批次维度按仓库编码分组显示（集团维度跨仓库合并，本条件用于限定参与合并的仓库范围）；结存余额口径支持多选、记账流水口径为单选</td></tr>
+<tr><td>商品 SKU / 名称</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>结存余额口径按 SKU / 名称模糊；记账流水口径为商品 SKU 文本输入</td></tr>
+<tr><td>资产类型</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 自有资产 OWN / 受托代管 CONSIGNMENT（结存余额口径）</td></tr>
+<tr><td>计价模式</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>结存余额口径，三种一期均可选；取值：全部 / 移动加权平均 / 个别计价 / 先入先出法</td></tr>
+<tr><td>库存状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 仅看有库存 / 仅看负库存（结存余额口径）</td></tr>
+<tr><td>会计期间</td><td>下拉单选</td><td>精确匹配</td><td>非必填</td><td>取值 <code>YYYY-MM</code>（记账流水口径）</td></tr>
+<tr><td>记账日期范围</td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>记账流水口径</td></tr>
+<tr><td>单据类型</td><td>下拉多选</td><td>精确匹配</td><td>非必填</td><td>取值：采购入库 / 销退入库 / 调拨入库 / 其他入库 / 货权转移入库 / 销售出库 / 采退出库 / 调拨出库 / 其他出库 / 货权转移出库（记账流水口径）（<strong>入库 5 类 + 出库 5 类</strong>）。<strong>调拨与货权转移都是双边单据，按其两腿各列一项</strong>——报文与 <code>doc_type</code>（单据类型）层各只有<strong>一个</strong>类型（调拨 <code>TRANSFER</code>：调拨、一级货权转移 <code>OWNER_TRANSFER</code>：一级货权转移），转出 / 转入是<strong>行上的 <code>is_in</code>（出入方向·1 入 0 出）</strong>。<strong>盘点 <code>STOCKTAKE</code>（盘点）、二级货权重分配 <code>OWNER_REASSIGN</code>（二级货权重分配）、跨期补录 <code>PERIOD_ADJUST</code>（跨期补录单）不在本列表</strong>，盘盈 / 盘亏是盘点单的派生单据、不是独立 <code>doc_type</code>（单据类型）</td></tr>
+<tr><td>子场景原因</td><td>下拉多选</td><td>精确匹配</td><td>非必填</td><td>取值：全部 / 借用归还 / 报废毁损 / 赠出送样 / 借出可归还 / 委托代销发出 / 货权已转实物才出。<code>reason</code>（子场景原因），<strong>记账流水口径</strong>；仅其他出入库有值，完整枚举见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td>金额来源</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 原单回冲 / 外部给价 / 财务估价。<code>valuation_source</code>（金额来源），<strong>记账流水口径</strong>；仅其他出入库有值</td></tr>
+<tr><td>有无实物移动</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 有 / 无。<code>has_physical_movement</code>（有无实物移动），<strong>记账流水口径</strong></td></tr>
+<tr><td>业务单据号</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>记账流水口径</td></tr>
+<tr><td>批次号</td><td>文本输入</td><td>精确匹配</td><td>非必填</td><td>记账流水口径；<strong>结存余额口径无批次维度，不展示本条件</strong>（核算单元是三轴聚合）；<strong>批次维度页签下本条件生效</strong></td></tr>
+<tr><td>异常标记</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 正常 / 负库存过账 / 尾差平账（记账流水口径）</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（8 个）<span class="cnt">8</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件在当前维度 tab 内重新加载数据</td><td>重新查询并刷新当前 tab 列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出 Excel]</code></td><td>导出结存余额结果</td><td>点击后下载导出文件</td><td>结存余额口径</td></tr>
+<tr><td><code>[导出流水报表]</code></td><td>导出记账流水结果</td><td>点击后下载导出文件</td><td>记账流水口径</td></tr>
+<tr><td><code>[查看收发流水]</code></td><td>查看该行对应的收发流水明细</td><td>跳转 P07 数据计算流水</td><td>结存余额口径</td></tr>
+<tr><td><code>[计价批次]</code></td><td>查看该行对应的计价批次</td><td>跳转 P09 存货计价批次追踪</td><td>结存余额口径</td></tr>
+<tr><td><code>[穿透详情]</code></td><td>穿透查看核算结果、凭证分录与原始报文</td><td>右侧滑出抽屉展示核算结果、凭证分录、原始报文 JSON</td><td>记账流水口径</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段。<strong>集团维度、仓库维度、批次维度下另需列出构成该合并行的核算单元明细</strong>（仓库 / 一级货主 / 二级产权人 × 数量 / 金额 / 均价 / 计价模式），使合并行可拆回、可审计（见 <code>§一.5.2</code>）</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（集团维度）（29 项）<span class="cnt">29</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品编码。<strong>本维度跨仓库、跨一级货主、跨二级产权人合并到商品 SKU 一行</strong>：各仓库 × 各一级货主 × 各二级产权人的核算单元合并为一行，数量与金额求和、均价 = Σ金额 ÷ Σ数量（<strong>加权而非算术平均</strong>），合并与降级规则见 <code>§一.5.2</code></td></tr>
+<tr><td><code>sku_name</code>（商品品名）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品主数据全称</td></tr>
+<tr><td><code>asset_type</code>（资产类型）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>OWN</code>（货权变更单号前缀）自有(蓝) / <code>CONSIGNMENT</code>（寄售）受托代管(橙)</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），灰底 Tag（<strong>三种一期均可选</strong>，取自计价模型配置）</td></tr>
+<tr><td><code>current_qty</code>（当前结存数量）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>账面结余量，数值展现，小于 0 标红加粗</td></tr>
+<tr><td><code>current_unit_cost</code>（当前结存均价）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><strong>按方法分流</strong>：<code>MOVING_AVG</code>（移动加权平均） 显示派生均价（= 结存金额 ÷ 结存数量，即移动平均单价）；<code>FIFO</code>（先入先出法） 同显派生均价并标注「派生 · 非计价依据」；<code>INDIVIDUAL</code>（个别计价） 显示 <code>--</code>（逐件成本差异最大，均价最误导，下钻至序列号资产台账）。货币格式 <code>¥#,##0.000000</code>；均价池（核算单元）按 <code>(商品, 仓库, 一级货主)</code> 建立。<strong>本列已合并多仓库、多货主，取值是加权均价而非任一单元的均价；合并行含 <code>INDIVIDUAL</code>（个别计价） 单元时降级为 <code>--</code></strong>——见 <code>§一.5.2</code> 的合并规则与降级表</td></tr>
+<tr><td><code>current_total_cost</code>（当前结存总额）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>在库总成本 qty × cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>has_negative</code>（负库存标记）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>1</code> 时显示红色闪烁 Tag <code>负库存异常</code></td></tr>
+<tr><td><code>updated_at</code>（最后更新时间）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>journal_no</code>（流水号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>唯一记账流水号</td></tr>
+<tr><td><code>posting_seq</code>（全局过账序号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><strong>全局单调递增</strong>的过账序号，记录实际生效顺序（同一天内也按它排序，而非 <code>biz_date + seq_in_day</code>）。<strong>审计追溯与事件重放的对齐依据</strong>：排障时按它复现过账次序、核对 <code>before_* / after_*</code> 快照链是否连续。纯数字，等宽字体右对齐</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水所归属的批次号；<strong>空 = 该商品不按批次管理</strong>。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>batch_no</code>，<strong>不落 <code>t_calc_log</code></strong>（字段层已冻结，故为展示层派生而非新字段）。<strong>仅记账流水口径有值</strong>：结存余额口径的核算单元是 <code>(商品, 仓库, 一级货主)</code> 三轴聚合，批次不属于聚合键，强行展示会打散聚合，故该口径下恒为 <code>—</code>。口径说明：<code>SI</code>（个别计价）单元的批次 = 序列号；<code>FIFO</code>（先入先出法）单元的批次 = 每次入库形成的层</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>上游单据编号</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>业务操作类型，彩色 Tag</td></tr>
+<tr><td><code>fiscal_period</code>（会计期间）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>归属账期，如 <code>2026-09</code></td></tr>
+<tr><td><code>posting_date</code>（记账日期）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>财务记账日，<code>YYYY-MM-DD</code>（日期格式）</td></tr>
+<tr><td><code>direction</code>（变动方向）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>1</code> 入库(绿+) / <code>-1</code> 出库(橙-) / <code>0</code> 纯金额调整(蓝调)</td></tr>
+<tr><td><code>change_qty</code>（发生数量）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次出入库量，数值保留 4 位小数</td></tr>
+<tr><td><code>unit_cost</code>（核算单价）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次不含税成本，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>total_cost</code>（发生总成本）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>change_qty × unit_cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>bal_qty_snapshot</code>（结存数量快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后在库量快照</td></tr>
+<tr><td><code>bal_price_snapshot</code>（结存均价快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后均价快照，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>bal_cost_snapshot</code>（结存金额快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后总额快照，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>is_abnormal</code>（异常标记）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>0</code> 正常 / <code>1</code> 负库存 / <code>2</code> 尾差清零</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型恒为 <code>—</code>。彩色 Tag（蓝底），与 <code>bill_type</code> 并列展示使「其他出入库」不再是一团糊。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>reason</code>，<strong>不落 <code>t_calc_log</code></strong>（与 <code>batch_no</code> 同）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>决定这笔流水的金额是「取数」还是「估价」</strong>：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值；<strong><code>FINANCE_ESTIMATE</code> 行加黄底提示「财务估价」</strong>，便于复核时一眼定位</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><code>1</code>（有） / <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕。<strong><code>0</code> 时整行加浅灰底 + 「无实物移动」Tag</strong>——这是把虚进虚出（<code>XY-1</code>–<code>XY-3</code>）从流水里挑出来的唯一手段</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>直发业务「入库 + 出库」两笔的配对键，非直发为空。链接文本，点击跳对侧那一笔；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong></td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（仓库维度）（30 项）<span class="cnt">30</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>warehouse_code</code>（仓库）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>物理仓编码及名称，本维度按仓库编码分组。<strong>本维度跨货主合并</strong>：同仓同 SKU 下各一级货主 × 各二级产权人的核算单元合并为一行，<strong>合并规则（数量/金额求和、均价加权、方法混合降级）统一见 <code>§一.5.2</code></strong></td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品编码</td></tr>
+<tr><td><code>sku_name</code>（商品品名）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品主数据全称</td></tr>
+<tr><td><code>asset_type</code>（资产类型）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>OWN</code>（货权变更单号前缀）自有(蓝) / <code>CONSIGNMENT</code>（寄售）受托代管(橙)</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），灰底 Tag（<strong>三种一期均可选</strong>，取自计价模型配置）</td></tr>
+<tr><td><code>current_qty</code>（当前结存数量）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>账面结余量，数值展现，小于 0 标红加粗</td></tr>
+<tr><td><code>current_unit_cost</code>（当前结存均价）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><strong>按方法分流</strong>：<code>MOVING_AVG</code>（移动加权平均） 显示派生均价（= 结存金额 ÷ 结存数量，即移动平均单价）；<code>FIFO</code>（先入先出法） 同显派生均价并标注「派生 · 非计价依据」；<code>INDIVIDUAL</code>（个别计价） 显示 <code>--</code>（逐件成本差异最大，均价最误导，下钻至序列号资产台账）。货币格式 <code>¥#,##0.000000</code>；均价池（核算单元）按 <code>(商品, 仓库, 一级货主)</code> 建立。<strong>本列已合并多货主，取值是加权均价而非任一单元的均价；合并行含 <code>INDIVIDUAL</code>（个别计价） 单元时降级为 <code>--</code></strong>——见 <code>§一.5.2</code> 的合并规则与降级表</td></tr>
+<tr><td><code>current_total_cost</code>（当前结存总额）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>在库总成本 qty × cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>has_negative</code>（负库存标记）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>1</code> 时显示红色闪烁 Tag <code>负库存异常</code></td></tr>
+<tr><td><code>updated_at</code>（最后更新时间）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>journal_no</code>（流水号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>唯一记账流水号</td></tr>
+<tr><td><code>posting_seq</code>（全局过账序号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><strong>全局单调递增</strong>的过账序号，记录实际生效顺序（同一天内也按它排序，而非 <code>biz_date + seq_in_day</code>）。<strong>审计追溯与事件重放的对齐依据</strong>：排障时按它复现过账次序、核对 <code>before_* / after_*</code> 快照链是否连续。纯数字，等宽字体右对齐</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水所归属的批次号；<strong>空 = 该商品不按批次管理</strong>。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>batch_no</code>，<strong>不落 <code>t_calc_log</code></strong>（字段层已冻结，故为展示层派生而非新字段）。<strong>仅记账流水口径有值</strong>：结存余额口径的核算单元是 <code>(商品, 仓库, 一级货主)</code> 三轴聚合，批次不属于聚合键，强行展示会打散聚合，故该口径下恒为 <code>—</code>。口径说明：<code>SI</code>（个别计价）单元的批次 = 序列号；<code>FIFO</code>（先入先出法）单元的批次 = 每次入库形成的层</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>上游单据编号</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>业务操作类型，彩色 Tag</td></tr>
+<tr><td><code>fiscal_period</code>（会计期间）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>归属账期，如 <code>2026-09</code></td></tr>
+<tr><td><code>posting_date</code>（记账日期）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>财务记账日，<code>YYYY-MM-DD</code>（日期格式）</td></tr>
+<tr><td><code>direction</code>（变动方向）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>1</code> 入库(绿+) / <code>-1</code> 出库(橙-) / <code>0</code> 纯金额调整(蓝调)</td></tr>
+<tr><td><code>change_qty</code>（发生数量）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次出入库量，数值保留 4 位小数</td></tr>
+<tr><td><code>unit_cost</code>（核算单价）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次不含税成本，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>total_cost</code>（发生总成本）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>change_qty × unit_cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>bal_qty_snapshot</code>（结存数量快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后在库量快照</td></tr>
+<tr><td><code>bal_price_snapshot</code>（结存均价快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后均价快照，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>bal_cost_snapshot</code>（结存金额快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后总额快照，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>is_abnormal</code>（异常标记）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>0</code> 正常 / <code>1</code> 负库存 / <code>2</code> 尾差清零</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型恒为 <code>—</code>。彩色 Tag（蓝底），与 <code>bill_type</code> 并列展示使「其他出入库」不再是一团糊。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>reason</code>，<strong>不落 <code>t_calc_log</code></strong>（与 <code>batch_no</code> 同）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>决定这笔流水的金额是「取数」还是「估价」</strong>：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值；<strong><code>FINANCE_ESTIMATE</code> 行加黄底提示「财务估价」</strong>，便于复核时一眼定位</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><code>1</code>（有） / <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕。<strong><code>0</code> 时整行加浅灰底 + 「无实物移动」Tag</strong>——这是把虚进虚出（<code>XY-1</code>–<code>XY-3</code>）从流水里挑出来的唯一手段</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>直发业务「入库 + 出库」两笔的配对键，非直发为空。链接文本，点击跳对侧那一笔；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong></td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（货主维度）（30 项）<span class="cnt">30</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>纳税主体法人编码及名称，本维度按一级货主分组（一级货主 = 法人主体），均价池（核算单元）落在一级层 <code>(商品, 仓库, 一级货主)</code></td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品编码</td></tr>
+<tr><td><code>sku_name</code>（商品品名）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品主数据全称</td></tr>
+<tr><td><code>asset_type</code>（资产类型）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>OWN</code>（货权变更单号前缀）自有(蓝) / <code>CONSIGNMENT</code>（寄售）受托代管(橙)</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），灰底 Tag（<strong>三种一期均可选</strong>，取自计价模型配置）</td></tr>
+<tr><td><code>current_qty</code>（当前结存数量）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>账面结余量，数值展现，小于 0 标红加粗</td></tr>
+<tr><td><code>current_unit_cost</code>（当前结存均价）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><strong>按方法分流</strong>：<code>MOVING_AVG</code>（移动加权平均） 显示派生均价（即移动平均单价）；<code>FIFO</code>（先入先出法） 同显派生均价并标注「派生 · 非计价依据」；<code>INDIVIDUAL</code>（个别计价） 显示 <code>--</code>。货币格式 <code>¥#,##0.000000</code>；均价池（核算单元）只在一级层 <code>(商品, 仓库, 一级货主)</code></td></tr>
+<tr><td><code>current_total_cost</code>（当前结存总额）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>在库总成本 qty × cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>has_negative</code>（负库存标记）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>1</code> 时显示红色闪烁 Tag <code>负库存异常</code></td></tr>
+<tr><td><code>updated_at</code>（最后更新时间）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>journal_no</code>（流水号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>唯一记账流水号</td></tr>
+<tr><td><code>posting_seq</code>（全局过账序号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><strong>全局单调递增</strong>的过账序号，记录实际生效顺序（同一天内也按它排序，而非 <code>biz_date + seq_in_day</code>）。<strong>审计追溯与事件重放的对齐依据</strong>：排障时按它复现过账次序、核对 <code>before_* / after_*</code> 快照链是否连续。纯数字，等宽字体右对齐</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水所归属的批次号；<strong>空 = 该商品不按批次管理</strong>。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>batch_no</code>，<strong>不落 <code>t_calc_log</code></strong>（字段层已冻结，故为展示层派生而非新字段）。<strong>仅记账流水口径有值</strong>：结存余额口径的核算单元是 <code>(商品, 仓库, 一级货主)</code> 三轴聚合，批次不属于聚合键，强行展示会打散聚合，故该口径下恒为 <code>—</code>。口径说明：<code>SI</code>（个别计价）单元的批次 = 序列号；<code>FIFO</code>（先入先出法）单元的批次 = 每次入库形成的层</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>上游单据编号</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>业务操作类型，彩色 Tag</td></tr>
+<tr><td><code>fiscal_period</code>（会计期间）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>归属账期，如 <code>2026-09</code></td></tr>
+<tr><td><code>posting_date</code>（记账日期）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>财务记账日，<code>YYYY-MM-DD</code>（日期格式）</td></tr>
+<tr><td><code>direction</code>（变动方向）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>1</code> 入库(绿+) / <code>-1</code> 出库(橙-) / <code>0</code> 纯金额调整(蓝调)</td></tr>
+<tr><td><code>change_qty</code>（发生数量）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次出入库量，数值保留 4 位小数</td></tr>
+<tr><td><code>unit_cost</code>（核算单价）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次不含税成本，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>total_cost</code>（发生总成本）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>change_qty × unit_cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>bal_qty_snapshot</code>（结存数量快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后在库量快照</td></tr>
+<tr><td><code>bal_price_snapshot</code>（结存均价快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后均价快照，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>bal_cost_snapshot</code>（结存金额快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后总额快照，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>is_abnormal</code>（异常标记）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>0</code> 正常 / <code>1</code> 负库存 / <code>2</code> 尾差清零</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型恒为 <code>—</code>。彩色 Tag（蓝底），与 <code>bill_type</code> 并列展示使「其他出入库」不再是一团糊。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>reason</code>，<strong>不落 <code>t_calc_log</code></strong>（与 <code>batch_no</code> 同）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>决定这笔流水的金额是「取数」还是「估价」</strong>：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值；<strong><code>FINANCE_ESTIMATE</code> 行加黄底提示「财务估价」</strong>，便于复核时一眼定位</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><code>1</code>（有） / <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕。<strong><code>0</code> 时整行加浅灰底 + 「无实物移动」Tag</strong>——这是把虚进虚出（<code>XY-1</code>–<code>XY-3</code>）从流水里挑出来的唯一手段</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>直发业务「入库 + 出库」两笔的配对键，非直发为空。链接文本，点击跳对侧那一笔；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong></td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（产权人维度）（31 项）<span class="cnt">31</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>内部利润中心编码及名称（<strong>产权人可为个人或部门</strong>），本维度按二级产权人分组（二级货主 = 内部管理维度）。<strong>二级维度不读四轴余额表</strong>（二级不进余额表主键），读<strong>二级货主结存表</strong>——它是分摊账的<strong>物化投影</strong>，一行 = 一个二级货主 × 一种资产类型</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>商品编码</td></tr>
+<tr><td><code>sku_name</code>（商品品名）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品主数据全称（商品主数据取自余额表同键行）</td></tr>
+<tr><td><code>asset_type</code>（资产类型）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td><code>OWN</code>（货权变更单号前缀）自有(蓝) / <code>CONSIGNMENT</code>（寄售）受托代管(橙)。<strong>属于二级维度分组键之一</strong>（见 <code>§一.5.2</code>）</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），灰底 Tag（<strong>三种一期均可选</strong>，取自计价模型配置）</td></tr>
+<tr><td><code>current_qty</code>（当前结存数量）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>二级货主结存表的 <code>qty</code>（结存数量），数值展现，小于 0 标红加粗。<strong>带符号</strong>（二级层增加为正、减少为负）；<strong>直接读现值、不做加总</strong>——重分配的转出行取负，即把量从该货主扣走（<code>G-06</code> <strong>已闭合</strong>，规则见 <code>§一.5.2</code>）。负值的语义是<strong>超分摊</strong>（分摊出去的量超过其持有量），与仓库 / 一级层的负库存<strong>不是一回事</strong></td></tr>
+<tr><td><code>current_unit_cost</code>（当前结存均价）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>二级货主为内部管理维度，<strong>不独立建均价池</strong>；均价引用所属一级层 <code>(商品, 仓库, 一级货主)</code> 核算单元，货币格式 <code>¥#,##0.000000</code>。<strong>展示规则按该核算单元的方法分流</strong>（与一级层同规则，不因「引用来的」就一律显示均价）：<code>MOVING_AVG</code>（移动加权平均） 显示派生均价 / <code>FIFO</code>（先入先出法） 同显并标注「派生 · 非计价依据」/ <strong><code>INDIVIDUAL</code>（个别计价） 显示 <code>--</code></strong>（逐件成本差异最大，均价最误导，下钻至序列号资产台账 P08）</td></tr>
+<tr><td><code>current_total_cost</code>（当前结存总额）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）·<strong>派生</strong></td><td><strong>派生值、不落库</strong>：<code>qty ×</code> 所属一级层核算单元<strong>当期</strong>均价（即二级分摊金额 <code>alloc_amount</code>），货币格式 <code>¥#,##0.00</code>。<strong>该列即 V3 对平的左侧</strong>，<span class="mth">∑</span> 应等于一级层金额（见 <code>§一.5.2</code>）。派生而非「逐笔分摊金额求和」，是为让 R3 的「同一核算单元内多个二级货主<strong>共用同一个均价</strong>」<strong>由构造保证</strong>。<strong>不含 <code>internal_amount</code></strong>（内部结算金额不展示、不参与对平）</td></tr>
+<tr><td><code>has_negative</code>（负库存标记）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>该二级货主结存表的 <code>qty</code> 小于 0 时显示红色闪烁 Tag <code>负库存异常</code>（二级层语义为<strong>超分摊</strong>）</td></tr>
+<tr><td><code>updated_at</code>（最后更新时间）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>该二级货主结存最后一次变更的时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>journal_no</code>（流水号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>唯一记账流水号</td></tr>
+<tr><td><code>posting_seq</code>（全局过账序号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><strong>全局单调递增</strong>的过账序号，记录实际生效顺序（同一天内也按它排序，而非 <code>biz_date + seq_in_day</code>）。<strong>审计追溯与事件重放的对齐依据</strong>：排障时按它复现过账次序、核对 <code>before_* / after_*</code> 快照链是否连续。纯数字，等宽字体右对齐</td></tr>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水所归属的批次号；<strong>空 = 该商品不按批次管理</strong>。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>batch_no</code>，<strong>不落 <code>t_calc_log</code></strong>（字段层已冻结，故为展示层派生而非新字段）。<strong>仅记账流水口径有值</strong>：结存余额口径的核算单元是 <code>(商品, 仓库, 一级货主)</code> 三轴聚合，批次不属于聚合键，强行展示会打散聚合，故该口径下恒为 <code>—</code>。口径说明：<code>SI</code>（个别计价）单元的批次 = 序列号；<code>FIFO</code>（先入先出法）单元的批次 = 每次入库形成的层</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>上游单据编号</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>业务操作类型，彩色 Tag</td></tr>
+<tr><td><code>owner_info</code>（货权主体）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>一级货主 / 二级产权人</code> 组合文本</td></tr>
+<tr><td><code>fiscal_period</code>（会计期间）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>归属账期，如 <code>2026-09</code></td></tr>
+<tr><td><code>posting_date</code>（记账日期）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>财务记账日，<code>YYYY-MM-DD</code>（日期格式）</td></tr>
+<tr><td><code>direction</code>（变动方向）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>1</code> 入库(绿+) / <code>-1</code> 出库(橙-) / <code>0</code> 纯金额调整(蓝调)</td></tr>
+<tr><td><code>change_qty</code>（发生数量）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次出入库量，数值保留 4 位小数</td></tr>
+<tr><td><code>unit_cost</code>（核算单价）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次不含税成本，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>total_cost</code>（发生总成本）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>change_qty × unit_cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>bal_qty_snapshot</code>（结存数量快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后在库量快照</td></tr>
+<tr><td><code>bal_price_snapshot</code>（结存均价快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后均价快照，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>bal_cost_snapshot</code>（结存金额快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后总额快照，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>is_abnormal</code>（异常标记）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>0</code> 正常 / <code>1</code> 负库存 / <code>2</code> 尾差清零</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型恒为 <code>—</code>。彩色 Tag（蓝底），与 <code>bill_type</code> 并列展示使「其他出入库」不再是一团糊。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>reason</code>，<strong>不落 <code>t_calc_log</code></strong>（与 <code>batch_no</code> 同）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>决定这笔流水的金额是「取数」还是「估价」</strong>：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值；<strong><code>FINANCE_ESTIMATE</code> 行加黄底提示「财务估价」</strong>，便于复核时一眼定位</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><code>1</code>（有） / <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕。<strong><code>0</code> 时整行加浅灰底 + 「无实物移动」Tag</strong>——这是把虚进虚出（<code>XY-1</code>–<code>XY-3</code>）从流水里挑出来的唯一手段</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>直发业务「入库 + 出库」两笔的配对键，非直发为空。链接文本，点击跳对侧那一笔；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong></td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（批次维度）（30 项）<span class="cnt">30</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>batch_no</code>（批次号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水所归属的批次号；<strong>空 = 该商品不按批次管理</strong>。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>batch_no</code>，<strong>不落 <code>t_calc_log</code></strong>（字段层已冻结，故为展示层派生而非新字段）。<strong>仅记账流水口径有值</strong>：结存余额口径的核算单元是 <code>(商品, 仓库, 一级货主)</code> 三轴聚合，批次不属于聚合键，强行展示会打散聚合，故该口径下恒为 <code>—</code>。口径说明：<code>SI</code>（个别计价）单元的批次 = 序列号；<code>FIFO</code>（先入先出法）单元的批次 = 每次入库形成的层。<strong>本维度即按本列 × 仓库分组</strong>——这是结存流水数据页唯一以批次为分组键的页签，故本列在本维度下不取 <code>—</code>，取标准化事件派生值</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>物理仓编码及名称，本维度按仓库编码分组。<strong>本维度跨货主合并</strong>：同仓同 SKU 下各一级货主 × 各二级产权人的核算单元合并为一行，<strong>合并规则（数量/金额求和、均价加权、方法混合降级）统一见 <code>§一.5.2</code></strong></td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品编码</td></tr>
+<tr><td><code>sku_name</code>（商品品名）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>商品主数据全称</td></tr>
+<tr><td><code>asset_type</code>（资产类型）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>OWN</code>（货权变更单号前缀）自有(蓝) / <code>CONSIGNMENT</code>（寄售）受托代管(橙)</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），灰底 Tag（<strong>三种一期均可选</strong>，取自计价模型配置）</td></tr>
+<tr><td><code>current_qty</code>（当前结存数量）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>账面结余量，数值展现，小于 0 标红加粗</td></tr>
+<tr><td><code>current_unit_cost</code>（当前结存均价）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><strong>按方法分流</strong>：<code>MOVING_AVG</code>（移动加权平均） 显示派生均价（= 结存金额 ÷ 结存数量，即移动平均单价）；<code>FIFO</code>（先入先出法） 同显派生均价并标注「派生 · 非计价依据」；<code>INDIVIDUAL</code>（个别计价） 显示 <code>--</code>（逐件成本差异最大，均价最误导，下钻至序列号资产台账）。货币格式 <code>¥#,##0.000000</code>；均价池（核算单元）按 <code>(商品, 仓库, 一级货主)</code> 建立。<strong>本列已合并多货主，取值是加权均价而非任一单元的均价；合并行含 <code>INDIVIDUAL</code>（个别计价） 单元时降级为 <code>--</code></strong>——见 <code>§一.5.2</code> 的合并规则与降级表</td></tr>
+<tr><td><code>current_total_cost</code>（当前结存总额）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>在库总成本 qty × cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>has_negative</code>（负库存标记）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>1</code> 时显示红色闪烁 Tag <code>负库存异常</code></td></tr>
+<tr><td><code>updated_at</code>（最后更新时间）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+<tr><td><code>journal_no</code>（流水号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>唯一记账流水号</td></tr>
+<tr><td><code>posting_seq</code>（全局过账序号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><strong>全局单调递增</strong>的过账序号，记录实际生效顺序（同一天内也按它排序，而非 <code>biz_date + seq_in_day</code>）。<strong>审计追溯与事件重放的对齐依据</strong>：排障时按它复现过账次序、核对 <code>before_* / after_*</code> 快照链是否连续。纯数字，等宽字体右对齐</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单据号）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>上游单据编号</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>业务操作类型，彩色 Tag</td></tr>
+<tr><td><code>fiscal_period</code>（会计期间）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>归属账期，如 <code>2026-09</code></td></tr>
+<tr><td><code>posting_date</code>（记账日期）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>财务记账日，<code>YYYY-MM-DD</code>（日期格式）</td></tr>
+<tr><td><code>direction</code>（变动方向）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>1</code> 入库(绿+) / <code>-1</code> 出库(橙-) / <code>0</code> 纯金额调整(蓝调)</td></tr>
+<tr><td><code>change_qty</code>（发生数量）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次出入库量，数值保留 4 位小数</td></tr>
+<tr><td><code>unit_cost</code>（核算单价）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>本次不含税成本，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>total_cost</code>（发生总成本）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>change_qty × unit_cost，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>bal_qty_snapshot</code>（结存数量快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后在库量快照</td></tr>
+<tr><td><code>bal_price_snapshot</code>（结存均价快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后均价快照，货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>bal_cost_snapshot</code>（结存金额快照）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td>过账后总额快照，货币格式 <code>¥#,##0.00</code></td></tr>
+<tr><td><code>is_abnormal</code>（异常标记）</td><td><code>t_calc_log</code>（计算过程留痕表）</td><td><code>0</code> 正常 / <code>1</code> 负库存 / <code>2</code> 尾差清零</td></tr>
+<tr><td><code>reason</code>（子场景原因）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>L4 子场景的钥匙</strong>，仅 <code>OTHER_IN</code> / <code>OTHER_OUT</code> 有值，其余类型恒为 <code>—</code>。彩色 Tag（蓝底），与 <code>bill_type</code> 并列展示使「其他出入库」不再是一团糊。<strong>派生方式</strong>：按幂等键 <code>(doc_type, doc_no, version_no, line_no)</code> 反查标准化事件取 <code>reason</code>，<strong>不落 <code>t_calc_log</code></strong>（与 <code>batch_no</code> 同）。取值见《通用数据接口字段定义》<code>§4.3.2</code></td></tr>
+<tr><td><code>valuation_source</code>（金额来源）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><strong>决定这笔流水的金额是「取数」还是「估价」</strong>：<code>ORIG_DOC</code>（原单回冲）/ <code>EXTERNAL</code>（外部给价）/ <code>FINANCE_ESTIMATE</code>（财务估价，须含估价人）。仅其他出入库有值；<strong><code>FINANCE_ESTIMATE</code> 行加黄底提示「财务估价」</strong>，便于复核时一眼定位</td></tr>
+<tr><td><code>orig_doc_no</code>（原单号）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>本笔流水回冲 / 归还所依据的原单号（如 <code>OT-202601-0005</code>）。仅原物归还、退货类有值；链接文本，点击跳 P03 看原单报文</td></tr>
+<tr><td><code>has_physical_movement</code>（有无实物移动）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td><code>1</code>（有） / <code>0</code>（无）。<strong>事实声明</strong>，由业务推单时声明、财务侧不采信真伪只留痕。<strong><code>0</code> 时整行加浅灰底 + 「无实物移动」Tag</strong>——这是把虚进虚出（<code>XY-1</code>–<code>XY-3</code>）从流水里挑出来的唯一手段</td></tr>
+<tr><td><code>link_doc_no</code>（直发配对键）</td><td>标准化事件（<strong>展示层派生</strong>）</td><td>直发业务「入库 + 出库」两笔的配对键，非直发为空。链接文本，点击跳对侧那一笔；<strong>没有它「入库数量 = 出库数量」这条校验做不了</strong></td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P16" data-nav="P16 余额管理报表">
+<div class="sec-head"><span class="sec-no">16</span><div><h2>余额管理报表</h2><p class="sec-path">财务库存中心 → 结存查询 → 余额管理报表</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>结存查询</code> → <code>余额管理报表</code></li><li><strong>对应系统需求</strong>：SR04_F03 余额管理报表</li><li><strong>页面说明</strong>：同一份现时余额的五种分组：集团（商品 SKU）/ 仓库 / 货主 / 产权人 / 批次。仓库、货主、产权人三个页签是 P05 结存余额口径的分组视图；集团页签在 SKU 上汇总，批次页签按批次号 × 仓库看剩多少、值多少钱</li></ul>
+<h3 class="sub-h">搜索条件（9 项）<span class="cnt">9</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码；五个页签均生效。</td></tr>
+<tr><td><code>批次号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>计价批次号。<strong>仅「批次余额」页签生效</strong>（批次不是另外四个页签的聚合键）。</td></tr>
+<tr><td><code>物理仓库</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>仓库编码；五个页签均生效。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>法人主体，即核算单元的货主轴；五个页签均生效。</td></tr>
+<tr><td><code>二级产权人</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>内部管理维度（二级货主）。<strong>可为个人，也可为部门 / 事业部 / 代采项目</strong>。源自二级货主主数据，随所选一级货主联动。<strong>不进核算单元、不进均价池</strong>，只用于把一级层结存拆到二级。在「集团余额」「批次余额」与「二级产权人余额」三个页签生效。</td></tr>
+<tr><td><code>资产类型</code></td><td>下拉单选</td><td>精确查询</td><td>非必填（默认全部）</td><td>取值：全部 / 自有 / 受托代管；五个页签均生效。</td></tr>
+<tr><td><code>计价模式</code></td><td>下拉单选</td><td>精确查询</td><td>非必填（默认全部）</td><td><code>pricing_method</code>（计价模式）取值：全部 / 移动加权平均 / 个别计价 / 先入先出法。取该行所属<strong>核算单元</strong>的配置，不是批次自身的属性；五个页签均生效。</td></tr>
+<tr><td><code>库龄区间</code></td><td>下拉单选</td><td>精确查询</td><td>非必填（默认全部）</td><td>取值：全部 / 0-30 天 / 31-60 天 / 61-90 天 / 91-180 天 / 181-360 天 / 360 天以上；区间口径与 P12 库龄表的六桶一致，不另立边界。<strong>仅「批次余额」页签生效</strong>（库龄以批次入库日起算，另外四个页签无批次维度）。</td></tr>
+<tr><td><code>仅看有余额</code></td><td>下拉单选</td><td>精确查询</td><td>非必填（默认全部）</td><td>取值：全部 / 仅有余额 / 仅零余额。零余额行仍然保留（数量 = 0），用于追溯已出清的对象；五个页签均生效。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（6 个）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件在当前页签内重新加载数据</td><td>重新查询并刷新当前页签列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出余额报表]</code></td><td>导出<strong>当前页签</strong>当前筛选条件下的余额明细</td><td>按当前条件与页签导出 Excel</td><td>无权限限制</td></tr>
+<tr><td><code>[查看收发流水]</code></td><td>查看该行对象对应的收发流水明细</td><td>跳转 P07 数据计算流水</td><td>集团余额 / 仓库余额 / 一级货主余额 / 二级产权人余额四个页签</td></tr>
+<tr><td><code>[查看批次层成本]</code></td><td>查看该批次的成本层构成</td><td>打开明细抽屉：按 <code>layer_id</code>（成本层标识）逐层列出 <code>layer_qty</code>（层剩余数量） / <code>layer_unit_cost</code>（层单价） / <code>layer_amount</code>（层金额） / <code>is_open</code>（是否未耗尽）。<strong>个别计价</strong>逐台一层（按 SN 定位）、<strong>先入先出法</strong>按入库先后逐层；<strong>移动加权平均</strong>单元不写成本层，抽屉内提示「本单元按移动加权平均计价，无成本层」</td><td>批次余额页签</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（52 项）<span class="cnt">52</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页签</th>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td>集团余额</td><td><code>sku_code</code>（商品 SKU）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品编码。<strong>本页签跨仓库、跨一级货主、跨二级产权人合并到商品 SKU 一行</strong>：各仓库 × 各一级货主 × 各二级产权人的核算单元合并，数量与金额求和、均价 = Σ金额 ÷ Σ数量（<strong>加权而非算术平均</strong>），合并规则见 P05 与 §一.5.2。</td></tr>
+<tr><td>集团余额</td><td><code>sku_name</code>（商品品名）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品主数据全称。</td></tr>
+<tr><td>集团余额</td><td><code>asset_type</code>（资产类型）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>自有 / 受托代管。</td></tr>
+<tr><td>集团余额</td><td><code>pricing_method</code>（计价模式）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>移动加权平均 / 个别计价 / 先入先出法，取自计价模型配置。合并行含个别计价单元时均价降级为 <code>—</code>。</td></tr>
+<tr><td>集团余额</td><td><code>current_qty</code>（当前结存数量）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>账面结余量，小于 0 标红加粗。</td></tr>
+<tr><td>集团余额</td><td><code>current_unit_cost</code>（当前结存均价）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td><strong>按方法分流</strong>：移动加权平均显示派生均价；先入先出法同显派生均价并标注「派生 · 非计价依据」；个别计价显示 <code>—</code>（逐件成本差异最大，均价最误导，下钻至序列号资产台账 P08）。货币格式 <code>¥#,##0.000000</code>。<strong>本列已合并多仓库、多货主，取值是加权均价而非任一单元的均价</strong>。</td></tr>
+<tr><td>集团余额</td><td><code>current_total_cost</code>（当前结存总额）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>在库总成本 = 数量 × 均价，货币格式 <code>¥#,##0.00</code>。</td></tr>
+<tr><td>集团余额</td><td><code>has_negative</code>（负库存标记）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>该行数量小于 0 时显示红色闪烁标记「负库存异常」。</td></tr>
+<tr><td>集团余额</td><td><code>updated_at</code>（最后更新时间）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+<tr><td>仓库余额</td><td><code>warehouse_code</code>（仓库）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>物理仓编码及名称，本页签按仓库编码分组。<strong>本页签跨货主合并</strong>：同仓同 SKU 下各一级货主 × 各二级产权人的核算单元合并为一行（数量 / 金额求和、均价加权、方法混合时降级），合并规则见 P05 与 §一.5.2。</td></tr>
+<tr><td>仓库余额</td><td><code>sku_code</code>（商品 SKU）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品编码。</td></tr>
+<tr><td>仓库余额</td><td><code>sku_name</code>（商品品名）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品主数据全称。</td></tr>
+<tr><td>仓库余额</td><td><code>asset_type</code>（资产类型）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>自有 / 受托代管。</td></tr>
+<tr><td>仓库余额</td><td><code>pricing_method</code>（计价模式）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>移动加权平均 / 个别计价 / 先入先出法，取自计价模型配置。合并行含个别计价单元时均价降级为 <code>—</code>。</td></tr>
+<tr><td>仓库余额</td><td><code>current_qty</code>（当前结存数量）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>账面结余量，小于 0 标红加粗。</td></tr>
+<tr><td>仓库余额</td><td><code>current_unit_cost</code>（当前结存均价）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td><strong>按方法分流</strong>：移动加权平均显示派生均价；先入先出法同显派生均价并标注「派生 · 非计价依据」；个别计价显示 <code>—</code>（逐件成本差异最大，均价最误导，下钻至序列号资产台账 P08）。货币格式 <code>¥#,##0.000000</code>。<strong>本列已合并多货主，取值是加权均价而非任一单元的均价</strong>。</td></tr>
+<tr><td>仓库余额</td><td><code>current_total_cost</code>（当前结存总额）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>在库总成本 = 数量 × 均价，货币格式 <code>¥#,##0.00</code>。</td></tr>
+<tr><td>仓库余额</td><td><code>has_negative</code>（负库存标记）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>该行数量小于 0 时显示红色闪烁标记「负库存异常」。</td></tr>
+<tr><td>仓库余额</td><td><code>updated_at</code>（最后更新时间）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+<tr><td>一级货主余额</td><td><code>legal_owner_id</code>（一级货主）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>纳税主体法人编码及名称，本页签按一级货主分组（一级货主 = 法人主体）。本页签一行 = 一个核算单元 =（商品, 仓库, 一级货主）。</td></tr>
+<tr><td>一级货主余额</td><td><code>warehouse_code</code>（仓库）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>物理仓编码及名称。</td></tr>
+<tr><td>一级货主余额</td><td><code>sku_code</code>（商品 SKU）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品编码。</td></tr>
+<tr><td>一级货主余额</td><td><code>sku_name</code>（商品品名）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品主数据全称。</td></tr>
+<tr><td>一级货主余额</td><td><code>asset_type</code>（资产类型）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>自有 / 受托代管。</td></tr>
+<tr><td>一级货主余额</td><td><code>pricing_method</code>（计价模式）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>移动加权平均 / 个别计价 / 先入先出法，取自计价模型配置。</td></tr>
+<tr><td>一级货主余额</td><td><code>current_qty</code>（当前结存数量）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>账面结余量，小于 0 标红加粗。</td></tr>
+<tr><td>一级货主余额</td><td><code>current_unit_cost</code>（当前结存均价）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>均价池（核算单元）就落在一级层（商品, 仓库, 一级货主），故本列即该核算单元的现行均价，<strong>不跨货主合并</strong>，无降级问题。展示规则按方法分流：移动加权平均显示派生均价 / 先入先出法同显并标注「派生 · 非计价依据」/ 个别计价显示 <code>—</code>。货币格式 <code>¥#,##0.000000</code>。</td></tr>
+<tr><td>一级货主余额</td><td><code>current_total_cost</code>（当前结存总额）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>在库总成本 = 数量 × 均价，货币格式 <code>¥#,##0.00</code>。</td></tr>
+<tr><td>一级货主余额</td><td><code>has_negative</code>（负库存标记）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>该行数量小于 0 时显示红色闪烁标记「负库存异常」。</td></tr>
+<tr><td>一级货主余额</td><td><code>updated_at</code>（最后更新时间）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>最后流水变动时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+<tr><td>二级产权人余额</td><td><code>amiba_owner_id</code>（二级产权人）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）</td><td>内部利润中心编码及名称（<strong>产权人可为个人或部门</strong>），本页签按二级产权人分组。<strong>二级维度不读四轴余额表</strong>（二级不进余额表主键），读<strong>二级货主结存表</strong>——它是分摊账的<strong>物化投影</strong>，一行 = 一个二级货主 × 一种资产类型。</td></tr>
+<tr><td>二级产权人余额</td><td><code>sku_code</code>（商品 SKU）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）</td><td>商品编码。</td></tr>
+<tr><td>二级产权人余额</td><td><code>sku_name</code>（商品品名）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>商品主数据全称（商品主数据取自余额表同键行）。</td></tr>
+<tr><td>二级产权人余额</td><td><code>asset_type</code>（资产类型）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）</td><td>自有 / 受托代管。<strong>属于二级维度分组键之一</strong>。</td></tr>
+<tr><td>二级产权人余额</td><td><code>pricing_method</code>（计价模式）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>移动加权平均 / 个别计价 / 先入先出法，取自计价模型配置。</td></tr>
+<tr><td>二级产权人余额</td><td><code>current_qty</code>（当前结存数量）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）</td><td>二级货主结存表的 <code>qty</code>（结存数量），<strong>带符号</strong>（二级层增加为正、减少为负）；<strong>直接读现值、不做加总</strong>——重分配的转出行取负，即把量从该货主扣走。负值的语义是<strong>超分摊</strong>（分摊出去的量超过其持有量），与仓库 / 一级层的负库存<strong>不是一回事</strong>。</td></tr>
+<tr><td>二级产权人余额</td><td><code>current_unit_cost</code>（移动平均单价·一级层）</td><td>核算单元层库存余额表·均价表（<code>t_inventory_balance_unit</code>）</td><td>二级货主为内部管理维度，<strong>不独立建会计均价池</strong>；均价引用所属一级层（商品, 仓库, 一级货主）核算单元。<strong>展示规则按该核算单元的方法分流</strong>（不因「引用来的」就一律显示均价）：移动加权平均显示派生均价 / 先入先出法同显并标注「派生 · 非计价依据」/ <strong>个别计价显示 <code>—</code></strong>。<strong>本列名带「一级层」是为了与右侧的自有均价并排时不致混淆</strong>——它要与自有均价并排，不改名就会被拿一级层的价去对二级的数量。货币格式 <code>¥#,##0.000000</code>。</td></tr>
+<tr><td>二级产权人余额</td><td><code>current_total_cost</code>（当前结存总额·会计口径）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）·<strong>派生</strong></td><td><strong>派生值、不落库</strong>：<code>qty</code> × 所属一级层核算单元<strong>当期</strong>均价（即二级分摊金额 <code>alloc_amount</code>），货币格式 <code>¥#,##0.00</code>。<strong>该列即 V3 对平的左侧</strong>，按二级产权人求和应等于一级层金额。派生而非「逐笔分摊金额求和」，是为让 R3 的「同一核算单元内多个二级货主<strong>在会计口径上共用同一个均价</strong>」<strong>由构造保证</strong>。<strong>不含内部结算金额</strong>（不展示、不参与对平）。</td></tr>
+<tr><td>二级产权人余额</td><td><strong><code>own_unit_price</code>（自有均价·二级）</strong></td><td>二级货主结存表（<code>t_owner_balance_l2</code>）·<strong>派生</strong></td><td><strong>管理口径、派生不落库</strong>：<code>own_amount</code> ÷ <code>qty</code>，货币格式 <code>¥#,##0.000000</code>——该二级产权人<strong>自己的</strong>移动加权平均。<strong>与左侧的一级层均价并排展示，两列不相等是正常的</strong>，差 = 该二级分摊到的<strong>池化差异</strong>。标注「派生 · 非计价依据」；数量 = 0 时显示 <code>—</code>。</td></tr>
+<tr><td>二级产权人余额</td><td><strong><code>own_amount</code>（自有结存金额·二级）</strong></td><td>二级货主结存表（<code>t_owner_balance_l2</code>）·<strong>落库</strong></td><td><strong>管理口径、落库字段</strong>：二级自有均价池的结存金额，货币格式 <code>¥#,##0.00</code>。<strong>与左侧的会计口径总额不是同一个数</strong>——两者之差 = 该二级分摊到的池化差异。<strong>不进存货总额、不进跌价基数、不出凭证</strong>。</td></tr>
+<tr><td>二级产权人余额</td><td><code>has_negative</code>（负库存标记）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）</td><td>该二级货主结存表数量小于 0 时显示红色闪烁标记「负库存异常」（二级层语义为<strong>超分摊</strong>）。</td></tr>
+<tr><td>二级产权人余额</td><td><code>updated_at</code>（最后更新时间）</td><td>二级货主结存表（<code>t_owner_balance_l2</code>）</td><td>该二级货主结存最后一次变更的时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+<tr><td>批次余额</td><td><code>batch_no</code>（计价批次号）</td><td>批次层库存余额表（<code>t_inventory_balance_batch</code>）</td><td>计价批次号，四轴之<strong>批次轴</strong>。<strong>本页签一行 = 一个计价批次 × 一个仓库</strong>（二级产权人不再进分组键）。</td></tr>
+<tr><td>批次余额</td><td><code>sku_code</code>（商品 SKU）</td><td>批次层库存余额表（<code>t_inventory_balance_batch</code>）</td><td>商品编码。</td></tr>
+<tr><td>批次余额</td><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品名称规格。</td></tr>
+<tr><td>批次余额</td><td><code>warehouse_code</code>（仓库）</td><td>批次层库存余额表（<code>t_inventory_balance_batch</code>）</td><td>批次所在仓库。<strong>与计价批次号共同构成本页签的分组键</strong>——同一批次分散在多个仓库时分成多行。</td></tr>
+<tr><td>批次余额</td><td><code>pricing_method</code>（计价模式）</td><td>计价规则配置（<code>t_price_method_config</code>）</td><td>该批次所属<strong>核算单元</strong>的计价方法，取值：移动加权平均 / 个别计价 / 先入先出法；未匹配到规则时回落全局默认并告警。<strong>展示层派生</strong>（按核算单元关联查询），不是本表列。</td></tr>
+<tr><td>批次余额</td><td><code>qty</code>（批次结存数量）</td><td>二级货主分摊账（<code>t_owner_allocation</code>）按 (核算单元, <code>batch_no</code>) 汇总各 <code>owner_l2</code></td><td>该计价批次在该仓库的结存数量，数量格式 <code>#,##0.0000</code>。<strong>本页签按（计价批次号, 仓库）聚合</strong>：同一批次号原先散在各二级产权人名下的行已合为一行，故本列 = 该批次该仓库下各二级产权人数量之和。日结校验 = 该批次的 <code>t_inventory_balance_batch.qty</code>（批次层库存余额表）。</td></tr>
+<tr><td>批次余额</td><td><code>amount</code>（批次结存金额）</td><td><strong>派生</strong>：<code>qty</code> × 该核算单元当期一级层均价（口径即二级分摊金额 <code>alloc_amount</code>，<strong>不落库</strong>）</td><td>该批次在该仓库的结存金额，货币格式 <code>¥#,##0.00</code>。<strong>派生而非「逐笔分摊金额求和」</strong>，是为让 R3 的「同一核算单元内多个二级货主<strong>共用同一个均价</strong>」<strong>由构造保证</strong>。按仓库或按一级货主聚合 = P05 对应维度的结存金额；按二级产权人聚合 = P05 二级产权人维度的结存总额，两页必须对得上。</td></tr>
+<tr><td>批次余额</td><td><code>unit_price</code>（移动平均单价）</td><td>批次层库存余额表（<code>t_inventory_balance_batch</code>）</td><td><code>amount</code> ÷ <code>qty</code>，货币格式 <code>¥#,##0.000000</code>；<strong>恒等于同一核算单元均价行的 <code>unit_price</code></strong>（<code>t_inventory_balance_unit</code>），日结逐行校验 <code>E-02</code>——对三种方法一律生效。对同一核算单元（商品 × 仓库 × 一级货主）内的<strong>所有批次行一律恒等</strong>（共用同一个均价）。</td></tr>
+<tr><td>批次余额</td><td><code>layer_unit_cost</code>（成本层单价）</td><td>库存成本层（<code>t_inventory_layer</code>）</td><td>成本层的实际入账单价，货币格式 <code>¥#,##0.000000</code>。<strong>仅个别计价 / 先入先出法单元有值</strong>；移动加权平均单元不写成本层，该列恒为 <code>—</code>。</td></tr>
+<tr><td>批次余额</td><td><code>updated_at</code>（更新时间）</td><td>批次层库存余额表（<code>t_inventory_balance_batch</code>）与二级货主分摊账（<code>t_owner_allocation</code>）取<strong>较晚者</strong></td><td>该行（计价批次号 × 仓库）的最后更新时间戳。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P08" data-nav="P08 序列号资产台账">
+<div class="sec-head"><span class="sec-no">08</span><div><h2>序列号资产台账</h2><p class="sec-path">财务库存中心 → 结存查询 → 序列号资产台账</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>结存查询</code> → <code>序列号资产台账</code></li><li><strong>对应系统需求</strong>：SR05_F02 序列号资产台账</li><li><strong>页面说明</strong>：个别计价法（<code>INDIVIDUAL</code>）承载页，一期启用。SN 强制采集，一机一况一价</li></ul>
+<h3 class="sub-h">搜索条件（8 项）<span class="cnt">8</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>SN / IMEI / 车架号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>设备唯一码，支持批量粘贴。</td></tr>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>所属商品编码。</td></tr>
+<tr><td><code>当前状态</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>全部 / 在库 IN_STOCK / 已售 SOLD / 已退供 RETURNED / 已报损 SCRAPPED。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>产权所属一级货主。</td></tr>
+<tr><td><code>所在仓库</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>设备当前所在物理仓。</td></tr>
+<tr><td><code>入库单号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>采购入库单号。</td></tr>
+<tr><td><code>销售单号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>销售订单号。</td></tr>
+<tr><td><code>入库时间范围</code></td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>按验收入库时间过滤。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（5 个）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件加载 SN 资产列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出 SN 资产表]</code></td><td>导出 SN 资产台账</td><td>按当前筛选条件导出 SN 资产表</td><td>无权限限制</td></tr>
+<tr><td><code>[全生命周期轨迹]</code></td><td>查看单台设备全生命周期足迹</td><td>抽屉展示时间轴：入库、调拨、销售、退货足迹</td><td>行级操作，无权限限制</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（14 项）<span class="cnt">14</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>sn_code</code>（SN/序列号）</td><td>SN 资产档案</td><td>设备唯一码，加粗可复制文本。</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>商品主数据</td><td>所属商品编码。</td></tr>
+<tr><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品名称规格。</td></tr>
+<tr><td><code>quality_grade</code>（成色等级）</td><td>SN 资产档案</td><td>二手等级，如 <code>A级 99新</code>，浅蓝 Tag。</td></tr>
+<tr><td><code>sn_status</code>（当前状态）</td><td>SN 资产档案</td><td><code>IN_STOCK</code>（绿） / <code>SOLD</code>（灰） / <code>RETURNED</code>（橙） / <code>SCRAPPED</code>（红）。</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>货主主数据（一级）</td><td>产权所属一级货主。</td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td>货主主数据（二级）</td><td>资产所属二级产权人（<strong>可为个人，也可为部门</strong>）。</td></tr>
+<tr><td><code>warehouse_code</code>（所在仓库）</td><td>仓库主数据</td><td>当前所在物理仓。</td></tr>
+<tr><td><code>initial_cost</code>（采购入账成本）</td><td>采购入库单（PO_IN）核算结果</td><td>采购原值，货币格式 <code>¥#,##0.00</code>。</td></tr>
+<tr><td><code>in_bill_no</code>（入库单号）</td><td>采购入库单（PO_IN）</td><td>采购/调入单号。</td></tr>
+<tr><td><code>in_time</code>（入库时间）</td><td>采购入库单（PO_IN）</td><td>验收入库时间，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+<tr><td><code>out_cost</code>（销售出库成本）</td><td>销售出库单（SO_OUT）核算结果</td><td>出库成本（在库为空），货币格式 <code>¥#,##0.00</code>。</td></tr>
+<tr><td><code>out_bill_no</code>（销售单号）</td><td>销售出库单（SO_OUT）</td><td>销售订单号。</td></tr>
+<tr><td><code>gross_profit</code>（单机毛利额）</td><td>派生</td><td><span class="mth">售价 - out_cost</span>，绿色/红色货币格式。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P11" data-nav="P11 成本波动表">
+<div class="sec-head"><span class="sec-no">11</span><div><h2>成本波动表</h2><p class="sec-path">财务库存中心 → 监控管理 → 成本波动表</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>监控管理</code> → <code>成本波动表</code></li><li><strong>对应系统需求</strong>：SR06_F02 成本波动表</li><li><strong>页面说明</strong>：波动率 &gt; 30% 预警（F15）。红色阻断记录进入「财务待复核单据池」，须主管审批放行</li></ul>
+<h3 class="sub-h">搜索条件（5 项）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码。</td></tr>
+<tr><td><code>单据类型</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>采购入库 / 成本调整 / 调拨入库等。</td></tr>
+<tr><td><code>预警级别</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>全部 / 无预警 NONE / 黄色预警 WARN / 红色阻断 CRITICAL。</td></tr>
+<tr><td><code>复核状态</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>全部 / 免审 PASSED / 待复核 PENDING / 已驳回 REJECTED。</td></tr>
+<tr><td><code>发生时间范围</code></td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>按记录发生时间过滤。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（5 个）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件加载波动记录</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出波动底稿]</code></td><td>导出成本波动底稿</td><td>按当前筛选条件导出波动底稿</td><td>无权限限制</td></tr>
+<tr><td><code>[复核审批 (限主管)]</code></td><td>对红色阻断记录放行或驳回</td><td>抽屉展示 30 天走势图，提交放行/驳回意见</td><td>仅限财务主管；红色阻断记录进入"财务待复核单据池"后需主管审核审批放行</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（14 项）<span class="cnt">14</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>journal_no</code>（变动流水号）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>触发单价变动的流水号。</td></tr>
+<tr><td><code>biz_bill_no</code>（业务单号）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>引发变动的单据号。</td></tr>
+<tr><td><code>bill_type</code>（单据类型）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>采购入库 / 成本调整 / 调拨入库等。</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>法人编码。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>仓库编码。</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>商品编码。</td></tr>
+<tr><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品名称规格。</td></tr>
+<tr><td><code>prev_unit_cost</code>（变动前均价）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>记账前均价，货币格式 <code>¥#,##0.0000</code>。</td></tr>
+<tr><td><code>curr_unit_cost</code>（变动后均价）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>记账后新均价，货币格式 <code>¥#,##0.0000</code>。</td></tr>
+<tr><td><code>cost_diff_abs</code>（单价变动绝对值）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td><span class="mth">curr - prev</span>，货币格式 <code>¥#,##0.0000</code>。</td></tr>
+<tr><td><code>fluctuation_rate</code>（波动幅度）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td><span class="mth"><span class="frac"><span class="fn">curr - prev</span><span class="fd">prev</span></span> × 100%</span>，涨幅红字 <code>+X%</code>，跌幅绿字 <code>-X%</code>。</td></tr>
+<tr><td><code>alert_level</code>（预警级别）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td><span class="mth">≥ 10%</span> 黄色预警，<span class="mth">≥ 30%</span> 红色阻断；黄色 WARN 为 <span class="mth">| Ratio | ≥ 10%</span> 且 <span class="mth">| Δ P | ≥ 20</span> 元，红色 CRITICAL 为 <span class="mth">| Ratio | ≥ 30%</span> 且 <span class="mth">| Δ P | ≥ 100</span> 元，红色阻断过账并进入"财务待复核单据池"。</td></tr>
+<tr><td><code>review_status</code>（复核状态）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td><code>PASSED</code>（通过）通过 / <code>PENDING</code>（待处理·挂起）待审 / <code>REJECTED</code>（拒收）驳回。</td></tr>
+<tr><td><code>created_at</code>（发生时间）</td><td>成本波动日志（<code>inv_cost_fluctuation_log</code>）</td><td>记录时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P15" data-nav="P15 负库存挂账表">
+<div class="sec-head"><span class="sec-no">15</span><div><h2>负库存挂账表</h2><p class="sec-path">财务库存中心 → 监控管理 → 负库存挂账表</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>监控管理</code> → <code>负库存挂账表</code></li><li><strong>对应系统需求</strong>：SR06_F03 负库存挂账表</li><li><strong>页面说明</strong>：缺货暂估出库的台账：一条记录从 OPEN（待冲平挂账中）单向走到 RESOLVED（已冲平补差）。一期容差参数默认 0，即默认禁止负库存，本页默认为空；容差调高后本页才有数据</li></ul>
+<h3 class="sub-h">搜索条件（6 项）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>出库流水号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>缺货暂估出库的流水号，如 <code>OUT-202603-0007</code>。</td></tr>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>法人主体。</td></tr>
+<tr><td><code>物理仓库</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>缺货出库仓。</td></tr>
+<tr><td><code>冲平状态</code></td><td>下拉单选</td><td>精确查询</td><td>非必填（默认全部）</td><td><code>resolve_status</code>（冲平状态） 取值：全部 / 待冲平挂账中 OPEN / 已冲平补差 RESOLVED</td></tr>
+<tr><td><code>是否超期</code></td><td>下拉单选</td><td>精确查询</td><td>非必填（默认全部）</td><td>取值：全部 / 正常挂账 / 超期预警；超期预警 = <code>pending_days</code>（挂账天数）&gt; 该策略的 <code>max_pending_days</code>（最长挂账天数），逾期未冲平即阻断后续出库</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（6 个）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载挂账台账</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出负库存监控台账]</code></td><td>导出当前筛选条件下的挂账明细</td><td>按当前条件导出 Excel</td><td>无权限限制</td></tr>
+<tr><td><code>[强制手动匹配采购单]</code></td><td>对挂账中的记录手工指定采购入库单完成冲平</td><td>弹出采购入库单选择框，<strong>候选单按下述 5 条筛选</strong>，选定后按该单实际单价冲平缺口，回写 <code>in_journal_no</code>（冲平采购流水号） / <code>actual_in_cost</code>（采购实际单价） / <code>cost_diff_amount</code>（成本补差金额） / <code>resolved_time</code>（冲平解决时间），状态置 <code>RESOLVED</code>（已冲平）。<strong>候选筛选</strong>：① <strong>同商品</strong>——<code>sku_code</code> 一致；② <strong>同一级货主</strong>——<code>legal_owner_id</code> 一致（不得用他人货权冲自己的缺口）；③ <strong>同仓库</strong>——<code>warehouse_code</code> 一致；<strong>跨仓须在弹窗内显式勾选「允许跨仓冲平」并写审计日志</strong>（跨仓会使 P05 仓库维度与一级货主维度的对平关系 V1 / V2 在该查询范围内不平，必须留痕可查）；④ <strong>入库日期 ≥ 挂账出库日期</strong>——后到货才能填补先前缺货；⑤ <strong>未被他行占用、且数量 ≥ 缺口量</strong>——<code>in_journal_no</code>（冲平采购流水号）是单值列，<strong>一条挂账行只能对一张采购入库单、一期不做部分冲平</strong></td><td>前置：记录 <code>resolve_status</code>（冲平状态）为 <code>OPEN</code>（待冲平挂账中）；自动冲平失败或到货单据未接入报表时的人工兜底入口；<code>cost_diff_amount</code>（成本补差金额）非零时同步出成本调整单 <code>COST_ADJUST</code>（成本调整单）计损益</td></tr>
+<tr><td><code>[查看补差明细]</code></td><td>查看该笔挂账的冲平全过程</td><td>打开明细抽屉：暂估出库流水 → 冲平采购入库流水 → 单价与金额差异</td><td>权限：<code>resolve_status</code> 为 <code>RESOLVED</code> 时展示完整链路，为 <code>OPEN</code> 时仅展示暂估侧</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（16 项）<span class="cnt">16</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>out_journal_no</code>（出库流水号）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>缺货暂估出库的流水号，与结存流水的 <code>journal_no</code>（流水号）一致。</td></tr>
+<tr><td><code>biz_bill_no</code>（关联销售单号）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>触发该次缺货出库的销售订单号，便于反向催货与催票。</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>法人编码与名称，缺货出库方。</td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>该笔挂账挂在哪位产权人账下（<strong>个人或部门</strong>）；不进存货总额，只影响二级考核口径。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>缺货出库仓。</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>商品编码。</td></tr>
+<tr><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品名称规格。</td></tr>
+<tr><td><code>negative_qty</code>（负库存缺口量）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>缺口件数，恒为负值（如 <code>-5.0000</code>），<strong>红色显示</strong>。</td></tr>
+<tr><td><code>est_out_cost</code>（暂估出库单价）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>出库时锁定的暂估单价 P_est（取自策略配置的暂估取价来源），货币格式 <code>¥#,##0.0000</code>。</td></tr>
+<tr><td><code>est_price_source</code>（暂估取价来源）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>该笔暂估单价的取值来源：最近采购订单价 / 基准供货价 / 当前均价；来源决定暂估与实际的偏差量级，是成本波动表的输入之一。</td></tr>
+<tr><td><code>pending_days</code>（挂账天数）</td><td>派生（当前日期 − 出库日期）</td><td>自暂估出库日起的挂账天数；超过策略 <code>max_pending_days</code>（最长挂账天数）时<strong>红色预警</strong>。</td></tr>
+<tr><td><code>resolve_status</code>（冲平状态）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td><code>OPEN</code>（待冲平挂账中）(红) / <code>RESOLVED</code>（已冲平补差）(绿)。<strong>一条记录只能从 <code>OPEN</code> 单向走到 <code>RESOLVED</code></strong>，不允许手工改回。</td></tr>
+<tr><td><code>in_journal_no</code>（冲平采购流水号）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>冲平该缺口的采购入库流水号；<code>OPEN</code> 时为空。</td></tr>
+<tr><td><code>actual_in_cost</code>（采购实际单价）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>后续到货的实际单价 P_actual，货币格式 <code>¥#,##0.0000</code>；<code>OPEN</code> 时为空。</td></tr>
+<tr><td><code>cost_diff_amount</code>（成本补差金额）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>补差金额 = (P_actual − P_est) × |缺口量|，货币格式 <code>¥#,##0.00</code>；正数为补提成本、负数为冲减，非零即触发出成本调整单 <code>COST_ADJUST</code>（成本调整单）。</td></tr>
+<tr><td><code>resolved_time</code>（冲平解决时间）</td><td>负库存挂账表（<code>inv_negative_stock_log</code>）</td><td>冲平时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P12" data-nav="P12 库龄表">
+<div class="sec-head"><span class="sec-no">12</span><div><h2>库龄表</h2><p class="sec-path">财务库存中心 → 监控管理 → 库龄表</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>监控管理</code> → <code>库龄表</code></li><li><strong>对应系统需求</strong>：SR07_F01 库存表（库龄与跌价双轨）——SR 需求名保留原字面；原型侧页面本次改名为「库龄表」</li><li><strong>页面说明</strong>：库龄法 + 3C 上市周期法双轨取孰高（F6–F11）；计提范围仅 is_internal = 1</li></ul>
+<h3 class="sub-h">搜索条件（6 项）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>快照基准日期</code></td><td>单选日期选择器</td><td>精确查询</td><td>必填</td><td>库龄推演的统计基准日。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>法人主体。</td></tr>
+<tr><td><code>二级产权人</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>产权人（<strong>个人或部门</strong>）。</td></tr>
+<tr><td><code>物理仓库</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>物理仓库。</td></tr>
+<tr><td><code>商品品类</code></td><td>商品类目树选择器</td><td>精确查询</td><td>非必填</td><td>三级品类。</td></tr>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（6 个）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件加载库龄与跌价看板</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[重新执行库龄推导 (异步任务)]</code></td><td>按快照基准日期重跑库龄推导</td><td>触发异步任务，任务完成后刷新看板</td><td>—（源文未规定权限）</td></tr>
+<tr><td><code>[导出资产减值测试底稿 (Excel)]</code></td><td>导出资产减值测试底稿</td><td>按当前筛选条件导出 Excel 底稿</td><td>无权限限制</td></tr>
+<tr><td><code>[生成跌价计提凭证建议]</code></td><td>生成跌价计提凭证建议</td><td>依据跌价测算结果生成计提凭证建议</td><td>—（源文未规定权限）</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（15 项）<span class="cnt">15</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>货主主数据（一级）</td><td>法人名称。</td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td>货主主数据（二级）</td><td>产权人全称（<strong>个人姓名或部门名称</strong>）。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>仓库主数据</td><td>仓库名称。</td></tr>
+<tr><td><code>category_name</code>（商品品类）</td><td>商品主数据</td><td>三级品类。</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>商品主数据</td><td>商品编码。</td></tr>
+<tr><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品名称规格。</td></tr>
+<tr><td><code>total_stock_qty</code>（在库总数量）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>结存总件数。</td></tr>
+<tr><td><code>total_stock_cost</code>（在库总成本）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>结存总金额，货币格式 <code>¥#,##0.00</code>。</td></tr>
+<tr><td><code>aging_0_30</code>（0-30天量/额）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>30天内数量与金额；库龄推导口径：SN 管理商品（<code>INDIVIDUAL</code>（个别计价） 单元）按单台 SN 绝对天数 <span class="mth">AgeDay = DATEDIFF(Now(), InTime)</span>；标品（<code>MOVING_AVG</code>（移动加权平均） 单元）按<strong>入库批次逆向倒扣法</strong>，从统计日倒序遍历历史采购批次、从未售结存量中依次扣减，将结存量还原至各历史入库日推导各区间账龄分布（此处「倒扣」是<strong>库龄推导手法</strong>，与计价方法先入先出法 <code>FIFO</code>（先入先出法） 无关）。</td></tr>
+<tr><td><code>aging_31_60</code>（31-60天量/额）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>31~60天数量与金额。</td></tr>
+<tr><td><code>aging_61_90</code>（61-90天量/额）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>61~90天数量与金额。</td></tr>
+<tr><td><code>aging_91_180</code>（91-180天量/额）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>91~180天数量与金额。</td></tr>
+<tr><td><code>aging_181_360</code>（181-360天量/额）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>181~360天数量与金额。</td></tr>
+<tr><td><code>aging_360_plus</code>（360天以上量/额）</td><td>库龄分析模型（<code>inv_stock_aging</code>：存货库龄分析表）</td><td>超 1 年呆滞品数量与金额，标红加粗。</td></tr>
+<tr><td><code>provision_amount</code>（建议跌价准备额）</td><td>跌价计提结果表（<code>t_depreciation_result</code>）</td><td><span class="mth">∑ (在库金额 × 跌价比例)</span>，橙色货币格式 <code>¥#,##0.00</code>；跌价准备建议测算仅对 <code>is_internal = 1</code> 计提，自动出具资产减值测试建议表，辅助财务计提资产减值准备。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P13" data-nav="P13 进销存周期表">
+<div class="sec-head"><span class="sec-no">13</span><div><h2>进销存周期表</h2><p class="sec-path">财务库存中心 → 监控管理 → 进销存周期表</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：<code>财务库存中心</code> → <code>监控管理</code> → <code>进销存周期表</code></li><li><strong>对应系统需求</strong>：SR07_F02 进销存周期表</li><li><strong>页面说明</strong>：月结收发存。锁账后三条路不可互换：改单 / 反结账 / 当期补录单 PERIOD_ADJUST</li></ul>
+<h3 class="sub-h">搜索条件（7 项）<span class="cnt">7</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>会计期间</code></td><td>下拉单选</td><td>精确查询</td><td>必选（如 <code>2026-09</code>）</td><td>月报所属会计期间。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>必选</td><td>法人主体。</td></tr>
+<tr><td><code>二级产权人</code></td><td>下拉多选</td><td>精确查询</td><td>非必填</td><td>产权人（<strong>个人或部门</strong>）。</td></tr>
+<tr><td><code>物理仓库</code></td><td>下拉多选</td><td>精确查询</td><td>非必填</td><td>物理仓库。</td></tr>
+<tr><td><code>商品品类</code></td><td>商品类目选择器</td><td>精确查询</td><td>非必填</td><td>商品品类。</td></tr>
+<tr><td><code>商品 SKU/名称</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码或品名。</td></tr>
+<tr><td><code>报表聚合维度</code></td><td>单选框组</td><td>精确查询</td><td>非必填</td><td>按 SKU 汇总 / 按类目汇总 / 按仓库汇总 / 按产权人汇总。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（5 个）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件加载收发存月报</td><td>重新查询并刷新报表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出标准收发存报表 (Excel/PDF)]</code></td><td>导出标准收发存报表</td><td>按当前筛选条件导出 Excel / PDF</td><td>无权限限制</td></tr>
+<tr><td><code>[★ 导出金蝶标准凭证引入表 (Excel)]</code></td><td>一键导出金蝶标准凭证引入模板</td><td>按当前筛选条件导出金蝶标准凭证引入表 Excel</td><td>无权限限制</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（22 项）<span class="cnt">22</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>法人名称。</td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>产权人名称（<strong>个人姓名或部门名称</strong>）。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>仓库名称。</td></tr>
+<tr><td><code>sku_info</code>（商品 SKU/名称）</td><td>商品主数据</td><td>商品编码 + 品名规格。</td></tr>
+<tr><td><code>unit_code</code>（计量单位）</td><td>商品主数据</td><td>基础单位（如 <code>PCS</code>：件·计量单位）。</td></tr>
+<tr><td><code>begin_qty</code>（期初数量）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>上期期末结存数量。</td></tr>
+<tr><td><code>begin_unit_cost</code>（期初单价）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td><span class="mth"><span class="frac"><span class="fn">begin_cost</span><span class="fd">begin_qty</span></span></span>，货币格式 <code>¥#,##0.000000</code>。</td></tr>
+<tr><td><code>begin_total_cost</code>（期初金额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>上期期末结存总金额。</td></tr>
+<tr><td><code>in_purchase</code>（采购入库量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期采购入库暂估量与金额。</td></tr>
+<tr><td><code>in_sale_return</code>（销退入库量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期退货原单溯源量与金额。</td></tr>
+<tr><td><code>in_transfer</code>（调拨调入量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期调拨验收入库量与金额。</td></tr>
+<tr><td><code>in_profit</code>（盘盈入库量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期盘盈入账量与金额。</td></tr>
+<tr><td><code>in_total</code>（入库小计量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td><span class="mth">∑ InQty</span> / <span class="mth">∑ InCost</span>。</td></tr>
+<tr><td><code>out_sale</code>（销售出库量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期销售发货结转量与成本。</td></tr>
+<tr><td><code>out_purchase_return</code>（采退出库量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期退供不良品量与金额。</td></tr>
+<tr><td><code>out_transfer</code>（调拨调出量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期调拨发出量与原成本。</td></tr>
+<tr><td><code>out_loss</code>（盘亏出库量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>本期盘亏结转量与成本。</td></tr>
+<tr><td><code>out_total</code>（出库小计量/额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td><span class="mth">∑ OutQty</span> / <span class="mth">∑ OutCost</span>。</td></tr>
+<tr><td><code>cost_adjust_amount</code>（纯成本调整额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td>发票差、运费摊、负库存补差纯金额合计（数量为0）。</td></tr>
+<tr><td><code>end_qty</code>（期末数量）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td><span class="mth">begin + in - out</span>，数值展现；满足数量守恒 F12：期末数量 <span class="mth">EndQty = BeginQty + InTotalQty - OutTotalQty</span>，关账时引擎自动执行恒等式检验，差额不为 0 则阻断月结。</td></tr>
+<tr><td><code>end_unit_cost</code>（期末单价）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td><span class="mth"><span class="frac"><span class="fn">end_cost</span><span class="fd">end_qty</span></span></span>，货币格式 <code>¥#,##0.000000</code>。</td></tr>
+<tr><td><code>end_total_cost</code>（期末金额）</td><td>期间收发存汇总（<code>inv_period_balance</code>）</td><td><span class="mth">begin + in - out + adjust</span>，货币格式 <code>¥#,##0.00</code>；满足金额守恒 F13：期末金额 <span class="mth">EndCost = BeginCost + InTotalCost - OutTotalCost + CostAdjustAmount</span>，关账时引擎自动执行恒等式检验，差额不为 0 则阻断月结。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P06" data-nav="P06 存货实时余额">
+<div class="sec-head"><span class="sec-no">06</span><div><h2>存货实时余额</h2><p class="sec-path">财务库存中心 →  → 存货实时余额</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：不在侧栏入口（原属 <code>结存查询</code>；整页保留，<code>原型页面.html#p6</code> 深链可达）</li><li><strong>对应系统需求</strong>：SR04_F02 存货实时余额</li><li><strong>页面说明</strong>：二级产权人粒度（<strong>一级货主必填</strong>）· 取数走二级货主结存表；存货口径只加一级层（存货总额 = Σ 一级层中 is_internal = 1 的金额，二级层绝不相加）。<strong>本页不给管理口径的自有均价 / 自有结存金额</strong>——要看 <code>own_unit_price</code>（自有均价）/ <code>own_amount</code>（自有结存金额）去 P16 的「二级产权人余额」页签，两页在二级产权人粒度上必须逐行对得上</li></ul>
+<h3 class="sub-h">搜索条件（7 项）<span class="cnt">7</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td>一级货主</td><td>下拉单选</td><td>精确匹配</td><td>必填</td><td>—</td></tr>
+<tr><td>二级产权人</td><td>下拉联动（支持多选）</td><td>精确匹配</td><td>非必填</td><td>与一级货主联动</td></tr>
+<tr><td>物理仓库</td><td>下拉选择（支持多选）</td><td>精确匹配</td><td>非必填</td><td>—</td></tr>
+<tr><td>商品 SKU / 名称</td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>—</td></tr>
+<tr><td>资产类型</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 自有资产 OWN / 受托代管 CONSIGNMENT</td></tr>
+<tr><td>计价模式</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>三种一期均可选；取值：全部 / 移动加权平均 / 个别计价 / 先入先出法</td></tr>
+<tr><td>库存状态</td><td>下拉单选</td><td>精确匹配</td><td>非必填（默认全部）</td><td>取值：全部 / 仅看有库存 / 仅看负库存</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（6 个）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件重新加载实时余额列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出 Excel]</code></td><td>导出当前查询结果</td><td>点击后下载导出文件</td><td>—</td></tr>
+<tr><td><code>[查看收发流水]</code></td><td>查看该行对应的收发流水明细</td><td>跳转 P07 数据计算流水</td><td>—</td></tr>
+<tr><td><code>[计价批次]</code></td><td>查看该行对应的计价批次</td><td>跳转 P09 存货计价批次追踪</td><td>—</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（12 项）<span class="cnt">12</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>纳税主体法人编码及名称（该二级产权人所属的一级货主）。<strong>本页一级货主必填</strong>——先定法人，再看该法人下各二级产权人的结存</td></tr>
+<tr><td><code>amiba_owner_id</code>（二级产权人）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>内部利润中心编码及名称（<strong>产权人可为个人，也可为部门 / 事业部 / 代采项目</strong>）。<strong>本页按二级产权人分组</strong>。二级产权人<strong>不进核算单元、不进会计均价池</strong>（R3）——同一核算单元内多个二级产权人<strong>在会计口径上共用同一个一级层均价</strong></td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>物理仓编码及名称</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>商品编码</td></tr>
+<tr><td><code>sku_name</code>（商品品名）</td><td>商品主数据（经 <code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表） 同键行取）</td><td>商品主数据全称</td></tr>
+<tr><td><code>asset_type</code>（资产类型）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td><code>OWN</code>（货权变更单号前缀）自有(蓝) / <code>CONSIGNMENT</code>（寄售）受托代管(橙)。<strong>属于二级维度分组键之一</strong>（见 <code>§一.5.2</code>）</td></tr>
+<tr><td><code>pricing_method</code>（计价模式）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td><code>MOVING_AVG</code>（移动加权平均） / <code>INDIVIDUAL</code>（个别计价） / <code>FIFO</code>（先入先出法），灰底 Tag（<strong>三种一期均可选</strong>，取自计价模型配置）。<strong>继承</strong>所属一级层核算单元的方法，二级层不单独配方法</td></tr>
+<tr><td><code>current_qty</code>（当前结存数量）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>二级货主结存表的 <code>qty</code>（结存数量），数值展现，小于 0 标红加粗。<strong>带符号</strong>（二级层增加为正、减少为负）；<strong>直接读现值、不做加总</strong>——重分配的转出行取负，即把量从该货主扣走。负值的语义是<strong>超分摊</strong>（分摊出去的量超过该货主持有量），<strong>与仓库 / 一级层的负库存不是一回事</strong></td></tr>
+<tr><td><code>current_unit_cost</code>（当前结存均价）</td><td><code>t_inventory_balance_unit</code>（核算单元层库存余额表·均价表）</td><td>二级货主为内部管理维度，<strong>不独立建会计均价池</strong>（R3）；均价<strong>继承</strong>所属一级层 <span class="mth">(商品, 仓库, 一级货主)</span> 核算单元。<strong>按方法分流</strong>：移动加权平均显示派生均价（即移动平均单价）；先入先出法同显派生均价并标注「派生 · 非计价依据」；<strong>个别计价显示 <code>—</code></strong>（逐件成本差异最大，均价最误导，下钻至序列号资产台账 P08）。货币格式 <code>¥#,##0.000000</code></td></tr>
+<tr><td><code>current_total_cost</code>（当前结存总额·<strong>会计口径</strong>）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）·<strong>派生</strong></td><td><strong>派生值、不落库</strong>：<code>qty ×</code> 所属一级层核算单元<strong>当期</strong>均价（即二级分摊金额 <code>alloc_amount</code>），货币格式 <code>¥#,##0.00</code>。派生而非「逐笔分摊金额求和」，是为让 R3 的「同一核算单元内多个二级货主<strong>在会计口径上共用同一个均价</strong>」<strong>由构造保证</strong>。<span class="mth">∑</span> 本列 = 一级层金额（V3 对平）。<strong>不含 <code>internal_amount</code></strong>（内部结算金额不展示、不参与对平）</td></tr>
+<tr><td><code>has_negative</code>（负库存标记）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>该二级货主结存表的 <code>qty</code> 小于 0 时显示红色闪烁 Tag「负库存异常」（二级层语义为<strong>超分摊</strong>，Tag 文案与仓库 / 一级层区分）。<strong>负库存期间本行均价同时显示 <code>—</code></strong></td></tr>
+<tr><td><code>updated_at</code>（最后更新时间）</td><td><code>t_owner_balance_l2</code>（二级货主结存表）</td><td>该二级货主结存最后一次变更的时间戳，<code>YYYY-MM-DD HH:mm:ss</code></td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P09" data-nav="P09 存货计价批次追踪">
+<div class="sec-head"><span class="sec-no">09</span><div><h2>存货计价批次追踪</h2><p class="sec-path">财务库存中心 →  → 存货计价批次追踪</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：不在侧栏入口（原属 <code>单据与台账</code>；整页保留，<code>原型页面.html#p9</code> 深链可达）</li><li><strong>对应系统需求</strong>：SR05_F03 存货计价批次追踪</li><li><strong>页面说明</strong>：<code>MOVING_AVG</code>（移动加权平均）：批次不进均价池，只影响库龄与跌价；<code>INDIVIDUAL</code>（个别计价）/ <code>FIFO</code>（先入先出法）：批次 / 成本层即成本单元。PO 暂估 → 到票后走「追加反向事件 + 据实事件」，不改暂估金额</li></ul>
+<h3 class="sub-h">搜索条件（6 项）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>计价批次号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>采购批次号。</td></tr>
+<tr><td><code>采购入库单号</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>来源入库单号。</td></tr>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码。</td></tr>
+<tr><td><code>一级货主</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>采购法人。</td></tr>
+<tr><td><code>到票状态</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>全部 / 暂估中 ESTIMATED / 已到票 INVOICED。</td></tr>
+<tr><td><code>入库日期范围</code></td><td>日期范围选择框</td><td>区间</td><td>非必填</td><td>按批次入库日期过滤。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（5 个）<span class="cnt">5</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件加载批次列表</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[导出批次报表]</code></td><td>导出批次追踪报表</td><td>按当前筛选条件导出批次报表</td><td>无权限限制</td></tr>
+<tr><td><code>[查看分摊与出库明细]</code></td><td>查看该批次的分摊与出库明细</td><td>滑出抽屉：展示费用分摊与出库明细</td><td>行级操作，无权限限制</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（14 项）<span class="cnt">14</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>batch_no</code>（计价批次号）</td><td>计价批次（<code>t_inventory_balance_batch</code>：批次层库存余额表）</td><td>采购批次号。</td></tr>
+<tr><td><code>in_biz_bill_no</code>（采购入库单号）</td><td>采购入库单（PO_IN）</td><td>来源入库单号。</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>商品主数据</td><td>商品编码。</td></tr>
+<tr><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品品名规格。</td></tr>
+<tr><td><code>legal_owner_id</code>（一级货主）</td><td>货主主数据（一级）</td><td>采购法人。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>仓库主数据</td><td>入库仓库。</td></tr>
+<tr><td><code>init_qty</code>（批次初始量）</td><td>计价批次（<code>t_inventory_balance_batch</code>：批次层库存余额表）</td><td>入库初始总数，数值展现。</td></tr>
+<tr><td><code>remain_qty</code>（在库剩余量）</td><td>计价批次（<code>t_inventory_balance_batch</code>：批次层库存余额表）</td><td>未售结存件数，数值展现。</td></tr>
+<tr><td><code>sold_qty</code>（已售出数量）</td><td>派生</td><td><span class="mth">init_qty - remain_qty</span>，数值展现。</td></tr>
+<tr><td><code>po_est_cost</code>（PO暂估单价）</td><td>采购入库单（PO_IN）核算结果</td><td>暂估不含税价，货币格式 <code>¥#,##0.000000</code>。</td></tr>
+<tr><td><code>actual_cost</code>（发票最终单价）</td><td>供应商到票价差回传</td><td>到票最终价，货币格式 <code>¥#,##0.000000</code>（未到票显示 <code>--</code>）。</td></tr>
+<tr><td><code>diff_unit_cost</code>（单位价差）</td><td>派生</td><td><span class="mth">actual - po_est</span>，正差红字，负差绿字。</td></tr>
+<tr><td><code>invoice_status</code>（到票状态）</td><td>供应商到票价差回传</td><td><code>ESTIMATED</code>（暂估）暂估中(橙) / <code>INVOICED</code>（已开票）已到票(绿)。</td></tr>
+<tr><td><code>in_time</code>（入库时间）</td><td>采购入库单（PO_IN）</td><td>批次入库时间戳，<code>YYYY-MM-DD HH:mm:ss</code>。</td></tr>
+</tbody></table></div>
+</section>
+<section class="pg" id="P10" data-nav="P10 核对表">
+<div class="sec-head"><span class="sec-no">10</span><div><h2>核对表</h2><p class="sec-path">财务库存中心 →  → 核对表</p></div></div>
+<ul class="meta"><li><strong>菜单位置</strong>：不在侧栏入口（原属 <code>对账与监控</code>；整页保留，<code>原型页面.html#p10</code> 深链可达）</li><li><strong>对应系统需求</strong>：SR06_F01 核对表</li><li><strong>页面说明</strong>：三账一致性：WMS 实物在架 / 业务可用 / 财务账面。差异不为 0 红色高亮</li></ul>
+<h3 class="sub-h">搜索条件（4 项）<span class="cnt">4</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>查询条件</th>
+<th>查询控件类型</th>
+<th>匹配方式</th>
+<th>必填/默认值</th>
+<th>说明、取值与联动</th>
+</tr></thead><tbody>
+<tr><td><code>核对日期</code></td><td>单选日期选择器</td><td>精确查询</td><td>默认今日</td><td>对账日期。</td></tr>
+<tr><td><code>物理仓库</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>仓库编码。</td></tr>
+<tr><td><code>商品 SKU</code></td><td>文本输入</td><td>模糊搜索</td><td>非必填</td><td>商品编码。</td></tr>
+<tr><td><code>对账状态</code></td><td>下拉单选</td><td>精确查询</td><td>非必填</td><td>全部 / 存在差异 UNBALANCED / 完全一致 BALANCED。</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">按钮交互（6 个）<span class="cnt">6</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>按钮</th>
+<th>功能</th>
+<th>点击后的交互</th>
+<th>权限、前置条件与结果</th>
+</tr></thead><tbody>
+<tr><td><code>[查询]</code></td><td>按当前搜索条件加载对账结果</td><td>重新查询并刷新列表</td><td>无权限限制</td></tr>
+<tr><td><code>[重置]</code></td><td>清空全部搜索条件</td><td>清空条件并恢复默认查询</td><td>无权限限制</td></tr>
+<tr><td><code>[执行全仓手动对账任务]</code></td><td>手工触发一次全仓三账对账</td><td><strong>重算三方差、不改变差异事实</strong>：重新比对全仓 <code>wms_qty</code> / <code>biz_inv_qty</code> / <code>fin_inv_qty</code> 三方差并刷新 <code>diff_type</code>（差异根因初步研判）与 <code>status</code>（对账状态）。<strong>只有时点差会自然收敛</strong>——<code>diff_type</code> 为 <code>WMS已发货财务未过账</code>（WMS 已发货财务未过账）或 <code>在途调拨</code>（在途调拨）的行，在补齐过账后由「不平」转「平账」；<strong>根因为真实差异的行（如 <code>负库存挂账</code>，负库存挂账）重跑后仍为「不平」</strong>，并保留在导出清单。<strong>不得实现为「点一下全部平账」</strong></td><td>—（源文未规定权限）</td></tr>
+<tr><td><code>[导出对账异常清单]</code></td><td>导出差异明细</td><td>按当前筛选条件导出对账异常清单</td><td>无权限限制</td></tr>
+<tr><td><code>[差异链路排查]</code></td><td>定位差异发生的报文链路</td><td>抽屉按毫秒展示 24 小时报文流水时间线</td><td>行级操作，无权限限制</td></tr>
+<tr><td><code>[查看]</code></td><td>查看该行完整明细</td><td>打开行详情弹窗，按当前行只读展示该行全部字段</td><td>无权限限制</td></tr>
+</tbody></table></div>
+<h3 class="sub-h">字段说明（11 项）<span class="cnt">11</span></h3>
+<div class="tbl-wrap"><table class="grid">
+<thead><tr>
+<th>页面字段</th>
+<th>数据来源</th>
+<th>字段含义、取值和展示规则</th>
+</tr></thead><tbody>
+<tr><td><code>recon_date</code>（核对日期）</td><td>对账结果表（<code>t_reconcile_result</code>）</td><td>对账日期，<code>YYYY-MM-DD</code>（日期格式）。</td></tr>
+<tr><td><code>warehouse_code</code>（仓库）</td><td>对账结果表（<code>t_reconcile_result</code>）</td><td>仓库编码。</td></tr>
+<tr><td><code>sku_code</code>（商品 SKU）</td><td>对账结果表（<code>t_reconcile_result</code>）</td><td>商品编码。</td></tr>
+<tr><td><code>sku_name</code>（商品名称）</td><td>商品主数据</td><td>商品品名。</td></tr>
+<tr><td><code>wms_qty</code>（WMS物理在架数）</td><td>WMS 物理在架数</td><td>WMS 物理在架库存总量。</td></tr>
+<tr><td><code>biz_inv_qty</code>（业务库存可用总数）</td><td>业务库存中心</td><td>业务库存（可用量+预占锁定）。</td></tr>
+<tr><td><code>fin_inv_qty</code>（财务账面结存数）</td><td>财务库存余额表 <code>current_qty</code>（当前结存数量）</td><td>财务库存余额表 <code>current_qty</code>（当前结存数量）。</td></tr>
+<tr><td><code>wms_diff</code>（实物 vs 财务差异）</td><td>派生（F14）</td><td><code>diff = 本系统账面值 − 业务系统值</code>（账实差异） 的实物侧：<span class="mth">wms - fin</span>，不为 0 红色高亮（如 <code>+2.0000</code>）。</td></tr>
+<tr><td><code>biz_diff</code>（业务 vs 财务差异）</td><td>派生（F14）</td><td><code>diff = 本系统账面值 − 业务系统值</code>（账实差异） 的业务侧：<span class="mth">biz - fin</span>，不为 0 红色高亮。</td></tr>
+<tr><td><code>diff_type</code>（差异根因初步研判）</td><td>对账结果表（<code>t_reconcile_result</code>）</td><td><code>WMS已发货财务未过账</code> / <code>在途调拨</code> / <code>负库存挂账</code>。</td></tr>
+<tr><td><code>status</code>（对账状态）</td><td>对账结果表（<code>t_reconcile_result</code>）</td><td><code>BALANCED</code>（平账）平账(绿) / <code>UNBALANCED</code>（不平）不平(红)；平账判定引用守恒校验 F12（数量守恒：期末数量 = 期初数量 + Σ入库数量 − Σ出库数量）与 F13（金额守恒：期末金额 = 期初金额 + Σ入库金额 − Σ出库金额 + Σ舍入差异），行级差异按 F14 口径 <code>diff = 本系统账面值 − 业务系统值</code>（账实差异） 计算，<span class="mth">| diff |</span> 在容差内取 OK，否则按方向分类 DIFF / MISS / EXTRA。</td></tr>
+</tbody></table></div>
+</section>
+    <footer class="doc-foot">本页由 <code>财务库存中心（一期）原型说明_v1.0.md</code> 生成，仅供阅读。要改内容请改 md，再在本目录重跑 <code>python3 build_proto_doc.py</code>；勿直接改本文件。各页的「搜索条件 / 按钮交互 / 字段说明」三张表逐行取自原型内置的「字段与按钮说明」抽屉，P01 / P02 的「新建表单」表另取自原型内置的「新建表单」抽屉；与原型、原文口径不一致时，以 <code>财务库存中心（一期）需求文档 1.0（原型页面与核算引擎）.md</code> 为准。</footer>
+  </div>
+</main>
+</div>
+<script>
+(function(){
+  var q=document.getElementById('q'), hit=document.getElementById('hit');
+  var secs=[].slice.call(document.querySelectorAll('#doc .pg'));
+  var ovs=[].slice.call(document.querySelectorAll('#nav a:not([data-pg])'));
+  function run(){
+    var v=q.value.trim().toLowerCase(), n=0;
+    secs.forEach(function(s){
+      var isP=s.classList.contains('pg')&&s.id.match(/^P\d+$/);
+      var ok=!v||s.textContent.toLowerCase().indexOf(v)>-1;
+      s.hidden=!ok;
+      if(ok&&isP)n++;
+      if(isP){
+        var a=document.querySelector('#nav a[data-pg="'+s.id+'"]');
+        if(a)a.classList.toggle('is-dim',!ok);
+      }
+    });
+    ovs.forEach(function(a){a.classList.toggle('is-dim',!!v);});
+    hit.textContent=v?(n+' 页匹配'):'全部';
+  }
+  q.addEventListener('input',run);
+  document.addEventListener('keydown',function(e){
+    if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus();}
+    if(e.key==='Escape'&&document.activeElement===q){q.value='';run();q.blur();}
+  });
+  // 滚动高亮
+  var secEls=[].slice.call(document.querySelectorAll('.wrap > .pg'));
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(!e.isIntersecting)return;
+      var id=e.target.id;
+      document.querySelectorAll('#nav a').forEach(function(a){
+        a.classList.toggle('is-active',a.getAttribute('href')==='#'+id);
+      });
+    });
+  },{rootMargin:'-72px 0px -70% 0px',threshold:0});
+  secEls.forEach(function(s){io.observe(s);});
+  run();
+})();
+</script>
+</body>
+</html>
