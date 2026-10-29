@@ -97,6 +97,10 @@
         .data-table th.text-right, .data-table td.text-right { text-align: right; }
         .table-scroll { overflow-x: auto; margin: 0 24px 24px; width: calc(100% - 48px); }
         .table-scroll .data-table { width: auto; min-width: 100%; }
+        /* 代储订单表 15 列、转售登记单表 13 列，收紧单元格以免操作列被挤出 */
+        #page-order .data-table, #page-resale .data-table { font-size: 13px; }
+        #page-order .data-table th, #page-order .data-table td,
+        #page-resale .data-table th, #page-resale .data-table td { padding: 14px 10px; }
         .tag { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
         .tag-success { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
         .tag-warning { background: #fffbe6; color: #faad14; border: 1px solid #ffe58f; }
@@ -264,6 +268,7 @@
                 <div class="sidebar-item" data-menu="collection" onclick="switchMenu('collection')" style="padding-left:36px;">收取记录</div>
                 <div class="sidebar-item" data-menu="actual" onclick="switchMenu('actual')" style="padding-left:36px;">实收信息</div>
                 <div class="sidebar-item" data-menu="order" onclick="switchMenu('order')">代储订单管理</div>
+                <div class="sidebar-item" data-menu="resale" onclick="switchMenu('resale')" style="padding-left:36px;">转售登记单</div>
                 <div class="sidebar-item" data-menu="sale" onclick="switchMenu('sale')">销售订单管理</div>
                 <div class="sidebar-item" data-menu="outbound" onclick="switchMenu('outbound')">出库指令管理</div>
                 <div class="sidebar-item" data-menu="settlement" onclick="switchMenu('settlement')">清结算中心</div>
@@ -551,30 +556,32 @@
                         </div>
                         <div class="table-scroll">
                             <table class="data-table">
-                                <thead><tr><th class="col-check"><input type="checkbox" class="row-check" id="order-check-all" onclick="toggleAllOrders(this)"></th><th>订单编号</th><th>供应商</th><th>货物信息</th><th>货物数量</th><th>可售库存</th><th>实际入库货值</th><th>保证金比例</th><th>拨付金额</th><th>仓库</th><th>业务归属人</th><th>拨付状态</th><th>入库日期</th><th>操作</th></tr></thead>
+                                <thead><tr><th class="col-check"><input type="checkbox" class="row-check" id="order-check-all" onclick="toggleAllOrders(this)"></th><th>订单编号</th><th>供应商</th><th>货物信息</th><th>货物数量</th><th>可售库存</th><th>实际入库货值</th><th>保证金比例</th><th>拨付金额</th><th>仓库</th><th>业务归属人</th><th>拨付状态</th><th>转售状态</th><th>入库日期</th><th>操作</th></tr></thead>
                                 <tbody id="order-tbody">
                                     <!-- 【PERM-ORDER-001】权限：仅销售管理员角色可见"销售"按钮，待拨付状态隐藏"销售"按钮 -->
                                     <!-- 勾选规则：拨付状态=已拨付 且 该代储订单不存在未付款销售单，才可勾选；不可勾选行加 row-locked 并在 title 中说明原因 -->
                                     <!-- 订单状态：已拨付，但存在未付款销售单 XS20250909002，按规则不可再发起销售（勾选禁用，"销售"按钮同步隐藏） -->
-                                    <tr class="row-locked" title="存在未付款销售单 XS20250909002，需付款完成后才能再次发起销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td>100</td><td>85</td><td>¥880,000.00</td><td>70%</td><td>¥616,000.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250909001')">详情</span></div></td></tr>
+                                    <tr class="row-locked" title="存在未付款销售单 XS20250909002，需付款完成后才能再次发起销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td>100</td><td>85</td><td>¥880,000.00</td><td>70%</td><td>¥616,000.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-processing">处理中</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" style="color:#bfbfbf;cursor:not-allowed;" title="转售单 FX202610260001 处理中" onclick="showToast('转售单 FX202610260001 处理中','warning')">转售登记</span><span class="action-link" onclick="showOrderDetail('DC20250909001')">详情</span></div></td></tr>
                                     <!-- 订单状态：已拨付（可销售、可批量勾选，已有销售单 XS20250909003 且已支付，不构成阻塞） -->
-                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250909002" data-available="42" onclick="toggleOrderCheckbox(this)"></td><td>DC20250909002</td><td>无锡科技</td><td>华为 Mate 60</td><td>50</td><td>42</td><td>¥345,000.00</td><td>70%</td><td>¥241,500.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909002', '无锡科技', '华为 Mate 60', '42')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250909002')">详情</span></div></td></tr>
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250909002" data-available="42" onclick="toggleOrderCheckbox(this)"></td><td>DC20250909002</td><td>无锡科技</td><td>华为 Mate 60</td><td>50</td><td>42</td><td>¥345,000.00</td><td>70%</td><td>¥241,500.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-default">未转售</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909002', '无锡科技', '华为 Mate 60', '42')">销售</span><span class="action-link" onclick="openResaleRegistration('DC20250909002')">转售登记</span><span class="action-link" onclick="showOrderDetail('DC20250909002')">详情</span></div></td></tr>
                                     <!-- 订单状态：销售中（已拨付，尚有可售库存 10 台，按规则仍可勾选） -->
-                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250908003" data-available="10" onclick="toggleOrderCheckbox(this)"></td><td>DC20250908003</td><td>深圳数码</td><td>iPad Air</td><td>30</td><td>10</td><td>¥156,000.00</td><td>70%</td><td>¥109,200.00</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250908003')">详情</span></div></td></tr>
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250908003" data-available="10" onclick="toggleOrderCheckbox(this)"></td><td>DC20250908003</td><td>深圳数码</td><td>iPad Air</td><td>30</td><td>10</td><td>¥156,000.00</td><td>70%</td><td>¥109,200.00</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-default">未转售</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="openResaleRegistration('DC20250908003')">转售登记</span><span class="action-link" onclick="showOrderDetail('DC20250908003')">详情</span></div></td></tr>
                                     <!-- 订单状态：已拨付（尚有可售库存 35 台，但存在未付款销售单 XS20250908005，不可勾选） -->
-                                    <tr class="row-locked" title="存在未付款销售单 XS20250908005，需付款完成后才能再次发起销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250907004</td><td>华东科技</td><td>小米14</td><td>80</td><td>35</td><td>¥320,000.00</td><td>70%</td><td>¥224,000.00</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-07</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250907004')">详情</span></div></td></tr>
+                                    <tr class="row-locked" title="存在未付款销售单 XS20250908005，需付款完成后才能再次发起销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250907004</td><td>华东科技</td><td>小米14</td><td>80</td><td>35</td><td>¥320,000.00</td><td>70%</td><td>¥224,000.00</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-default">未转售</span></td><td>2026-09-07</td><td><div class="action-links"><span class="action-link" onclick="openResaleRegistration('DC20250907004')">转售登记</span><span class="action-link" onclick="showOrderDetail('DC20250907004')">详情</span></div></td></tr>
                                     <!-- 订单状态：待入库（待拨付，不可勾选） -->
-                                    <tr class="row-locked" title="拨付状态为待拨付，不可销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250906005</td><td>北京电子</td><td>OPPO Find X7</td><td>40</td><td>-</td><td>¥200,000.00</td><td>70%</td><td>-</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-warning">待拨付</span></td><td>2026-09-06</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250906005')">详情</span></div></td></tr>
+                                    <tr class="row-locked" title="拨付状态为待拨付，不可销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250906005</td><td>北京电子</td><td>OPPO Find X7</td><td>40</td><td>-</td><td>¥200,000.00</td><td>70%</td><td>-</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-warning">待拨付</span></td><td><span class="tag tag-default">—</span></td><td>2026-09-06</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250906005')">详情</span></div></td></tr>
                                     <!-- 订单状态：已入库（待拨付，不可勾选） -->
-                                    <tr class="row-locked" title="拨付状态为待拨付，不可销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250905006</td><td>南方通讯</td><td>vivo X100</td><td>60</td><td>-</td><td>¥270,000.00</td><td>70%</td><td>-</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-warning">待拨付</span></td><td>2026-09-05</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250905006')">详情</span></div></td></tr>
+                                    <tr class="row-locked" title="拨付状态为待拨付，不可销售"><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250905006</td><td>南方通讯</td><td>vivo X100</td><td>60</td><td>-</td><td>¥270,000.00</td><td>70%</td><td>-</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-warning">待拨付</span></td><td><span class="tag tag-default">—</span></td><td>2026-09-05</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250905006')">详情</span></div></td></tr>
                                     <!-- 订单状态：已拨付（可销售、可批量勾选，尚无销售单） -->
-                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250909007" data-available="120" onclick="toggleOrderCheckbox(this)"></td><td>DC20250909007</td><td>杭州电子</td><td>荣耀 Magic6</td><td>120</td><td>120</td><td>¥480,000.00</td><td>70%</td><td>¥336,000.00</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909007', '杭州电子', '荣耀 Magic6', '120')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250909007')">详情</span></div></td></tr>
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250909007" data-available="120" onclick="toggleOrderCheckbox(this)"></td><td>DC20250909007</td><td>杭州电子</td><td>荣耀 Magic6</td><td>120</td><td>120</td><td>¥480,000.00</td><td>70%</td><td>¥336,000.00</td><td><span class="wh-badge">北京监管仓</span></td><td>王五</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-default">未转售</span></td><td>2026-09-09</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250909007', '杭州电子', '荣耀 Magic6', '120')">销售</span><span class="action-link" onclick="openResaleRegistration('DC20250909007')">转售登记</span><span class="action-link" onclick="showOrderDetail('DC20250909007')">详情</span></div></td></tr>
                                     <!-- 订单状态：已拨付（可销售、可批量勾选，尚无销售单） -->
-                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250908008" data-available="90" onclick="toggleOrderCheckbox(this)"></td><td>DC20250908008</td><td>南京数码</td><td>三星 Galaxy S24</td><td>90</td><td>90</td><td>¥450,000.00</td><td>70%</td><td>¥315,000.00</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-success">已拨付</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250908008', '南京数码', '三星 Galaxy S24', '90')">销售</span><span class="action-link" onclick="showOrderDetail('DC20250908008')">详情</span></div></td></tr>
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" data-order-no="DC20250908008" data-available="90" onclick="toggleOrderCheckbox(this)"></td><td>DC20250908008</td><td>南京数码</td><td>三星 Galaxy S24</td><td>90</td><td>90</td><td>¥450,000.00</td><td>70%</td><td>¥315,000.00</td><td><span class="wh-badge">深圳监管仓</span></td><td>李四</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-default">未转售</span></td><td>2026-09-08</td><td><div class="action-links"><span class="action-link" onclick="openDirectSale('DC20250908008', '南京数码', '三星 Galaxy S24', '90')">销售</span><span class="action-link" onclick="openResaleRegistration('DC20250908008')">转售登记</span><span class="action-link" onclick="showOrderDetail('DC20250908008')">详情</span></div></td></tr>
+                                    <!-- 已完成线下转售：可售库存已清零，转售登记入口隐藏 -->
+                                    <tr><td class="col-check"><input type="checkbox" class="row-check" disabled></td><td>DC20250904009</td><td>苏州电子</td><td>华为 P70</td><td>60</td><td>0</td><td>¥300,000.00</td><td>70%</td><td>¥210,000.00</td><td><span class="wh-badge">上海监管仓</span></td><td>张三</td><td><span class="tag tag-success">已拨付</span></td><td><span class="tag tag-success">已转售</span></td><td>2026-09-04</td><td><div class="action-links"><span class="action-link" onclick="showOrderDetail('DC20250904009')">详情</span></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="pagination"><span class="pagination-total">共 8 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">2</span><span class="pagination-item">3</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
+                        <div class="pagination"><span class="pagination-total">共 9 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">2</span><span class="pagination-item">3</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
                         <!--
                         【PRD-ORDER-001】代储订单销售规则
                         1. 销售前提：订单拨付状态 = 已拨付，且该代储订单不存在未付款的销售订单
@@ -619,6 +626,37 @@
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;- N 张单后续各自独立走支付、出库指令、清结算流程，互不阻塞
                             <br>&nbsp;&nbsp;&nbsp;&nbsp;- 明细包含多个仓库时，汇总区提示将拆分生成多个出库指令与提货码
                         </div>
+                    </div>
+                </div>
+
+                <!-- 模块8: 转售登记单（代储订单管理二级入口） -->
+                <div id="page-resale" class="page-content">
+                    <div class="card">
+                        <div class="search-area">
+                            <div class="search-item"><label class="form-label">登记单号</label><input type="text" class="form-input" placeholder="请输入登记单号"></div>
+                            <div class="search-item"><label class="form-label">代储订单编码</label><input type="text" class="form-input" placeholder="请输入代储订单编码"></div>
+                            <div class="search-item"><label class="form-label">供应商</label><input type="text" class="form-input" placeholder="请输入供应商名称"></div>
+                            <div class="search-item"><label class="form-label">单据状态</label><select class="form-input"><option value="">全部</option><option>草稿</option><option>待审核</option><option>已通过</option><option>已驳回</option><option>已作废</option></select></div>
+                            <div class="search-item"><label class="form-label">成交日期</label><input type="date" class="form-input"></div>
+                            <button class="btn btn-primary" onclick="handleQuery()">查询</button>
+                            <button class="btn btn-default" onclick="handleReset()">重置</button>
+                        </div>
+                        <div class="toolbar">
+                            <div class="toolbar-left"><span class="selection-tip">线下人工转售登记，凭证由经办人自由上传、不分类</span></div>
+                            <div class="toolbar-right"><button class="btn btn-default" onclick="handleExport()">导出</button></div>
+                        </div>
+                        <div class="table-scroll">
+                            <table class="data-table">
+                                <thead><tr><th>登记单号</th><th>代储订单编码</th><th>供应商</th><th>货物信息</th><th>转售数量</th><th>转售单价</th><th>转售金额</th><th>回款金额</th><th>回款日期</th><th>状态</th><th>创建人</th><th>创建时间</th><th>操作</th></tr></thead>
+                                <tbody id="resale-tbody">
+                                    <tr><td><span class="link" onclick="showResaleDetail('FX202610260001')">FX202610260001</span></td><td>DC20250909001</td><td>能良科技</td><td>iPhone 15 Pro</td><td style="text-align:right;">85</td><td style="text-align:right;">¥7,500.00</td><td style="text-align:right;">¥637,500.00</td><td style="text-align:right;">¥637,500.00</td><td>2026-10-22</td><td><span class="tag tag-warning">待审核</span></td><td>张三</td><td>2026-10-26 10:20</td><td><div class="action-links"><span class="action-link" onclick="showResaleDetail('FX202610260001')">详情</span><span class="action-link" onclick="openResaleAudit('FX202610260001')">审核</span></div></td></tr>
+                                    <tr><td><span class="link" onclick="showResaleDetail('FX202610200001')">FX202610200001</span></td><td>DC20250904009</td><td>苏州电子</td><td>华为 P70</td><td style="text-align:right;">60</td><td style="text-align:right;">¥4,800.00</td><td style="text-align:right;">¥288,000.00</td><td style="text-align:right;">¥288,000.00</td><td>2026-10-21</td><td><span class="tag tag-success">已通过</span></td><td>张三</td><td>2026-10-20 09:15</td><td><div class="action-links"><span class="action-link" onclick="showResaleDetail('FX202610200001')">详情</span></div></td></tr>
+                                    <tr><td><span class="link" onclick="showResaleDetail('FX202610150002')">FX202610150002</span></td><td>DC20250908003</td><td>深圳数码</td><td>iPad Air</td><td style="text-align:right;">10</td><td style="text-align:right;">¥4,300.00</td><td style="text-align:right;">¥43,000.00</td><td style="text-align:right;">¥43,000.00</td><td>2026-10-16</td><td><span class="tag tag-error">已驳回</span></td><td>李四</td><td>2026-10-15 16:40</td><td><div class="action-links"><span class="action-link" onclick="showResaleDetail('FX202610150002')">详情</span><span class="action-link" onclick="editResaleRegistration('FX202610150002')">编辑</span><span class="action-link danger" onclick="voidResaleRegistration('FX202610150002')">作废</span></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination"><span class="pagination-total" id="resale-total">共 3 条</span><div class="pagination-page"><span class="pagination-item disabled">&lt;</span><span class="pagination-item active">1</span><span class="pagination-item">&gt;</span></div><div class="pagination-jump">跳至 <input type="text" value="1"> 页</div></div>
+                        <div class="alert-info" style="margin:0 24px 24px;"><strong>说明：</strong>转售登记单为线下人工转售的留痕单据，一个代储订单只允许一张有效单据，且一次性处置剩余全部库存。审核通过后系统仅扣减可售库存，不生成销售订单、出库指令、清结算记录或差价补偿金应收单；线下实际出库由仓库按既有流程执行，系统不做确认。驳回后可直接修改原单并重新提交。</div>
                     </div>
                 </div>
 
@@ -1248,12 +1286,83 @@
         </div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-actual-claim')">取消</button><button class="btn btn-primary" onclick="submitActualClaim()">确认认领并核销</button></div></div>
     </div>
 
+    <!-- 弹窗: 线下转售登记单 -->
+    <div id="modal-resale-create" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-resale-create')">
+        <div class="modal-content" style="max-width:900px;">
+            <div class="modal-header"><div class="modal-title" id="resale-modal-title">线下转售登记单</div><div class="modal-close" onclick="closeModal('modal-resale-create')">×</div></div>
+            <div class="modal-body">
+                <div class="alert-warning" style="margin-bottom:18px;" id="resale-batch-tip">本单将一次性处置该代储订单剩余全部库存，提交后不可分批追加。</div>
+                <div class="info-card blue">
+                    <div class="info-card-title">代储订单信息</div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">代储订单编码</div><div class="info-value" id="resale-order-no">-</div></div><div class="form-group half"><div class="info-label">供应商</div><div class="info-value" id="resale-supplier">-</div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">货物信息</div><div class="info-value" id="resale-goods">-</div></div><div class="form-group half"><div class="info-label">已拨保证金</div><div class="info-value" id="resale-margin">-</div></div></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half"><label class="form-label">转售数量（全部剩余，只读）</label><input id="resale-qty" class="form-input" readonly></div>
+                    <div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>转售单价（元）</label><input id="resale-price" class="form-input" type="number" placeholder="请输入转售单价" oninput="recalcResaleAmount()"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half"><label class="form-label">转售金额（元）</label><input id="resale-amount" class="form-input" readonly placeholder="自动计算"></div>
+                    <div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>成交日期</label><input id="resale-deal-date" class="form-input" type="date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>买家名称</label><input id="resale-buyer" class="form-input" placeholder="线下买家或渠道名称"></div>
+                    <div class="form-group half"><label class="form-label">联系方式</label><input id="resale-contact" class="form-input" placeholder="选填"></div>
+                </div>
+                <div style="font-weight:600;color:#262626;margin:4px 0 16px;padding-left:12px;border-left:4px solid #faad14;">回款信息</div>
+                <div class="form-row">
+                    <div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>回款金额（元）</label><input id="resale-refund-amount" class="form-input" type="number" placeholder="请输入回款金额"></div>
+                    <div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>回款日期</label><input id="resale-refund-date" class="form-input" type="date"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group half"><label class="form-label"><span style="color:#ff4d4f;">*</span>回款方式</label><select id="resale-refund-method" class="form-input"><option value="">请选择</option><option>银行转账</option><option>现金</option><option>其他</option></select></div>
+                    <div class="form-group half"><label class="form-label">回款账户</label><input id="resale-refund-account" class="form-input" placeholder="银行转账时必填"></div>
+                </div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>转售原因及说明</label><textarea id="resale-reason" class="form-input" rows="4" placeholder="请说明为什么走线下转售、人工核实过程及成交依据"></textarea></div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>凭证回传</label><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><button class="btn btn-default" onclick="markResaleAttachment()">上传附件</button><span style="font-size:13px;color:#8c8c8c;">可多传、不分类，由经办人自行上传成交与回款凭证</span><span id="resale-attachment-tip" style="font-size:13px;color:#52c41a;"></span></div></div>
+                <div class="form-group"><label class="form-label">备注</label><textarea id="resale-remark" class="form-input" rows="2" placeholder="选填"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-resale-create')">取消</button><button class="btn btn-default" onclick="saveResaleDraft()">保存草稿</button><button class="btn btn-primary" onclick="submitResale()">提交审核</button></div>
+        </div>
+    </div>
+
+    <!-- 弹窗: 转售登记单详情 -->
+    <div id="modal-resale-detail" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-resale-detail')">
+        <div class="modal-content" style="max-width:760px;"><div class="modal-header"><div class="modal-title">转售登记单详情</div><div class="modal-close" onclick="closeModal('modal-resale-detail')">×</div></div><div id="resale-detail-body" class="modal-body"></div><div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-resale-detail')">关闭</button></div></div>
+    </div>
+
+    <!-- 弹窗: 转售登记单审核 -->
+    <div id="modal-resale-audit" class="modal-overlay" onclick="if(event.target===this)closeModal('modal-resale-audit')">
+        <div class="modal-content" style="max-width:820px;">
+            <div class="modal-header"><div class="modal-title">转售登记单审核</div><div class="modal-close" onclick="closeModal('modal-resale-audit')">×</div></div>
+            <div class="modal-body">
+                <div class="alert-info" style="margin-bottom:18px;">请核对成交信息、回款信息与凭证。审核通过后该代储订单剩余可售库存将一次性清零，且单据不可再编辑。</div>
+                <div class="info-card blue">
+                    <div class="info-card-title">登记基本信息</div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">登记单号</div><div id="resale-audit-no" class="info-value">-</div></div><div class="form-group half"><div class="info-label">审核状态</div><div class="info-value"><span class="tag tag-warning">待审核</span></div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">代储订单</div><div id="resale-audit-order" class="info-value">-</div></div><div class="form-group half"><div class="info-label">供应商</div><div id="resale-audit-supplier" class="info-value">-</div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">货物信息</div><div id="resale-audit-goods" class="info-value">-</div></div><div class="form-group half"><div class="info-label">转售数量</div><div id="resale-audit-qty" class="info-value">-</div></div></div>
+                </div>
+                <div class="info-card yellow">
+                    <div class="info-card-title">成交与回款</div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">转售单价</div><div id="resale-audit-price" class="info-value">-</div></div><div class="form-group half"><div class="info-label">转售金额</div><div id="resale-audit-amount" class="info-value">-</div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">买家名称</div><div id="resale-audit-buyer" class="info-value">-</div></div><div class="form-group half"><div class="info-label">成交日期</div><div id="resale-audit-deal-date" class="info-value">-</div></div></div>
+                    <div class="form-row" style="margin-bottom:0;"><div class="form-group half"><div class="info-label">回款金额</div><div id="resale-audit-refund" class="info-value">-</div></div><div class="form-group half"><div class="info-label">回款日期 / 方式</div><div id="resale-audit-refund-info" class="info-value">-</div></div></div>
+                    <div class="info-row"><span class="info-label">转售原因</span><span id="resale-audit-reason" class="info-value">-</span></div>
+                    <div class="info-row"><span class="info-label">凭证</span><span class="link" onclick="showToast('正在预览：线下转售凭证.pdf','info')">线下转售凭证.pdf</span></div>
+                </div>
+                <div class="form-group"><label class="form-label"><span style="color:#ff4d4f;">*</span>审核意见</label><textarea id="resale-audit-comment" class="form-input" rows="4" placeholder="审核通过或驳回时均需填写审核意见"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeModal('modal-resale-audit')">取消</button><button class="btn btn-danger" onclick="rejectResaleAudit()">驳回</button><button class="btn btn-primary" onclick="approveResaleAudit()">审核通过</button></div>
+        </div>
+    </div>
+
     <script>
         // ========== 菜单切换 ==========
         function switchMenu(menu) {
             document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
             document.querySelector('.sidebar-item[data-menu="' + menu + '"]').classList.add('active');
-            var menuNames = {'audit': '代储代销审核', 'warehouse': '电子仓单管理', 'margin': '保证金拨付', 'compensation': '差价补偿金应收', 'collection': '收取记录', 'actual': '实收信息', 'order': '代储订单管理', 'sale': '销售订单管理', 'outbound': '出库指令管理', 'settlement': '清结算中心', 'invoice': '票据中心', 'receipt': '提货凭证管理'};
+            var menuNames = {'audit': '代储代销审核', 'warehouse': '电子仓单管理', 'margin': '保证金拨付', 'compensation': '差价补偿金应收', 'collection': '收取记录', 'actual': '实收信息', 'order': '代储订单管理', 'resale': '转售登记单', 'sale': '销售订单管理', 'outbound': '出库指令管理', 'settlement': '清结算中心', 'invoice': '票据中心', 'receipt': '提货凭证管理'};
             document.getElementById('current-menu').textContent = menuNames[menu];
             document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
             document.getElementById('page-' + menu).classList.add('active');
@@ -1601,7 +1710,8 @@
             'DC20250906005': { supplier: '北京电子', goods: 'OPPO Find X7', category: '手机', brand: 'OPPO', commonName: 'Find X7', commonSku: '256GB 绿色', quantity: '40', available: null, amount: '¥200,000.00', margin: '-', status: '<span class="tag tag-warning">待拨付</span>', date: '2026-09-06', warehouse: '北京监管仓', owner: '王五', evalPrice: 5000, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: null },
             'DC20250905006': { supplier: '南方通讯', goods: 'vivo X100', category: '手机', brand: 'vivo', commonName: 'X100', commonSku: '256GB 蓝色', quantity: '60', available: null, amount: '¥270,000.00', margin: '¥189,000.00', status: '<span class="tag tag-warning">待拨付</span>', date: '2026-09-05', warehouse: '深圳监管仓', owner: '李四', evalPrice: 4500, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: null },
             'DC20250909007': { supplier: '杭州电子', goods: '荣耀 Magic6', category: '手机', brand: '荣耀', commonName: 'Magic6', commonSku: '256GB 黑色', quantity: '120', available: 120, amount: '¥480,000.00', margin: '¥336,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-09', warehouse: '北京监管仓', owner: '王五', evalPrice: 4000, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: '2026-09-09' },
-            'DC20250908008': { supplier: '南京数码', goods: '三星 Galaxy S24', category: '手机', brand: '三星', commonName: 'Galaxy S24', commonSku: '256GB 灰色', quantity: '90', available: 90, amount: '¥450,000.00', margin: '¥315,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-08', warehouse: '深圳监管仓', owner: '李四', evalPrice: 5000, depositRate: 0.7, serviceRate: 0.003, storageFee: 10, allocateDate: '2026-09-08' }
+            'DC20250908008': { supplier: '南京数码', goods: '三星 Galaxy S24', category: '手机', brand: '三星', commonName: 'Galaxy S24', commonSku: '256GB 灰色', quantity: '90', available: 90, amount: '¥450,000.00', margin: '¥315,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-08', warehouse: '深圳监管仓', owner: '李四', evalPrice: 5000, depositRate: 0.7, serviceRate: 0.003, storageFee: 10, allocateDate: '2026-09-08' },
+            'DC20250904009': { supplier: '苏州电子', goods: '华为 P70', category: '手机', brand: '华为', commonName: 'P70', commonSku: '256GB 银色', quantity: '60', available: 0, amount: '¥300,000.00', margin: '¥210,000.00', status: '<span class="tag tag-success">已拨付</span>', date: '2026-09-04', warehouse: '上海监管仓', owner: '张三', evalPrice: 5000, depositRate: 0.7, serviceRate: 0.0025, storageFee: 10, allocateDate: '2026-09-04' }
         };
 
         function openDirectSale(orderNo, supplier, product, stock) {
@@ -1635,6 +1745,320 @@
         function confirmSale() {
             closeModal('modal-direct-sale');
             showToast('下单成功！', 'success');
+        }
+
+        // ========== 转售登记（线下人工转售） ==========
+        // 一个代储订单只允许一张有效转售单；转售数量 = 发起时全部可售库存，只读
+        // 审核通过后该订单可售库存清零；驳回后可修改原单重提
+        var resaleData = {
+            'FX202610260001': { order:'DC20250909001', supplier:'能良科技', goods:'iPhone 15 Pro', qty:85, price:7500, amount:637500, buyer:'深圳华强北渠道商 A', contact:'13800000000', dealDate:'2026-10-20', refundAmount:637500, refundDate:'2026-10-22', refundMethod:'银行转账', refundAccount:'招商银行 6225****1234', reason:'代储期届满仍未售完，线下渠道一次性买断', status:'待审核', createBy:'张三', createTime:'2026-10-26 10:20', auditRemark:'' },
+            'FX202610200001': { order:'DC20250904009', supplier:'苏州电子', goods:'华为 P70', qty:60, price:4800, amount:288000, buyer:'华东通讯渠道商 B', contact:'13900000000', dealDate:'2026-10-19', refundAmount:288000, refundDate:'2026-10-21', refundMethod:'银行转账', refundAccount:'工商银行 6222****5678', reason:'货值持续下跌，与供应商确认后线下整批处置', status:'已通过', createBy:'张三', createTime:'2026-10-20 09:15', auditRemark:'凭证齐全，同意转售' },
+            'FX202610150002': { order:'DC20250908003', supplier:'深圳数码', goods:'iPad Air', qty:10, price:4300, amount:43000, buyer:'广州数码档口 C', contact:'13700000000', dealDate:'2026-10-15', refundAmount:43000, refundDate:'2026-10-16', refundMethod:'银行转账', refundAccount:'建设银行 6217****9012', reason:'剩货零散，线下档口一次性收购', status:'已驳回', createBy:'李四', createTime:'2026-10-15 16:40', auditRemark:'成交凭证缺少买家签收页，请补充后重提' }
+        };
+        var currentResaleAuditNo = '';
+        var editingResaleNo = '';
+        var resaleAttachmentAdded = false;
+
+        function findOrderRow(orderNo) {
+            var rows = document.querySelectorAll('#order-tbody tr');
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].children[1] && rows[i].children[1].textContent.trim() === orderNo) return rows[i];
+            }
+            return null;
+        }
+
+        function openResaleRegistration(orderNo) {
+            var data = orderData[orderNo];
+            if (!data) return showToast('未找到代储订单', 'error');
+            if (!data.available) return showToast('该订单已无剩余可售库存，不能发起转售', 'error');
+            var existing = '';
+            Object.keys(resaleData).forEach(function (k) {
+                var r = resaleData[k];
+                if (r.order === orderNo && (r.status === '草稿' || r.status === '待审核' || r.status === '已通过')) existing = k;
+            });
+            if (existing) return showToast('该代储订单已有有效转售单 ' + existing + '，不能重复发起', 'error');
+            editingResaleNo = '';
+            resaleAttachmentAdded = false;
+            document.getElementById('resale-modal-title').textContent = '线下转售登记单';
+            document.getElementById('resale-order-no').textContent = orderNo;
+            document.getElementById('resale-supplier').textContent = data.supplier;
+            document.getElementById('resale-goods').textContent = data.goods;
+            document.getElementById('resale-margin').textContent = data.margin;
+            document.getElementById('resale-qty').value = data.available;
+            document.getElementById('resale-price').value = '';
+            document.getElementById('resale-amount').value = '';
+            document.getElementById('resale-deal-date').value = '';
+            document.getElementById('resale-buyer').value = '';
+            document.getElementById('resale-contact').value = '';
+            document.getElementById('resale-refund-amount').value = '';
+            document.getElementById('resale-refund-date').value = '';
+            document.getElementById('resale-refund-method').selectedIndex = 0;
+            document.getElementById('resale-refund-account').value = '';
+            document.getElementById('resale-reason').value = '';
+            document.getElementById('resale-remark').value = '';
+            document.getElementById('resale-attachment-tip').textContent = '';
+            document.getElementById('resale-batch-tip').textContent = '本单将一次性处置该代储订单剩余全部库存 ' + data.available + ' 台，提交后不可分批追加。';
+            openModal('modal-resale-create');
+        }
+
+        function editResaleRegistration(no) {
+            var d = resaleData[no];
+            if (!d) return showToast('未找到转售登记单', 'error');
+            if (d.status !== '已驳回' && d.status !== '草稿') return showToast('仅草稿或已驳回的单据可编辑', 'warning');
+            editingResaleNo = no;
+            resaleAttachmentAdded = true;
+            document.getElementById('resale-modal-title').textContent = '编辑转售登记单 ' + no;
+            document.getElementById('resale-order-no').textContent = d.order;
+            document.getElementById('resale-supplier').textContent = d.supplier;
+            document.getElementById('resale-goods').textContent = d.goods;
+            document.getElementById('resale-margin').textContent = '-';
+            document.getElementById('resale-qty').value = d.qty;
+            document.getElementById('resale-price').value = d.price;
+            document.getElementById('resale-amount').value = d.amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            document.getElementById('resale-deal-date').value = d.dealDate;
+            document.getElementById('resale-buyer').value = d.buyer;
+            document.getElementById('resale-contact').value = d.contact;
+            document.getElementById('resale-refund-amount').value = d.refundAmount;
+            document.getElementById('resale-refund-date').value = d.refundDate;
+            document.getElementById('resale-refund-method').value = d.refundMethod;
+            document.getElementById('resale-refund-account').value = d.refundAccount;
+            document.getElementById('resale-reason').value = d.reason;
+            document.getElementById('resale-remark').value = d.remark || '';
+            document.getElementById('resale-attachment-tip').textContent = '已上传 1 个凭证';
+            document.getElementById('resale-batch-tip').textContent = '本单将一次性处置该代储订单剩余全部库存 ' + d.qty + ' 台，提交后不可分批追加。';
+            openModal('modal-resale-create');
+        }
+
+        function recalcResaleAmount() {
+            var qty = Number(document.getElementById('resale-qty').value) || 0;
+            var price = Number(document.getElementById('resale-price').value) || 0;
+            document.getElementById('resale-amount').value = (qty * price).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function markResaleAttachment() {
+            resaleAttachmentAdded = true;
+            document.getElementById('resale-attachment-tip').textContent = '已上传 1 个凭证';
+            showToast('已选择凭证文件（原型演示）', 'info');
+        }
+
+        function nextResaleNo() {
+            var d = new Date();
+            var ymd = String(d.getFullYear()) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+            var seq = 1;
+            Object.keys(resaleData).forEach(function (k) { if (k.indexOf('FX' + ymd) === 0) seq++; });
+            return 'FX' + ymd + String(seq).padStart(4, '0');
+        }
+
+        function collectResaleForm() {
+            return {
+                order: document.getElementById('resale-order-no').textContent,
+                supplier: document.getElementById('resale-supplier').textContent,
+                goods: document.getElementById('resale-goods').textContent,
+                qty: Number(document.getElementById('resale-qty').value) || 0,
+                price: Number(document.getElementById('resale-price').value) || 0,
+                amount: Number(document.getElementById('resale-amount').value.replace(/,/g, '')) || 0,
+                dealDate: document.getElementById('resale-deal-date').value,
+                buyer: document.getElementById('resale-buyer').value.trim(),
+                contact: document.getElementById('resale-contact').value.trim(),
+                refundAmount: Number(document.getElementById('resale-refund-amount').value) || 0,
+                refundDate: document.getElementById('resale-refund-date').value,
+                refundMethod: document.getElementById('resale-refund-method').value,
+                refundAccount: document.getElementById('resale-refund-account').value.trim(),
+                reason: document.getElementById('resale-reason').value.trim(),
+                remark: document.getElementById('resale-remark').value.trim(),
+                createBy: '张三',
+                createTime: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-'),
+                auditRemark: ''
+            };
+        }
+
+        function upsertResaleRow(no) {
+            var d = resaleData[no];
+            var tbody = document.getElementById('resale-tbody');
+            if (!d || !tbody) return;
+            var rows = tbody.querySelectorAll('tr');
+            var tr = null;
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].children[0].textContent.trim() === no) { tr = rows[i]; break; }
+            }
+            if (!tr) {
+                tr = document.createElement('tr');
+                tbody.insertBefore(tr, tbody.firstChild);
+                var total = document.getElementById('resale-total');
+                if (total) total.textContent = '共 ' + tbody.querySelectorAll('tr').length + ' 条';
+            }
+            var statusTag = d.status === '已通过' ? '<span class="tag tag-success">已通过</span>'
+                : d.status === '已驳回' ? '<span class="tag tag-error">已驳回</span>'
+                : d.status === '已作废' ? '<span class="tag tag-default">已作废</span>'
+                : d.status === '草稿' ? '<span class="tag tag-default">草稿</span>'
+                : '<span class="tag tag-warning">待审核</span>';
+            var acts = '<span class="action-link" onclick="showResaleDetail(\'' + no + '\')">详情</span>';
+            if (d.status === '待审核') acts += '<span class="action-link" onclick="openResaleAudit(\'' + no + '\')">审核</span>';
+            if (d.status === '草稿' || d.status === '已驳回') {
+                acts += '<span class="action-link" onclick="editResaleRegistration(\'' + no + '\')">编辑</span>';
+                acts += '<span class="action-link danger" onclick="voidResaleRegistration(\'' + no + '\')">作废</span>';
+            }
+            tr.innerHTML = '<td><span class="link" onclick="showResaleDetail(\'' + no + '\')">' + no + '</span></td>'
+                + '<td>' + d.order + '</td><td>' + d.supplier + '</td><td>' + d.goods + '</td>'
+                + '<td style="text-align:right;">' + d.qty + '</td>'
+                + '<td style="text-align:right;">' + fmtMoney(d.price) + '</td>'
+                + '<td style="text-align:right;">' + fmtMoney(d.amount) + '</td>'
+                + '<td style="text-align:right;">' + fmtMoney(d.refundAmount) + '</td>'
+                + '<td>' + d.refundDate + '</td><td>' + statusTag + '</td>'
+                + '<td>' + d.createBy + '</td><td>' + d.createTime + '</td>'
+                + '<td><div class="action-links">' + acts + '</div></td>';
+        }
+
+        function markOrderResaleProcessing(orderNo, no) {
+            var tr = findOrderRow(orderNo);
+            if (!tr) return;
+            tr.children[12].innerHTML = '<span class="tag tag-processing">处理中</span>';
+            tr.children[14].innerHTML = '<div class="action-links">'
+                + '<span class="action-link" style="color:#bfbfbf;cursor:not-allowed;" title="转售单 ' + no + ' 处理中" onclick="showToast(\'转售单 ' + no + ' 处理中\',\'warning\')">转售登记</span>'
+                + '<span class="action-link" onclick="showOrderDetail(\'' + orderNo + '\')">详情</span></div>';
+        }
+
+        function saveResaleDraft() {
+            if (!document.getElementById('resale-price').value) return showToast('请先填写转售单价', 'error');
+            var no = editingResaleNo || nextResaleNo();
+            var d = collectResaleForm();
+            d.status = '草稿';
+            if (editingResaleNo) {
+                d.createBy = resaleData[editingResaleNo].createBy;
+                d.createTime = resaleData[editingResaleNo].createTime;
+            }
+            resaleData[no] = d;
+            editingResaleNo = '';
+            upsertResaleRow(no);
+            markOrderResaleProcessing(d.order, no);
+            closeModal('modal-resale-create');
+            showToast('转售登记单草稿已保存（' + no + '）', 'success');
+        }
+
+        function submitResale() {
+            var required = ['resale-price', 'resale-deal-date', 'resale-buyer', 'resale-refund-amount', 'resale-refund-date', 'resale-refund-method', 'resale-reason'];
+            for (var i = 0; i < required.length; i++) {
+                if (!document.getElementById(required[i]).value.trim()) return showToast('请完整填写所有必填信息', 'error');
+            }
+            if (document.getElementById('resale-refund-method').value === '银行转账' && !document.getElementById('resale-refund-account').value.trim()) {
+                return showToast('回款方式为银行转账时，回款账户必填', 'error');
+            }
+            if (!resaleAttachmentAdded) return showToast('请至少上传 1 个转售凭证', 'error');
+            var no = editingResaleNo || nextResaleNo();
+            var d = collectResaleForm();
+            d.status = '待审核';
+            if (editingResaleNo) {
+                d.createBy = resaleData[editingResaleNo].createBy;
+                d.createTime = resaleData[editingResaleNo].createTime;
+            }
+            resaleData[no] = d;
+            upsertResaleRow(no);
+            markOrderResaleProcessing(d.order, no);
+            var isEdit = !!editingResaleNo;
+            editingResaleNo = '';
+            closeModal('modal-resale-create');
+            showToast(isEdit ? '转售登记单已修改并重新提交审核（沿用原单号 ' + no + '）' : '转售登记单 ' + no + ' 已提交人工审核', 'success');
+        }
+
+        function showResaleDetail(no) {
+            var d = resaleData[no];
+            if (!d) return showToast('未找到转售登记单', 'error');
+            var statusTag = d.status === '已通过' ? '<span class="tag tag-success">已通过</span>'
+                : d.status === '已驳回' ? '<span class="tag tag-error">已驳回</span>'
+                : d.status === '已作废' ? '<span class="tag tag-default">已作废</span>'
+                : d.status === '草稿' ? '<span class="tag tag-default">草稿</span>'
+                : '<span class="tag tag-warning">待审核</span>';
+            var html = '<div class="info-card blue"><div class="info-card-title">登记基本信息</div>'
+                + detailRow('登记单号', no) + detailRow('代储订单', d.order) + detailRow('供应商', d.supplier)
+                + detailRow('货物信息', d.goods) + detailRow('单据状态', statusTag) + '</div>'
+                + '<div style="font-weight:600;color:#262626;margin-bottom:16px;padding-left:12px;border-left:4px solid #1890ff;">成交与回款</div>'
+                + detailRow('转售数量', d.qty + ' 台') + detailRow('转售单价', fmtMoney(d.price))
+                + detailRow('转售金额', fmtMoney(d.amount)) + detailRow('买家名称', d.buyer + (d.contact ? '（' + d.contact + '）' : ''))
+                + detailRow('成交日期', d.dealDate) + detailRow('回款金额', fmtMoney(d.refundAmount))
+                + detailRow('回款日期', d.refundDate) + detailRow('回款方式', d.refundMethod)
+                + detailRow('回款账户', d.refundAccount || '-') + detailRow('转售原因', d.reason)
+                + detailRow('凭证', '<span class="link" onclick="showToast(\'正在预览：线下转售凭证.pdf\',\'info\')">线下转售凭证.pdf</span>')
+                + detailRow('创建人 / 时间', d.createBy + ' / ' + d.createTime)
+                + (d.remark ? detailRow('备注', d.remark) : '')
+                + (d.auditRemark ? detailRow('审核意见', d.auditRemark) : '');
+            document.getElementById('resale-detail-body').innerHTML = html;
+            openModal('modal-resale-detail');
+        }
+
+        function openResaleAudit(no) {
+            var d = resaleData[no];
+            if (!d) return showToast('未找到待审核登记单', 'error');
+            currentResaleAuditNo = no;
+            document.getElementById('resale-audit-no').textContent = no;
+            document.getElementById('resale-audit-order').textContent = d.order;
+            document.getElementById('resale-audit-supplier').textContent = d.supplier;
+            document.getElementById('resale-audit-goods').textContent = d.goods;
+            document.getElementById('resale-audit-qty').textContent = d.qty + ' 台';
+            document.getElementById('resale-audit-price').textContent = fmtMoney(d.price);
+            document.getElementById('resale-audit-amount').textContent = fmtMoney(d.amount);
+            document.getElementById('resale-audit-buyer').textContent = d.buyer;
+            document.getElementById('resale-audit-deal-date').textContent = d.dealDate;
+            document.getElementById('resale-audit-refund').textContent = fmtMoney(d.refundAmount);
+            document.getElementById('resale-audit-refund-info').textContent = d.refundDate + ' / ' + d.refundMethod;
+            document.getElementById('resale-audit-reason').textContent = d.reason;
+            document.getElementById('resale-audit-comment').value = '';
+            openModal('modal-resale-audit');
+        }
+
+        function approveResaleAudit() {
+            var comment = document.getElementById('resale-audit-comment').value.trim();
+            if (!comment) return showToast('请填写审核意见', 'error');
+            var d = resaleData[currentResaleAuditNo];
+            d.status = '已通过';
+            d.auditRemark = comment;
+            // 审核通过：该代储订单剩余可售库存一次性清零，转售状态变为已转售
+            var orderNo = d.order;
+            if (orderData[orderNo]) orderData[orderNo].available = 0;
+            var tr = findOrderRow(orderNo);
+            if (tr) {
+                tr.children[5].textContent = '0';
+                tr.children[12].innerHTML = '<span class="tag tag-success">已转售</span>';
+                tr.children[14].innerHTML = '<div class="action-links"><span class="action-link" onclick="showOrderDetail(\'' + orderNo + '\')">详情</span></div>';
+            }
+            upsertResaleRow(currentResaleAuditNo);
+            closeModal('modal-resale-audit');
+            showToast('审核通过：该订单剩余库存已清零，转售状态更新为已转售', 'success');
+        }
+
+        function rejectResaleAudit() {
+            var comment = document.getElementById('resale-audit-comment').value.trim();
+            if (!comment) return showToast('请填写驳回原因', 'error');
+            var no = currentResaleAuditNo;
+            var d = resaleData[no];
+            d.status = '已驳回';
+            d.auditRemark = comment;
+            upsertResaleRow(no);
+            // 驳回不占用库存，入口恢复为可编辑重提
+            var tr = findOrderRow(d.order);
+            if (tr) {
+                tr.children[12].innerHTML = '<span class="tag tag-default">未转售</span>';
+                tr.children[14].innerHTML = '<div class="action-links">'
+                    + '<span class="action-link" title="修改原单后重新提交" onclick="editResaleRegistration(\'' + no + '\')">转售登记</span>'
+                    + '<span class="action-link" onclick="showOrderDetail(\'' + d.order + '\')">详情</span></div>';
+            }
+            closeModal('modal-resale-audit');
+            showToast('已驳回，创建人可修改原单后重新提交', 'warning');
+        }
+
+        function voidResaleRegistration(no) {
+            var d = resaleData[no];
+            if (!d) return showToast('未找到转售登记单', 'error');
+            if (!confirm('确定作废转售登记单 ' + no + ' 吗？作废后不可恢复。')) return;
+            d.status = '已作废';
+            upsertResaleRow(no);
+            var tr = findOrderRow(d.order);
+            if (tr) {
+                tr.children[12].innerHTML = '<span class="tag tag-default">未转售</span>';
+                tr.children[14].innerHTML = '<div class="action-links">'
+                    + '<span class="action-link" onclick="openResaleRegistration(\'' + d.order + '\')">转售登记</span>'
+                    + '<span class="action-link" onclick="showOrderDetail(\'' + d.order + '\')">详情</span></div>';
+            }
+            showToast('转售登记单已作废，该订单可重新发起转售登记', 'success');
         }
 
         // ========== 批量销售（多条代储订单 → 同一采购商） ==========
