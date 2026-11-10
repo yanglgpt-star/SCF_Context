@@ -1,0 +1,28 @@
+name: Build & Deploy Pages
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 支持手动触发
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15 # 拉长超时，解决你之前deploy超时
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Upload artifact（上传根目录全部静态文件）
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'   # ⭐ 这里是 . 代表【当前仓库根目录】，就是你的index.html所在位置
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
